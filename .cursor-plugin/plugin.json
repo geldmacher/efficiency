@@ -1,6 +1,6 @@
 {
   "name": "geldmacher-efficiency",
-  "displayName": "Geldmacher Efficiency",
+  "displayName": "Efficiency",
   "description": "RTK-backed Cursor cost controls for lower token spend, targeted context, and lean validation.",
   "version": "0.1.0",
   "author": {
