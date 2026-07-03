@@ -1,7 +1,7 @@
 {
   "name": "geldmacher-efficiency",
   "displayName": "Geldmacher Efficiency",
-  "description": "RTK-backed Cursor workflows for token-conscious planning, execution, and review.",
+  "description": "RTK-backed Cursor cost controls for lower token spend, targeted context, and lean validation.",
   "version": "0.1.0",
   "author": {
     "name": "Dennis Geldmacher",

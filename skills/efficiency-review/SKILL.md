@@ -1,18 +1,20 @@
 ---
 name: efficiency-review
-description: Review completed Cursor work for concrete cost, context, RTK, and validation inefficiencies.
+description: Review completed Cursor work for concrete cost, context, RTK, and validation inefficiencies without creating workflow follow-up.
 ---
 
 # Efficiency Review
 
 ## Goal
 
-Identify whether completed work spent unnecessary model context or shell output, missed RTK usage, skipped low-cost validation, or left a cheaper follow-up path.
+Identify whether completed work spent unnecessary model context or shell output, missed RTK usage, skipped low-cost validation, or missed cost-reduction measures.
+
+This review is not a delivery review and not a workflow review. It does not judge whether the task outcome is correct except where validation spending creates cost risk.
 
 ## Inputs
 
 - original request
-- execution packet or plan, if any
+- cost budget, if any
 - changed files or artifacts
 - shell commands and relevant output
 - validation evidence
@@ -31,6 +33,6 @@ Use this structure:
 - **Context discipline**: targeted reads, broad scans, repeated reads, or missing context
 - **Validation economy**: checks run, cheap checks skipped, or over-testing
 - **Risks from under-spending**: correctness risks caused by too little context or validation
-- **Cheaper next step**: `none` or a compact execution packet
+- **Cost adjustments**: `none` or concrete measures for the next Cursor session
 
 Prefer specific command, file, and verification evidence over general advice.

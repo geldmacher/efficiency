@@ -1,8 +1,10 @@
 # Geldmacher Efficiency
 
-Cursor workflows for cost-efficient agent work: RTK-backed shell usage, targeted context gathering, compact execution plans, and concrete efficiency review.
+Cursor cost controls for agent work: RTK-backed shell usage, targeted context gathering, bounded command output, lean validation, and concrete efficiency review.
 
 This plugin is intentionally small. It does not ship a custom Cursor hook in v0.1. RTK integration is delegated to RTK's supported Cursor setup through `rtk init --global --agent cursor`.
+
+It does not replace the workflow plugin. It does not define handoffs, implementation roles, delivery-review loops, or task execution packets. Its job is only to reduce avoidable Cursor cost.
 
 ## Installation
 
@@ -13,16 +15,16 @@ Copy or clone this repository to `~/.cursor/plugins/local/geldmacher-efficiency/
 Use the plugin when a Cursor session should spend fewer tokens and avoid broad exploratory churn.
 
 1. Run `/setup-rtk` once per machine to verify RTK and prepare Cursor's RTK integration.
-2. Run `/efficiency-plan` when a request should become a compact, cost-aware implementation packet.
-3. Execute the packet with normal Cursor tools while following the always-on efficiency rule.
-4. Run `/efficiency-review` after meaningful work to find wasted context, missed RTK usage, skipped validation, and cheaper next steps.
+2. Run `/cost-budget` when a session needs explicit cost guardrails for context, commands, dry-runs, validation, and stop conditions.
+3. Use Cursor or the workflow plugin for actual task planning and execution.
+4. Run `/efficiency-review` after meaningful work to find wasted context, missed RTK usage, validation cost issues, and cost controls to improve next time.
 
 ## Components
 
-- **Commands**: `/setup-rtk`, `/efficiency-plan`, `/efficiency-review`.
-- **Skills**: `rtk-cursor-setup`, `cost-efficient-execution`, `efficiency-review`.
-- **Agent**: `efficiency-reviewer`, a readonly review role focused on efficiency gaps and concrete follow-up.
-- **Rule**: `cursor-efficiency`, an always-on rule for RTK-first shell usage, targeted reads, `rg` before broad scans, dry-runs before global setup, and escalation instead of expensive guessing.
+- **Commands**: `/setup-rtk`, `/cost-budget`, `/efficiency-review`.
+- **Skills**: `rtk-cursor-setup`, `cost-reduction`, `efficiency-review`.
+- **Agent**: `efficiency-reviewer`, a readonly review role focused on cost gaps and missed reduction measures.
+- **Rule**: `cursor-efficiency`, an always-on rule for RTK-first shell usage, targeted reads, `rg` before broad scans, dry-runs before global setup, and escalation instead of costly guessing.
 
 ## RTK Integration
 
@@ -37,21 +39,19 @@ Use the plugin when a Cursor session should spend fewer tokens and avoid broad e
 
 The plugin never installs RTK or mutates global Cursor configuration without explicit user confirmation.
 
-## Cost-Aware Execution Packet
+## Cost Budget
 
-`/efficiency-plan` produces a compact packet with these sections:
+`/cost-budget` produces a compact set of cost controls with these sections:
 
-1. `Intent and success condition`
-2. `Scope and non-goals`
-3. `Context budget`
-4. `Target files and symbols`
-5. `RTK shell plan`
-6. `Executable agent plan`
-7. `Verification`
-8. `Escalate instead of guessing when`
-9. `Open questions`
+1. `Cost objective`
+2. `RTK requirements`
+3. `Context limits`
+4. `Shell-output limits`
+5. `Dry-run requirements`
+6. `Validation budget`
+7. `Stop and ask when`
 
-Execution-critical uncertainty must be clarified before producing the packet. `Open questions` is only for non-blocking follow-up.
+The budget is deliberately not an implementation plan. Each item must be a cost-saving constraint or procedure that can be used alongside Cursor's native planning or the workflow plugin.
 
 ## Publishing Notes
 
