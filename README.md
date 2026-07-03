@@ -26,40 +26,19 @@ Use the plugin when a Cursor session should spend fewer tokens and avoid broad e
 
 ## RTK Integration
 
-`/setup-rtk` follows this safety model:
-
-1. Verify RTK is available with `rtk --version` and `command -v rtk`.
-2. If RTK is missing, show the official RTK installation documentation and stop.
-3. Run `rtk init --global --agent cursor --dry-run` first.
-4. Summarize the dry-run result.
-5. Ask for explicit confirmation before running `rtk init --global --agent cursor`.
-6. After setup, instruct the user to restart Cursor and verify RTK-backed shell behavior.
-
-The plugin never installs RTK or mutates global Cursor configuration without explicit user confirmation.
+`/setup-rtk` verifies RTK and guides Cursor's supported RTK integration. It previews setup before applying changes.
 
 ## Cost Budget
 
-`/cost-budget` produces a compact set of cost controls with these sections:
+`/cost-budget` produces compact cost controls for a Cursor session. It is deliberately not an implementation plan and can be used alongside Cursor's native planning or the workflow plugin.
 
-1. `Cost objective`
-2. `RTK requirements`
-3. `Context limits`
-4. `Shell-output limits`
-5. `Dry-run requirements`
-6. `Validation budget`
-7. `Stop and ask when`
+## Development
 
-The budget is deliberately not an implementation plan. Each item must be a cost-saving constraint or procedure that can be used alongside Cursor's native planning or the workflow plugin.
-
-## Publishing Notes
-
-Before publishing or submitting the plugin, run:
+Agent and contributor instructions live in `AGENTS.md`. Before publishing or submitting the plugin, validate it with:
 
 ```bash
 node scripts/validate-plugin.mjs
 ```
-
-The validator checks `.cursor-plugin/plugin.json`, the configured logo path, and required frontmatter for commands, skills, agents, and rules.
 
 ## References
 
