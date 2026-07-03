@@ -1,0 +1,20 @@
+{
+  "name": "geldmacher-efficiency",
+  "displayName": "Geldmacher Efficiency",
+  "description": "RTK-backed Cursor workflows for token-conscious planning, execution, and review.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Dennis Geldmacher",
+    "email": "geldmacher.dennis@outlook.de"
+  },
+  "license": "MIT",
+  "keywords": [
+    "rtk",
+    "efficiency",
+    "cost",
+    "tokens",
+    "cursor",
+    "agents"
+  ],
+  "logo": "assets/logo.svg"
+}

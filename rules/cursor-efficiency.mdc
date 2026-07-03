@@ -1,0 +1,35 @@
+---
+description: Keep Cursor agent work cost-efficient through RTK-backed shell usage, targeted context, and bounded validation.
+alwaysApply: true
+---
+
+# Cursor Efficiency
+
+Apply this rule to all Cursor agent work.
+
+- Prefer RTK-backed shell commands when RTK is available.
+- Use `rg` or `rg --files` before broad scans or slower search tools.
+- Read the smallest useful file ranges instead of dumping large files.
+- Gather enough context to be correct, but stop before unrelated exploration.
+- Use dry-runs before global setup, migrations, generation, publishing, or config changes when a dry-run exists.
+- Do not install tools, mutate global configuration, or publish externally without explicit user confirmation.
+- Ask or escalate when missing intent would cause expensive guessing.
+- Keep plans compact, executable, and scoped to the request.
+- Run the cheapest validation that materially proves the change.
+- Use `rtk gain` after command-heavy work when savings evidence is useful.
+
+## RTK Cursor Setup
+
+For Cursor integration, use RTK's supported setup command:
+
+```bash
+rtk init --global --agent cursor
+```
+
+Always run the dry-run first:
+
+```bash
+rtk init --global --agent cursor --dry-run
+```
+
+Do not create a custom Cursor hook for this plugin's v0.1 RTK integration.

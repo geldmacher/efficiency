@@ -1,0 +1,8 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Geldmacher Efficiency</title>
+  <desc id="desc">A compact GE monogram with an efficiency gauge.</desc>
+  <rect width="512" height="512" rx="96" fill="#101418"/>
+  <path d="M104 272C104 177.01 181.01 100 276 100C330.635 100 379.332 125.46 410.827 165.146L376.32 192.523C351.776 161.606 315.463 144 276 144C205.318 144 148 201.318 148 272C148 342.682 205.318 400 276 400C333.588 400 382.283 361.97 398.39 309.667H286V266H452V288C452 385.202 373.202 464 276 464C181.01 464 104 386.99 104 292V272Z" fill="#F5F7FA"/>
+  <path d="M212 188H332V232H256V254H320V298H256V324H336V368H212V188Z" fill="#3BD671"/>
+  <path d="M324 118C349.029 125.941 371.257 140.009 389.183 158.703" stroke="#3BD671" stroke-width="24" stroke-linecap="round"/>
+</svg>
