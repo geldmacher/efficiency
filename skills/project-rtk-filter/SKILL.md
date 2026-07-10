@@ -1,6 +1,6 @@
 ---
 name: project-rtk-filter
-description: Create tested project RTK filters for local commands and DDEV wrappers.
+description: Create tested project RTK filters for local command surfaces and DDEV projects, including custom commands, exec/package-manager wrappers, bounded logs, and finite database queries while excluding lifecycle, destructive, streaming, and interactive operations.
 ---
 
 # Project RTK Filter
@@ -25,12 +25,10 @@ Find commands that are specific to the current project before writing filters:
 
 1. Read the project entrypoints and command docs, such as `AGENTS.md`, `README.md`, `docs/**`, `.github/workflows/**`, `.ddev/**`, `Makefile`, `package.json`, `composer.json`, `pyproject.toml`, `Taskfile.yml`, and scripts under `bin/` or `scripts/`.
 2. Identify commands agents are expected to run often: checks, tests, linting, builds, evaluations, docs gates, generators, cache maintenance, and CLI wrappers.
-3. For DDEV projects, prefer matching the outer `ddev ...` command instead of host-level package-manager commands. Include common shapes such as:
-   - `ddev check`
-   - `ddev <custom-command>`
-   - `ddev exec "cd <subdir> && <tool> ..."`
-4. Separate finite commands from long-running commands. Filter only finite commands.
-5. Group commands by output shape, not by implementation technology. Example groups: full project gates, backend tests, frontend tests, docs/licensing, evaluations, maintenance, generic `ddev exec`.
+3. When `.ddev/config.yaml` or `.ddev/commands/` exists, read [references/ddev-command-surface.md](references/ddev-command-surface.md) completely before designing filters. Inventory `ddev help`, every `.ddev/commands/{host,web,db,...}` entry, documented `ddev exec` forms, package-manager wrappers, bounded logs, and finite database-client invocations.
+4. Inspect `rtk gain --failures` and `rtk gain --history` when available for frequently observed `rtk fallback: ddev ...` commands. Treat these as missed filter opportunities, not necessarily failed shell commands.
+5. Separate finite commands from long-running, interactive, lifecycle, and destructive commands. Filter only finite commands; never smoke-test a mutating command merely to validate a filter.
+6. Group commands by output shape, not by implementation technology. Example groups: project gates, tests/quality, docs/licensing, evaluations, maintenance, package managers, bounded logs, database queries, and allowlisted generic `ddev exec`.
 
 ## Filter Design
 
@@ -65,6 +63,10 @@ Prefer conservative filters:
 - Keep `FAIL`, `ERROR`, `WARN`, stack traces, assertion messages, file paths, command summaries, and non-zero-exit diagnostics.
 - Avoid stripping broad words like `warning`, `failed`, `error`, `exception`, `request_id`, `trace`, or `deprecated` unless the project has a specific noisy line that is safe to remove.
 - Do not collapse domain-specific evidence needed for debugging.
+- Match the outer `ddev ...` invocation so direct `rtk ddev ...` execution can select the project filter.
+- Use positive allowlists for broad wrappers such as `ddev exec`; do not match arbitrary container commands.
+- Match database clients only in explicit finite modes such as MySQL/MariaDB `-e`/`--execute` or PostgreSQL `-c`/`--command` and `-f`/`--file`. Never match a bare interactive client.
+- Prefer SQL-side projection, aggregation, predicates, and `LIMIT` over aggressive output filtering. Use line and width caps only as a safety bound, and preserve database errors.
 
 ## Verification
 
@@ -72,11 +74,12 @@ Use the cheapest available checks:
 
 1. Validate TOML syntax and require inline coverage with `rtk verify --require-all` when available.
 2. If `rtk verify --require-all` warns that project filters were skipped, such as `untrusted project filters skipped`, do not report project-filter validation as passed.
-3. If project-local filters require trust, tell the user to run `rtk trust` from the project root instead of doing it silently, then rerun `rtk verify --require-all`.
-4. Smoke-test representative commands through RTK only when they are finite and safe.
+3. Finish filter edits before trust. If project-local filters require trust, tell the user to review the file and run `rtk trust` from the project root instead of doing it silently; edits change the trusted hash. Then rerun `rtk verify --require-all` and require the project test count to be included.
+4. Smoke-test representative commands explicitly through RTK only when they are finite and safe, for example `RTK_TOML_DEBUG=1 rtk ddev <finite-command>`. Require debug output or savings history to show the intended project filter rather than `fallback`.
 5. For DDEV commands, avoid starting duplicate dev servers. Prefer documented finite gates and small `ddev exec` smoke commands.
-6. Report any RTK-version limitation, such as a local version that can execute filters through `rtk <command>` but cannot rewrite TOML-only commands through the Cursor hook.
-7. Delegate to `rtk-filter-reviewer` only when changes cover at least three filter groups or introduce broadly matching generic regexes. Review smaller changes inline.
+6. Check representative raw commands with `rtk hook check --agent cursor '<command>'` when Cursor integration is in scope. Report `No rewrite` as a hook/registry limitation: project TOML filters may still work for explicit `rtk ddev ...`, but the hook must not be claimed to auto-prefix that command.
+7. Report any RTK-version limitation, such as a local version that can execute filters through `rtk <command>` but cannot rewrite TOML-only commands through the Cursor hook. Ensure project agent instructions explicitly prefer `rtk ddev ...` when the hook cannot rewrite the raw command.
+8. Delegate to `rtk-filter-reviewer` only when changes cover at least three filter groups or introduce broadly matching generic regexes. Review smaller changes inline.
 
 ## Output
 
