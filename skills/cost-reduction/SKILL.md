@@ -1,6 +1,6 @@
 ---
 name: cost-reduction
-description: Define Cursor cost-reduction guardrails for RTK usage, context size, shell output, and validation scope without replacing task workflow.
+description: Set Cursor cost guardrails for RTK, context, shell output, and validation.
 ---
 
 # Cost Reduction
@@ -10,6 +10,8 @@ description: Define Cursor cost-reduction guardrails for RTK usage, context size
 Reduce Cursor spend by controlling token-heavy context, shell output, repeated exploration, avoidable retries, and validation cost.
 
 This skill does not plan the task, compile handoffs, assign roles or define implementation steps. It only defines cost controls that can be used beside any existing workflow.
+
+Use automatically only when at least one threshold is met: five expected shell commands, three expected changed files, or global configuration, migration, generation, or publishing work. Explicit user invocation always applies.
 
 ## Cost Drivers
 
@@ -30,14 +32,17 @@ Check for:
 Use this structure:
 
 1. `Cost objective`
-2. `RTK requirements`
-3. `Context limits`
-4. `Shell-output limits`
-5. `Dry-run requirements`
-6. `Validation budget`
-7. `Stop and ask when`
+2. `Cost snapshot`
+3. `RTK requirements`
+4. `Context limits`
+5. `Shell-output limits`
+6. `Dry-run requirements`
+7. `Validation budget`
+8. `Stop and ask when`
 
 Keep the output short and operational. Each item must be a constraint or cost-saving measure, not an implementation step.
+
+When RTK is available, create the snapshot with `rtk gain --project --format json` and report its `summary.total_commands`, `total_input`, `total_output`, `total_saved`, and `avg_savings_pct` fields. Otherwise use `unavailable` with a reason. Treat the snapshot as cumulative project history, not a task delta.
 
 ## Boundaries
 
@@ -45,3 +50,5 @@ Keep the output short and operational. Each item must be a constraint or cost-sa
 - Do not define task order or implementation ownership.
 - Do not invent workflow stages.
 - Do not emit handoff content.
+- Do not use `rtk discover` or `rtk session` as Cursor metrics because they inspect Claude Code history.
+- Do not calculate monetary cost unless the user provides model-specific input and output token prices.

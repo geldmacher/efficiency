@@ -21,4 +21,5 @@ Rules:
 - Do not remove mandatory project constraints.
 - Measure token estimates before and after.
 - Run relevant validation.
+- Delegate to `context-optimization-reviewer` when always-on safety guidance changed or estimated recurring context reduction exceeds 25%. Review smaller changes inline.
 - Report changed files, savings, and validation evidence.

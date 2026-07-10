@@ -1,6 +1,6 @@
 ---
 description: Keep project-specific RTK filters aligned with newly added local commands and DDEV wrappers.
-alwaysApply: true
+alwaysApply: false
 ---
 
 # RTK Filter Maintenance
@@ -13,4 +13,4 @@ When adding, renaming, documenting, or frequently using project-specific shell c
 - For DDEV projects, match the outer `ddev ...` command or documented `ddev exec "cd <dir> && ..."` shape instead of host-level package-manager commands.
 - Do not add filters for long-running dev servers, watchers, interactive shells, SSH, `tail -f`, or commands whose raw stream is the intended output.
 - Add or update inline RTK filter tests whenever a filter is created or broadened.
-- Run the cheapest relevant RTK validation, usually `rtk verify`. If project filters are skipped as untrusted, count validation as missing, ask the user before `rtk trust` or global RTK/Cursor setup, and rerun validation after trust is granted.
+- Run `rtk verify --require-all`. If project filters are skipped as untrusted, count validation as missing, ask the user before `rtk trust` or global RTK/Cursor setup, and rerun validation after trust is granted.

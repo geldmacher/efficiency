@@ -1,6 +1,6 @@
 ---
 name: efficiency-review
-description: Review completed Cursor work for concrete cost, context, RTK, and validation inefficiencies without creating workflow follow-up.
+description: Review completed Cursor work for RTK, context, and validation waste.
 ---
 
 # Efficiency Review
@@ -22,7 +22,20 @@ This review is not a delivery review and not a workflow review. It does not judg
 
 ## Readonly Delegation
 
-Delegate to the `efficiency-reviewer` agent when available. If delegation is unavailable, state that limitation and perform a concise readonly review in chat.
+Review inline by default. Delegate to the `efficiency-reviewer` agent only when at least one threshold is met:
+
+- six or more changed files
+- ten or more relevant shell commands
+- global configuration or publishing changes
+- contradictory or materially incomplete evidence
+
+If delegation is required but unavailable, state that limitation and perform a concise readonly review in chat.
+
+## Cost Snapshot
+
+When RTK is available, run `rtk gain --project --format json` and report `summary.total_commands`, `total_input`, `total_output`, `total_saved`, and `avg_savings_pct`. Calculate a task delta only when the cost budget contains a baseline captured in the same task. Otherwise label the values as cumulative project history.
+
+Do not use `rtk discover` or `rtk session` as Cursor metrics. Do not calculate monetary cost unless the user provides model-specific input and output token prices.
 
 ## Output
 
@@ -33,6 +46,7 @@ Use this structure:
 - **Context discipline**: targeted reads, broad scans, repeated reads, or missing context
 - **Validation economy**: checks run, cheap checks skipped, or over-testing
 - **Risks from under-spending**: correctness risks caused by too little context or validation
+- **Cost snapshot**: cumulative project values, same-task delta, or `unavailable`
 - **Cost adjustments**: `none` or concrete measures for the next Cursor session
 
 Prefer specific command, file, and verification evidence over general advice.

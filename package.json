@@ -1,0 +1,19 @@
+{
+  "name": "geldmacher-efficiency-plugin-development",
+  "version": "0.4.0",
+  "private": true,
+  "description": "Development validation for the Geldmacher Efficiency Cursor plugin.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "validate": "node scripts/validate-plugin.mjs",
+    "test": "node --test",
+    "context-budget": "node scripts/measure-context.mjs --check"
+  },
+  "devDependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "yaml": "^2.8.1"
+  }
+}

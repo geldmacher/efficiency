@@ -1,6 +1,6 @@
 ---
 name: context-optimization-reviewer
-description: Readonly review of context-optimization changes for lost mandatory constraints, broken discoverability, and weak validation evidence.
+description: Review context reductions for lost constraints, discoverability, and evidence.
 readonly: true
 ---
 

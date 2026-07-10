@@ -1,6 +1,6 @@
 ---
 name: rtk-filter-reviewer
-description: Readonly review of project-specific RTK filter changes for command coverage, DDEV matching, safety, and diagnostic preservation.
+description: Review project RTK filters for coverage, DDEV matching, and diagnostics.
 readonly: true
 ---
 
@@ -20,7 +20,7 @@ Check:
 - Are regexes precise enough to avoid unrelated commands?
 - Do filters preserve failures, warnings, stack traces, file paths, request IDs, and useful diagnostics?
 - Does each created or broadened filter have an inline test?
-- Was validation run with `rtk verify`, and did it actually include project filters instead of warning that untrusted filters were skipped?
+- Was validation run with `rtk verify --require-all`, and did it actually include project filters instead of warning that untrusted filters were skipped?
 
 ## Output
 

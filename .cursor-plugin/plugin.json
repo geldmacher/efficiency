@@ -2,7 +2,7 @@
   "name": "geldmacher-efficiency",
   "displayName": "Efficiency",
   "description": "RTK-backed Cursor cost controls, context usage optimization, targeted context, and lean validation.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": {
     "name": "Dennis Geldmacher",
     "email": "geldmacher.dennis@outlook.de"
@@ -18,5 +18,9 @@
     "cursor",
     "agents"
   ],
-  "logo": "assets/logo.svg"
+  "logo": "assets/logo.svg",
+  "commands": "./commands/",
+  "agents": "./agents/",
+  "skills": "./skills/",
+  "rules": "./rules/"
 }

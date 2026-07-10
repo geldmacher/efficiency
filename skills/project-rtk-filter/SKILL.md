@@ -1,6 +1,6 @@
 ---
 name: project-rtk-filter
-description: Create or update project-specific RTK TOML filters by inventorying local commands, especially DDEV wrappers, and adding tested filters for noisy finite commands.
+description: Create tested project RTK filters for local commands and DDEV wrappers.
 ---
 
 # Project RTK Filter
@@ -70,12 +70,13 @@ Prefer conservative filters:
 
 Use the cheapest available checks:
 
-1. Validate TOML syntax and RTK filter tests with `rtk verify` when available.
-2. If `rtk verify` warns that project filters were skipped, such as `untrusted project filters skipped`, do not report project-filter validation as passed.
-3. If project-local filters require trust, tell the user to run `rtk trust` from the project root instead of doing it silently, then rerun `rtk verify`.
+1. Validate TOML syntax and require inline coverage with `rtk verify --require-all` when available.
+2. If `rtk verify --require-all` warns that project filters were skipped, such as `untrusted project filters skipped`, do not report project-filter validation as passed.
+3. If project-local filters require trust, tell the user to run `rtk trust` from the project root instead of doing it silently, then rerun `rtk verify --require-all`.
 4. Smoke-test representative commands through RTK only when they are finite and safe.
 5. For DDEV commands, avoid starting duplicate dev servers. Prefer documented finite gates and small `ddev exec` smoke commands.
 6. Report any RTK-version limitation, such as a local version that can execute filters through `rtk <command>` but cannot rewrite TOML-only commands through the Cursor hook.
+7. Delegate to `rtk-filter-reviewer` only when changes cover at least three filter groups or introduce broadly matching generic regexes. Review smaller changes inline.
 
 ## Output
 

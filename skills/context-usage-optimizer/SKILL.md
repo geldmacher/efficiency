@@ -1,7 +1,6 @@
 ---
 name: context-usage-optimizer
-description: Analyze Cursor Context Usage Analysis data and plan or apply durable reductions to recurring token usage.
-disable-model-invocation: true
+description: Plan or apply reductions from Cursor Context Usage Analysis data.
 ---
 
 # Context Usage Optimizer
@@ -83,6 +82,7 @@ When Agent Mode is active and the user asks to implement:
    - plugin or control-plane audit if agent assets changed
    - docs link checks if docs changed
    - project-specific gates only when runtime behavior changed
+7. Delegate to `context-optimization-reviewer` when always-on safety guidance changed or estimated recurring context reduction exceeds 25%. Otherwise review inline.
 
 ## Output Format
 
