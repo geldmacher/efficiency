@@ -26,5 +26,8 @@
     "rtk",
     "optimization"
   ],
-  "logo": "assets/logo.svg"
+  "logo": "assets/logo.svg",
+  "commands": "./commands/",
+  "agents": "./agents/",
+  "skills": "./skills/"
 }
