@@ -1,6 +1,6 @@
 {
   "name": "geldmacher-efficiency-plugin-development",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Development validation for the Geldmacher Efficiency Cursor plugin.",
   "engines": {

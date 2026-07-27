@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.0.1 - 2026-07-27
+
 ### Added
 
 - Restored the repository README, changelog, development package metadata, release checklist, manifest validator, and structural behavior tests.
@@ -13,6 +15,8 @@ All notable changes to this project are documented in this file.
 
 - Marked all auditor agents as read-only.
 - Strengthened RTK setup guidance around binary identification, dry-runs, verification, and uninstall previews.
+- Raised the locally verified native Cursor hook baseline to RTK 0.44.0 and documented distinct `allow` and `ask` verification paths.
+- Clarified that Cursor-hook use of custom TOML filters requires RTK 0.44.0 or newer and renewed trust after filter changes.
 - Rebuilt the release gate around the focused 1.0 component set.
 
 ## 1.0.0 - 2026-07-16

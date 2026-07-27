@@ -27,11 +27,15 @@ Complete this checklist before tagging a plugin release. Use a clean checkout or
 
 ## Safe behavior
 
+- [ ] `rtk --version` reports RTK 0.44.0 or newer for native Cursor hook and custom TOML filter coverage.
 - [ ] `/setup-rtk` identifies RTK with `rtk gain` before offering setup.
 - [ ] `/setup-rtk` shows the global Cursor dry-run and does not apply changes without an explicit request and required approval.
 - [ ] `rtk hook check --agent cursor '<finite-command>'` reports the expected rewrite for a safe finite fixture.
+- [ ] The real Cursor hook returns the RTK rewrite in `updated_input` for both a policy-allowed fixture and an approval-required fixture.
+- [ ] The `allow` fixture executes through Cursor and appears as an RTK command in `rtk gain --history`.
+- [ ] The `ask` fixture requests Cursor approval, retains the RTK rewrite, and does not execute before approval.
 - [ ] `/create-rtk-filter` excludes interactive, streaming, destructive, lifecycle, shell, and server commands.
-- [ ] A temporary project filter preserves failures and passes `rtk verify --require-all` after the project is trusted.
+- [ ] A temporary project filter preserves failures and passes `rtk verify --require-all` after the project is trusted; editing it invalidates trust until the native `rtk trust` flow is completed again.
 - [ ] `/optimize-context` does not edit context on an analysis-only request.
 - [ ] Auditor agents return analysis without modifying files.
 

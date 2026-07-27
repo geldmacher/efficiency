@@ -46,6 +46,11 @@ test("RTK setup preserves identification, preview, approval, verification, and r
     "rtk init --show --agent cursor",
     "rtk init --global --agent cursor --dry-run",
     "rtk hook check --agent cursor",
+    "rtk hook cursor",
+    "updated_input",
+    "permission: allow",
+    "permission: ask",
+    "rtk gain --history",
     "--uninstall --dry-run",
     "explicit",
   ]) assert.ok(setup.includes(expected), `missing setup policy: ${expected}`);
@@ -55,8 +60,22 @@ test("RTK filter design requires diagnostic fixtures and complete verification",
   const filter = `${read("skills/rtk-filter-design/SKILL.md")}\n${read("skills/rtk-filter-design/references/filter-format.md")}`;
   assert.match(filter, /rtk verify --require-all/);
   assert.match(filter, /Trust is a separate user-approved step/);
+  assert.match(filter, /RTK 0\.44\.0 or newer/);
+  assert.match(filter, /re-trust/);
   assert.match(filter, /rtk hook check --agent cursor/);
+  assert.match(filter, /updated_input/);
   assert.match(filter, /Preserve failures, warnings/);
+});
+
+test("RTK 0.44 Cursor release evidence covers allow and approval paths", () => {
+  const readme = read("README.md");
+  const checklist = read("docs/release-checklist.md");
+  assert.match(readme, /0\.44\.0 is the locally verified baseline/);
+  assert.match(checklist, /RTK 0\.44\.0 or newer/);
+  assert.match(checklist, /The `allow` fixture executes through Cursor/);
+  assert.match(checklist, /The `ask` fixture requests Cursor approval/);
+  assert.match(checklist, /rtk gain --history/);
+  assert.match(checklist, /invalidates trust/);
 });
 
 test("context optimization follows user intent and Cursor-native control surfaces", () => {
