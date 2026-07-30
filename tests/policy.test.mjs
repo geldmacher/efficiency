@@ -86,15 +86,33 @@ test("context optimization follows user intent and Cursor-native control surface
   assert.match(context, /If a material edit is not clearly authorized/);
 });
 
-test("the plugin remains opt-in without hidden integration surfaces", () => {
+test("response simplicity is a minimal always-on rule with protected content", () => {
+  const path = join(defaultRoot, "rules", "response-simplicity.mdc");
+  const fields = parseFrontmatter(path);
+  const rule = read("rules/response-simplicity.mdc");
+  assert.equal(fields.alwaysApply, true);
+  assert.match(fields.description, /clear, concise, and complete/i);
+  for (const expected of [
+    "Lead with the answer, result, or decision",
+    "natural, complete sentences",
+    "Do not restate the request",
+    "evidence, uncertainty, risks, blockers, approvals, and validation status",
+    "code, commands, paths, identifiers, and error messages exact",
+    "Prefer clarity over minimum length",
+  ]) assert.ok(rule.includes(expected), `missing response policy: ${expected}`);
+  assert.ok(rule.length < 1_200, "response rule should remain small enough for recurring context");
+});
+
+test("the plugin declares only the intended always-on integration surface", () => {
   const manifest = JSON.parse(read(".cursor-plugin/plugin.json"));
-  for (const field of ["rules", "hooks", "mcpServers"]) assert.equal(field in manifest, false);
+  assert.equal(manifest.rules, "./rules/");
+  for (const field of ["hooks", "mcpServers"]) assert.equal(field in manifest, false);
   assert.equal(manifest.commands, "./commands/");
   assert.equal(manifest.skills, "./skills/");
   assert.equal(manifest.agents, "./agents/");
 });
 
-test("README documents every command and auditor", () => {
+test("README documents every command, auditor, and rule", () => {
   const readme = read("README.md");
   for (const directory of ["commands", "agents"]) {
     const files = readdirSync(join(defaultRoot, directory)).filter((file) => file.endsWith(".md"));
@@ -102,6 +120,11 @@ test("README documents every command and auditor", () => {
       const fields = parseFrontmatter(join(defaultRoot, directory, file));
       assert.ok(readme.includes(fields.name), `README.md does not document ${fields.name}`);
     }
+  }
+  const rules = readdirSync(join(defaultRoot, "rules")).filter((file) => file.endsWith(".mdc"));
+  for (const file of rules) {
+    const name = basename(file, ".mdc");
+    assert.ok(readme.includes(name), `README.md does not document ${name}`);
   }
 });
 

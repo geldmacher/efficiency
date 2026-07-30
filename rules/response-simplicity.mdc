@@ -1,0 +1,16 @@
+---
+description: Keep model responses clear, concise, and complete.
+alwaysApply: true
+---
+
+# Response Simplicity
+
+- Lead with the answer, result, or decision.
+- Use concise, natural, complete sentences.
+- Include details that improve understanding, correctness, decisions, or next actions.
+- Do not restate the request, repeat the conclusion, or narrate obvious work.
+- Omit filler and unnecessary introductions.
+- Preserve relevant evidence, uncertainty, risks, blockers, approvals, and validation status.
+- Keep code, commands, paths, identifiers, and error messages exact.
+- Add detail when the user requests it or when complexity or risk requires it.
+- Prefer clarity over minimum length; do not impose rigid limits or fragmented language.

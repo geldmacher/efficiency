@@ -1,6 +1,6 @@
 # Efficiency
 
-Efficiency is a lightweight Cursor plugin for deliberate RTK usage, context economy, proportional validation, and evidence-based efficiency reviews. It provides opt-in commands and skills instead of adding recurring instructions to every agent turn.
+Efficiency is a lightweight Cursor plugin for concise model responses, deliberate RTK usage, context economy, proportional validation, and evidence-based efficiency reviews. Its commands and skills remain opt-in; one minimal always-on rule improves response clarity without imposing a compressed writing style.
 
 ## What it provides
 
@@ -12,6 +12,8 @@ Efficiency is a lightweight Cursor plugin for deliberate RTK usage, context econ
 | `/optimize-context` | Analyze or improve recurring Cursor context | `context-optimization` |
 | `/review-efficiency` | Review resource, context, communication, and validation economy | `efficiency-review` |
 
+The `response-simplicity` rule applies a small set of general response principles: lead with the outcome, remove filler and repetition, use natural complete sentences, and preserve evidence, uncertainty, risks, approvals, validation status, and exact technical content.
+
 Three optional read-only auditors provide independent review when the extra model call is justified:
 
 - `rtk-filter-auditor` checks matcher precision, diagnostic preservation, and verification evidence.
@@ -20,7 +22,8 @@ Three optional read-only auditors provide independent review when the extra mode
 
 ## Design boundaries
 
-- The plugin has no always-on rules, hooks, MCP servers, or telemetry.
+- The only always-on context is the short `response-simplicity` rule. The plugin has no custom runtime hooks, MCP servers, or telemetry.
+- Response economy must not remove material evidence, uncertainty, risks, blockers, approvals, validation status, or exact technical content.
 - RTK remains optional. Only `/setup-rtk` concerns machine-level integration, and it previews changes before an explicitly requested application.
 - Auditors analyze supplied evidence and do not modify files.
 - Efficiency guidance does not replace functional correctness, security review, project requirements, or Cursor's native approvals.
@@ -53,6 +56,8 @@ Reload Cursor with `Developer: Reload Window` or restart it. If the plugin is no
 
 ## Typical usage
 
+The response rule applies automatically when Cursor loads it; it does not require a command. Repository validation proves its declaration and content, while a fresh real Cursor session is required to prove that the active Cursor version applies a plugin-sourced always-on rule.
+
 1. Run `/setup-rtk` to inspect the installed RTK binary and current Cursor integration. Request setup explicitly if the dry-run is correct. A Cursor hook result of `ask` with an RTK `updated_input` is a working approval path, not a failed rewrite.
 2. Run `/create-rtk-filter` in a project with recurring noisy finite commands. Review fixtures, complete `rtk verify --require-all`, and use RTK's native `rtk trust` flow. Re-trust the filter after any edit before relying on it in the Cursor hook path.
 3. Use `/budget-efficiency` before an unusually broad or tool-heavy task.
@@ -77,6 +82,7 @@ The release check validates the manifest and component metadata, rejects unsafe 
 agents/                     Optional read-only auditors
 commands/                   User-facing slash commands
 skills/                     Reusable workflows and references
+rules/                      Minimal always-on response guidance
 assets/                     Plugin artwork
 schemas/                    Vendored Cursor manifest schema
 scripts/                    Validation utilities
@@ -90,6 +96,7 @@ docs/                       Release documentation
 - **The plugin is missing:** verify the local path, local-plugin policy, and `.cursor-plugin/plugin.json`, then reload Cursor.
 - **Project filters are skipped:** with RTK 0.44.0 or newer, custom TOML filters are trust-gated in the Cursor hook path. Complete `rtk trust` from the intended project root and re-trust the filter after edits before rerunning `rtk verify --require-all`.
 - **Hook rewriting is uncertain:** use `rtk hook check --agent cursor '<finite-command>'`, then inspect the real Cursor hook result and run a finite smoke check. `allow` may run immediately; `ask` must request native approval while retaining the RTK `updated_input`. Confirm execution with `rtk gain --history`. Successful filter execution alone does not prove hook rewriting.
+- **The response rule is not always applied:** confirm that `response-simplicity` appears as always applied after reloading Cursor, then verify it in a fresh conversation. If Cursor downgrades or omits the plugin rule, record the Cursor version and treat runtime activation as unverified rather than inferring success from `alwaysApply: true`.
 
 ## References
 

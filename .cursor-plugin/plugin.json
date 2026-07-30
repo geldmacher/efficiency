@@ -1,7 +1,7 @@
 {
   "name": "geldmacher-efficiency",
   "displayName": "Efficiency",
-  "description": "Lightweight Cursor-native helpers for RTK, context economy, proportional validation, and efficiency review.",
+  "description": "Lightweight Cursor-native helpers for concise responses, RTK, context economy, proportional validation, and efficiency review.",
   "version": "1.0.1",
   "author": {
     "name": "Dennis Geldmacher",
@@ -29,5 +29,6 @@
   "logo": "assets/logo.svg",
   "commands": "./commands/",
   "agents": "./agents/",
-  "skills": "./skills/"
+  "skills": "./skills/",
+  "rules": "./rules/"
 }

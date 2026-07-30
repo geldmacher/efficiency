@@ -22,8 +22,9 @@ Complete this checklist before tagging a plugin release. Use a clean checkout or
 - [ ] Install or link the repository at `~/.cursor/plugins/local/geldmacher-efficiency`.
 - [ ] Run `Developer: Reload Window` or restart Cursor.
 - [ ] Confirm the Efficiency plugin is visible in Cursor settings.
-- [ ] Confirm all five commands, five skills, and three agents are discoverable.
+- [ ] Confirm all five commands, five skills, three agents, and the `response-simplicity` rule are discoverable.
 - [ ] Confirm all three auditors are read-only.
+- [ ] Confirm `response-simplicity` is shown as always applied and affects a fresh Cursor conversation. If it is downgraded or omitted, record the Cursor version and block the runtime-activation claim.
 
 ## Safe behavior
 
@@ -37,6 +38,7 @@ Complete this checklist before tagging a plugin release. Use a clean checkout or
 - [ ] `/create-rtk-filter` excludes interactive, streaming, destructive, lifecycle, shell, and server commands.
 - [ ] A temporary project filter preserves failures and passes `rtk verify --require-all` after the project is trusted; editing it invalidates trust until the native `rtk trust` flow is completed again.
 - [ ] `/optimize-context` does not edit context on an analysis-only request.
+- [ ] The response rule leads with the outcome and removes filler without dropping evidence, uncertainty, risks, approvals, validation status, or exact technical content.
 - [ ] Auditor agents return analysis without modifying files.
 
 ## Documentation and release evidence

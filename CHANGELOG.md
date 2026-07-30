@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Added one minimal always-on `response-simplicity` rule for clear, concise, and complete model responses.
+
+### Changed
+
+- Documented the rule's protected content and the need for a fresh Cursor runtime smoke before claiming that plugin-sourced always-on activation works.
+
 ## 1.0.1 - 2026-07-27
 
 ### Added
