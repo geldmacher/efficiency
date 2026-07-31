@@ -11,6 +11,7 @@ All notable changes to this project are documented in this file.
 ### Changed
 
 - Documented the rule's protected content and the need for a fresh Cursor runtime smoke before claiming that plugin-sourced always-on activation works.
+- Refined the always-on response guidance with flexible controlled-language principles for consistent terminology, unambiguous sentences, and clearer instructions.
 
 ## 1.0.1 - 2026-07-27
 

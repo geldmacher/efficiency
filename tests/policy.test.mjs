@@ -95,6 +95,10 @@ test("response simplicity is a minimal always-on rule with protected content", (
   for (const expected of [
     "Lead with the answer, result, or decision",
     "natural, complete sentences",
+    "one main idea or action per sentence when combining them could cause ambiguity",
+    "same term for the same concept",
+    "state necessary conditions before the action",
+    "Prefer active voice when it makes responsibility clearer",
     "Do not restate the request",
     "evidence, uncertainty, risks, blockers, approvals, and validation status",
     "code, commands, paths, identifiers, and error messages exact",

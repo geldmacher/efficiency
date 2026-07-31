@@ -7,6 +7,10 @@ alwaysApply: true
 
 - Lead with the answer, result, or decision.
 - Use concise, natural, complete sentences.
+- Keep one main idea or action per sentence when combining them could cause ambiguity.
+- Use the same term for the same concept; avoid stylistic synonyms that can imply a difference.
+- In instructions, state necessary conditions before the action and make responsibility explicit.
+- Prefer active voice when it makes responsibility clearer.
 - Include details that improve understanding, correctness, decisions, or next actions.
 - Do not restate the request, repeat the conclusion, or narrate obvious work.
 - Omit filler and unnecessary introductions.

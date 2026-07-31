@@ -12,7 +12,7 @@ Efficiency is a lightweight Cursor plugin for concise model responses, deliberat
 | `/optimize-context` | Analyze or improve recurring Cursor context | `context-optimization` |
 | `/review-efficiency` | Review resource, context, communication, and validation economy | `efficiency-review` |
 
-The `response-simplicity` rule applies a small set of general response principles: lead with the outcome, remove filler and repetition, use natural complete sentences, and preserve evidence, uncertainty, risks, approvals, validation status, and exact technical content.
+The `response-simplicity` rule applies a small set of general response principles: lead with the outcome, remove filler and repetition, use natural complete sentences, keep terminology consistent, make instructions unambiguous, and preserve evidence, uncertainty, risks, approvals, validation status, and exact technical content.
 
 Three optional read-only auditors provide independent review when the extra model call is justified:
 
