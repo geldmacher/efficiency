@@ -1,6 +1,6 @@
 # Efficiency
 
-Efficiency is a lightweight Cursor plugin for concise model responses, deliberate RTK usage, context economy, proportional validation, and evidence-based efficiency reviews. Its commands and skills remain opt-in; one minimal always-on rule improves response clarity without imposing a compressed writing style.
+Efficiency is a lightweight Cursor plugin for concise model responses, deliberate RTK usage, context economy, and proportional validation. Its commands and skills remain opt-in; one minimal always-on rule improves response clarity without imposing a compressed writing style.
 
 ## What it provides
 
@@ -8,21 +8,21 @@ Efficiency is a lightweight Cursor plugin for concise model responses, deliberat
 | --- | --- | --- |
 | `/setup-rtk` | Inspect or prepare RTK's native Cursor integration | `rtk-setup` |
 | `/create-rtk-filter` | Design safe project-specific RTK filters | `rtk-filter-design` |
-| `/budget-efficiency` | Set a proportional efficiency budget for a task | `efficiency-budget` |
+| `/efficiency` | Set or review proportional task effort | `efficiency` |
 | `/optimize-context` | Analyze or improve recurring Cursor context | `context-optimization` |
-| `/review-efficiency` | Review resource, context, communication, and validation economy | `efficiency-review` |
 
-The `response-simplicity` rule applies a small set of general response principles: lead with the outcome, remove filler and repetition, use natural complete sentences, keep terminology consistent, make instructions unambiguous, and preserve evidence, uncertainty, risks, approvals, validation status, and exact technical content.
+The `response-simplicity` rule leads with outcomes, removes filler and repetition, uses natural complete sentences, and preserves evidence, uncertainty, risks, approvals, validation status, and exact technical content.
 
-Three optional read-only auditors provide independent review when the extra model call is justified:
+Two optional read-only auditors provide independent review when the extra model call is justified:
 
 - `rtk-filter-auditor` checks matcher precision, diagnostic preservation, and verification evidence.
-- `context-change-auditor` checks that context reductions preserve important constraints.
-- `efficiency-auditor` checks whether resource and validation effort were proportional.
+- `efficiency-auditor` checks task economy or whether a context reduction preserves material constraints.
 
 ## Design boundaries
 
 - The only always-on context is the short `response-simplicity` rule. The plugin has no custom runtime hooks, MCP servers, or telemetry.
+- **AI-Slop** is used only as shorthand for low-value generated output. Efficiency evaluates observable utility, not whether text appears AI-written.
+- A low-value finding must identify the concrete output, artifact, or step, explain why it did not materially improve the result, a decision, or necessary verification, and propose a practical adjustment.
 - Response economy must not remove material evidence, uncertainty, risks, blockers, approvals, validation status, or exact technical content.
 - RTK remains optional. Only `/setup-rtk` concerns machine-level integration, and it previews changes before an explicitly requested application.
 - Auditors analyze supplied evidence and do not modify files.
@@ -38,9 +38,17 @@ Three optional read-only auditors provide independent review when the extra mode
 | Development | Node.js 22 or newer |
 | Platforms | macOS, Linux, or WSL for RTK's Cursor hook workflow |
 
+`minClientVersions` remains unset until a tested compatibility range exists. Release receipts record the exact Cursor version used for live verification.
+
 ## Local installation
 
-Clone directly into Cursor's local plugin directory:
+Clone the public repository directly into Cursor's local plugin directory:
+
+```bash
+git clone https://github.com/geldmacher/efficiency.git ~/.cursor/plugins/local/geldmacher-efficiency
+```
+
+SSH is an alternative for an already configured GitHub account:
 
 ```bash
 git clone git@github.com:geldmacher/efficiency.git ~/.cursor/plugins/local/geldmacher-efficiency
@@ -52,28 +60,40 @@ For development from another directory, link the repository instead:
 ln -s /absolute/path/to/efficiency ~/.cursor/plugins/local/geldmacher-efficiency
 ```
 
-Reload Cursor with `Developer: Reload Window` or restart it. If the plugin is not visible, confirm that local or third-party plugins are permitted in the active Cursor profile or organization.
+Reload Cursor with `Developer: Reload Window` or restart it afterward.
 
 ## Typical usage
 
-The response rule applies automatically when Cursor loads it; it does not require a command. Repository validation proves its declaration and content, while a fresh real Cursor session is required to prove that the active Cursor version applies a plugin-sourced always-on rule.
+The response rule applies automatically when Cursor loads it; it does not require a command. Repository validation proves its declaration and content, while a fresh real Cursor session is required to prove plugin discovery and runtime behavior.
 
-1. Run `/setup-rtk` to inspect the installed RTK binary and current Cursor integration. Request setup explicitly if the dry-run is correct. A Cursor hook result of `ask` with an RTK `updated_input` is a working approval path, not a failed rewrite.
-2. Run `/create-rtk-filter` in a project with recurring noisy finite commands. Review fixtures, complete `rtk verify --require-all`, and use RTK's native `rtk trust` flow. Re-trust the filter after any edit before relying on it in the Cursor hook path.
-3. Use `/budget-efficiency` before an unusually broad or tool-heavy task.
-4. Use `/optimize-context` when recurring instructions or duplicated guidance inflate every session.
-5. Use `/review-efficiency` after meaningful work when the available evidence supports a useful assessment.
+1. Run `/setup-rtk` to inspect the installed RTK binary and current Cursor integration. A Cursor hook result of `ask` with an RTK `updated_input` is a working approval path, not a failed rewrite.
+2. Run `/create-rtk-filter` for recurring noisy finite commands. Complete `rtk verify --require-all`, use RTK's native `rtk trust` flow, and re-trust the filter after every edit.
+3. Run `/efficiency` before, during, or after meaningful work. The skill infers whether to set a budget, adjust execution, or review the result.
+4. Run `/optimize-context` when recurring instructions or duplicated guidance inflate every session.
+
+## Migrating from 1.x
+
+Efficiency 2.0 deliberately removes compatibility aliases:
+
+| 1.x entry point | 2.0 replacement |
+| --- | --- |
+| `/budget-efficiency` | `/efficiency` with a before-work request |
+| `/review-efficiency` | `/efficiency` with an in-progress or after-work request |
+| `efficiency-budget` | `efficiency` |
+| `efficiency-review` | `efficiency` |
+| `context-change-auditor` | `efficiency-auditor` with a context focus |
 
 ## Development
 
-Install the pinned dependencies and run the complete local gate:
+Install the lockfile-defined dependencies and run the complete local gate:
 
 ```bash
 npm ci
 npm run release-check
+git diff --check
 ```
 
-The release check validates the manifest and component metadata, rejects unsafe or missing component paths, checks Markdown links, and runs behavior tests. Before tagging a release, also complete the [manual release checklist](docs/release-checklist.md) and update the [changelog](CHANGELOG.md).
+The release check separates Cursor manifest/component validation from repository policy, verifies relative Markdown links, and runs structural and policy contract tests. Before tagging a release, complete the [release checklist](docs/release-checklist.md), execute the [runtime smoke](docs/runtime-smoke.md), and update the [changelog](CHANGELOG.md).
 
 ## Repository layout
 
@@ -84,19 +104,19 @@ commands/                   User-facing slash commands
 skills/                     Reusable workflows and references
 rules/                      Minimal always-on response guidance
 assets/                     Plugin artwork
-schemas/                    Vendored Cursor manifest schema
+schemas/                    Vendored Cursor schema and provenance
 scripts/                    Validation utilities
 tests/                      Structural and policy tests
-docs/                       Release documentation
+docs/                       Release and runtime verification material
 ```
 
 ## Troubleshooting
 
 - **`rtk gain` fails:** verify that Rust Token Killer, rather than an unrelated `rtk` binary, is installed.
 - **The plugin is missing:** verify the local path, local-plugin policy, and `.cursor-plugin/plugin.json`, then reload Cursor.
-- **Project filters are skipped:** with RTK 0.44.0 or newer, custom TOML filters are trust-gated in the Cursor hook path. Complete `rtk trust` from the intended project root and re-trust the filter after edits before rerunning `rtk verify --require-all`.
-- **Hook rewriting is uncertain:** use `rtk hook check --agent cursor '<finite-command>'`, then inspect the real Cursor hook result and run a finite smoke check. `allow` may run immediately; `ask` must request native approval while retaining the RTK `updated_input`. Confirm execution with `rtk gain --history`. Successful filter execution alone does not prove hook rewriting.
-- **The response rule is not always applied:** confirm that `response-simplicity` appears as always applied after reloading Cursor, then verify it in a fresh conversation. If Cursor downgrades or omits the plugin rule, record the Cursor version and treat runtime activation as unverified rather than inferring success from `alwaysApply: true`.
+- **Project filters are skipped:** complete `rtk trust` from the intended project root and re-trust after filter edits before rerunning `rtk verify --require-all`.
+- **Hook rewriting is uncertain:** inspect `rtk hook check --agent cursor '<finite-command>'`, the real Cursor `updated_input`, the native permission result, and `rtk gain --history`.
+- **The response rule is not applied:** confirm that `response-simplicity` is always applied after reloading Cursor, then verify it in a fresh conversation. Treat missing runtime evidence as unverified rather than inferring success from `alwaysApply: true`.
 
 ## References
 

@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
-import { validatePlugin } from "../scripts/validate-plugin.mjs";
+import { validatePlugin, validateRepositoryPolicy } from "../scripts/validate-plugin.mjs";
 
 async function write(path, contents) {
   await mkdir(dirname(path), { recursive: true });
@@ -52,21 +52,37 @@ async function updateJson(path, update) {
   await writeFile(path, `${JSON.stringify(value, null, 2)}\n`);
 }
 
-test("accepts a complete plugin fixture", async () => {
-  await withFixture(async (root) => assert.deepEqual(validatePlugin(root), []));
-});
-
-test("rejects invalid manifest JSON", async () => {
+test("accepts a complete plugin fixture and repository policy", async () => {
   await withFixture(async (root) => {
-    await writeFile(join(root, ".cursor-plugin", "plugin.json"), "{");
-    assert.match(validatePlugin(root).join("\n"), /invalid JSON/);
+    assert.deepEqual(validatePlugin(root), []);
+    assert.deepEqual(validateRepositoryPolicy(root), []);
   });
 });
 
-test("rejects unknown manifest fields", async () => {
+test("accepts an official minimal manifest without optional components", async () => {
   await withFixture(async (root) => {
-    await updateJson(join(root, ".cursor-plugin", "plugin.json"), (manifest) => { manifest.unknown = true; });
+    await writeFile(join(root, ".cursor-plugin", "plugin.json"), "{\"name\":\"minimal-plugin\"}\n");
+    assert.deepEqual(validatePlugin(root), []);
+  });
+});
+
+test("accepts valid minClientVersions and rejects invalid client semver", async () => {
+  await withFixture(async (root) => {
+    const manifestPath = join(root, ".cursor-plugin", "plugin.json");
+    await updateJson(manifestPath, (manifest) => { manifest.minClientVersions = { cursor: "3.14.7" }; });
+    assert.deepEqual(validatePlugin(root), []);
+    await updateJson(manifestPath, (manifest) => { manifest.minClientVersions.cursor = "3.14"; });
+    assert.match(validatePlugin(root).join("\n"), /minClientVersions.*pattern/i);
+  });
+});
+
+test("rejects invalid manifest JSON and unknown fields", async () => {
+  await withFixture(async (root) => {
+    const manifestPath = join(root, ".cursor-plugin", "plugin.json");
+    await updateJson(manifestPath, (manifest) => { manifest.unknown = true; });
     assert.match(validatePlugin(root).join("\n"), /additional properties.*unknown/i);
+    await writeFile(manifestPath, "{");
+    assert.match(validatePlugin(root).join("\n"), /invalid JSON/);
   });
 });
 
@@ -82,40 +98,83 @@ test("rejects component path traversal and missing targets", async () => {
   });
 });
 
-test("rejects invalid frontmatter and duplicate component names", async () => {
+test("validates components from declared paths instead of conventional folders", async () => {
+  await withFixture(async (root) => {
+    await writeFile(join(root, "commands", "sample-command.md"), "not frontmatter\n");
+    await write(join(root, "custom-commands", "custom-command.md"), "---\nname: custom-command\ndescription: Custom command.\n---\n");
+    await updateJson(join(root, ".cursor-plugin", "plugin.json"), (manifest) => {
+      manifest.commands = "./custom-commands/";
+    });
+    assert.deepEqual(validatePlugin(root), []);
+  });
+});
+
+test("rejects declared globs that match no targets", async () => {
+  await withFixture(async (root) => {
+    await updateJson(join(root, ".cursor-plugin", "plugin.json"), (manifest) => {
+      manifest.rules = "./rules/*.mdc";
+    });
+    assert.match(validatePlugin(root).join("\n"), /rules: path or glob matches no targets/);
+  });
+});
+
+test("validates rule frontmatter from declared rule paths", async () => {
+  await withFixture(async (root) => {
+    await write(join(root, "rules", "sample.mdc"), "---\ndescription: Sample rule.\nalwaysApply: true\n---\n\n# Sample\n");
+    await updateJson(join(root, ".cursor-plugin", "plugin.json"), (manifest) => {
+      manifest.rules = "./rules/";
+    });
+    assert.deepEqual(validatePlugin(root), []);
+    await writeFile(join(root, "rules", "sample.mdc"), "---\ndescription: []\nalwaysApply: yes\n---\n");
+    const failures = validatePlugin(root).join("\n");
+    assert.match(failures, /missing non-empty string field description/);
+    assert.match(failures, /alwaysApply must be boolean/);
+  });
+});
+
+test("rejects a declared component symlink that escapes the plugin root", async () => {
+  await withFixture(async (root) => {
+    const outside = await mkdtemp(join(tmpdir(), "efficiency-outside-"));
+    try {
+      const target = join(outside, "escaped.mdc");
+      await writeFile(target, "---\ndescription: Outside.\n---\n");
+      await mkdir(join(root, "rules"));
+      await symlink(target, join(root, "rules", "escaped.mdc"));
+      await updateJson(join(root, ".cursor-plugin", "plugin.json"), (manifest) => {
+        manifest.rules = "./rules/escaped.mdc";
+      });
+      assert.match(validatePlugin(root).join("\n"), /target resolves outside plugin root/);
+    } finally {
+      await rm(outside, { recursive: true, force: true });
+    }
+  });
+});
+
+test("rejects invalid frontmatter and component names", async () => {
   await withFixture(async (root) => {
     await writeFile(join(root, "commands", "sample-command.md"), "---\nname: [\n---\n");
-    await write(join(root, "skills", "second-skill", "SKILL.md"), "---\nname: sample-skill\ndescription: Duplicate.\n---\n");
+    await writeFile(join(root, "skills", "sample-skill", "SKILL.md"), "---\nname: wrong-skill\ndescription: Wrong.\n---\n");
     const failures = validatePlugin(root).join("\n");
     assert.match(failures, /invalid YAML/);
-    assert.match(failures, /duplicate name sample-skill/);
+    assert.match(failures, /name must match parent folder/);
   });
 });
 
-test("rejects a skill name that differs from its folder", async () => {
+test("rejects duplicate component names across declared paths", async () => {
   await withFixture(async (root) => {
-    await writeFile(join(root, "skills", "sample-skill", "SKILL.md"), "---\nname: wrong-skill\ndescription: Wrong.\n---\n");
-    assert.match(validatePlugin(root).join("\n"), /name must match parent folder/);
+    await write(join(root, "alternate", "sample-skill", "SKILL.md"), "---\nname: sample-skill\ndescription: Duplicate skill.\n---\n");
+    await updateJson(join(root, ".cursor-plugin", "plugin.json"), (manifest) => {
+      manifest.skills = ["./skills/", "./alternate/"];
+    });
+    assert.match(validatePlugin(root).join("\n"), /duplicate name sample-skill/);
   });
 });
 
-test("requires auditor agents to be read-only", async () => {
-  await withFixture(async (root) => {
-    await writeFile(join(root, "agents", "sample-auditor.md"), "---\nname: sample-auditor\ndescription: Sample auditor.\nmodel: inherit\nreadonly: false\n---\n");
-    assert.match(validatePlugin(root).join("\n"), /readonly must be boolean true/);
-  });
-});
-
-test("requires package and manifest versions to agree", async () => {
+test("repository policy requires aligned versions and release files", async () => {
   await withFixture(async (root) => {
     await updateJson(join(root, "package.json"), (packageJson) => { packageJson.version = "2.0.0"; });
-    assert.match(validatePlugin(root).join("\n"), /does not match plugin\.json version/);
-  });
-});
-
-test("requires repository documentation", async () => {
-  await withFixture(async (root) => {
+    assert.match(validateRepositoryPolicy(root).join("\n"), /does not match plugin\.json version/);
     await rm(join(root, "README.md"));
-    assert.match(validatePlugin(root).join("\n"), /README\.md is missing/);
+    assert.match(validateRepositoryPolicy(root).join("\n"), /README\.md is missing/);
   });
 });

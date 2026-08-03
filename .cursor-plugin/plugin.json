@@ -1,8 +1,8 @@
 {
   "name": "geldmacher-efficiency",
   "displayName": "Efficiency",
-  "description": "Lightweight Cursor-native helpers for concise responses, RTK, context economy, proportional validation, and efficiency review.",
-  "version": "1.0.1",
+  "description": "Lightweight Cursor-native helpers for concise responses, RTK, context economy, and proportional validation.",
+  "version": "2.0.0",
   "author": {
     "name": "Dennis Geldmacher",
     "email": "geldmacher.dennis@outlook.de"

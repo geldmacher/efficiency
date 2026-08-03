@@ -12,6 +12,7 @@ alwaysApply: true
 - In instructions, state necessary conditions before the action and make responsibility explicit.
 - Prefer active voice when it makes responsibility clearer.
 - Include details that improve understanding, correctness, decisions, or next actions.
+- Create only output and artifacts that materially improve the result, a decision, or necessary verification.
 - Do not restate the request, repeat the conclusion, or narrate obvious work.
 - Omit filler and unnecessary introductions.
 - Preserve relevant evidence, uncertainty, risks, blockers, approvals, and validation status.

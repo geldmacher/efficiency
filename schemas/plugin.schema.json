@@ -1,7 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://cursor.com/schemas/cursor-plugin/plugin.json",
-  "$comment": "Vendored from https://github.com/cursor/plugins/blob/0dda29e839d15464a137af9935665a5a47ee09b8/schemas/plugin.schema.json",
   "title": "Cursor Plugin Manifest",
   "description": "Schema for .cursor-plugin/plugin.json — defines a single Cursor plugin's metadata, components, and configuration.",
   "type": "object",
@@ -24,7 +23,11 @@
     },
     "version": {
       "type": "string",
-      "description": "Semantic version of the plugin (e.g. 1.2.3)."
+      "description": "Semantic version of the plugin (e.g. \"1.2.3\")."
+    },
+    "minClientVersions": {
+      "$ref": "#/$defs/minClientVersions",
+      "description": "Minimum client versions required to install the plugin, keyed by client identifier."
     },
     "author": {
       "$ref": "#/$defs/author",
@@ -47,11 +50,11 @@
     },
     "license": {
       "type": "string",
-      "description": "SPDX license identifier."
+      "description": "SPDX license identifier (e.g. \"MIT\", \"Apache-2.0\")."
     },
     "logo": {
       "type": "string",
-      "description": "Path to a logo image relative to the plugin root, or an absolute URL."
+      "description": "Path to a logo image (relative to the plugin root) or an absolute URL."
     },
     "keywords": {
       "type": "array",
@@ -112,6 +115,25 @@
           "description": "Author email address."
         }
       }
+    },
+    "minClientVersions": {
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "cursor": {
+          "$ref": "#/$defs/semver",
+          "description": "Minimum Cursor version required to install the plugin (e.g. \"3.13.0\")."
+        }
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/semver",
+        "description": "Minimum version required for another client identifier."
+      }
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?$",
+      "description": "Strict semantic version \"X.Y.Z\" with an optional prerelease suffix."
     },
     "stringOrStringArray": {
       "oneOf": [

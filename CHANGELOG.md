@@ -4,14 +4,30 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Extended `response-simplicity`, `/efficiency`, and `efficiency-auditor` with evidence-based output utility checks for low-value generated output without adding a style detector or new component.
+
+## 2.0.0 - 2026-08-01
+
 ### Added
 
-- Added one minimal always-on `response-simplicity` rule for clear, concise, and complete model responses.
+- Added `/efficiency` and the matching `efficiency` skill for before-work budgets, in-progress adjustments, and after-work reviews.
+- Added byte-for-byte provenance for the vendored Cursor manifest schema and a reproducible live Cursor smoke procedure.
 
 ### Changed
 
-- Documented the rule's protected content and the need for a fresh Cursor runtime smoke before claiming that plugin-sourced always-on activation works.
-- Refined the always-on response guidance with flexible controlled-language principles for consistent terminology, unambiguous sentences, and clearer instructions.
+- Expanded `efficiency-auditor` to review either task economy or context reductions.
+- Made component validation follow the manifest's declared paths and globs, including rules and symlink boundaries.
+- Separated official Cursor structure validation from repository-specific release policy.
+- Reduced wording-coupled tests and added negative coverage for manifest discovery, rules, globs, and path safety.
+- Updated local installation guidance to use public HTTPS by default.
+- Retained the minimal always-on `response-simplicity` rule with flexible clarity principles and protected technical content.
+
+### Removed
+
+- Removed `/budget-efficiency`, `/review-efficiency`, `efficiency-budget`, and `efficiency-review`; use `/efficiency` instead.
+- Removed `context-change-auditor`; use `efficiency-auditor` with a context focus instead.
 
 ## 1.0.1 - 2026-07-27
 

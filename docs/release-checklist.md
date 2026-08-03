@@ -1,6 +1,6 @@
 # Cursor release checklist
 
-Complete this checklist before tagging a plugin release. Use a clean checkout or local plugin link and record any skipped item with a reason.
+Complete this checklist before tagging a plugin release. Use a clean checkout or local plugin link and record every skipped item with a reason.
 
 ## Automated gates
 
@@ -11,39 +11,38 @@ Complete this checklist before tagging a plugin release. Use a clean checkout or
 
 ## Repository integrity
 
-- [ ] `.cursor-plugin/plugin.json`, `README.md`, `CHANGELOG.md`, `LICENSE`, `package.json`, and `package-lock.json` are present.
-- [ ] Manifest and package versions agree.
-- [ ] Manifest component paths resolve inside the plugin root.
-- [ ] All command, skill, and agent names match their filenames or skill directories.
-- [ ] Documentation links resolve and describe the current component set.
+- [ ] Manifest, package, lockfile, changelog, and intended release versions agree.
+- [ ] Declared component paths or globs resolve inside the plugin root and match at least one component.
+- [ ] The plugin contains exactly four commands, four skills, two agents, and one rule.
+- [ ] Component names and frontmatter match their files or skill directories.
+- [ ] `schemas/plugin.schema.json` matches the source commit and SHA-256 in `schemas/README.md` byte-for-byte.
+- [ ] Documentation links resolve and the 1.x migration table covers every removed entry point.
 
 ## Cursor discovery
 
 - [ ] Install or link the repository at `~/.cursor/plugins/local/geldmacher-efficiency`.
 - [ ] Run `Developer: Reload Window` or restart Cursor.
 - [ ] Confirm the Efficiency plugin is visible in Cursor settings.
-- [ ] Confirm all five commands, five skills, three agents, and the `response-simplicity` rule are discoverable.
-- [ ] Confirm all three auditors are read-only.
-- [ ] Confirm `response-simplicity` is shown as always applied and affects a fresh Cursor conversation. If it is downgraded or omitted, record the Cursor version and block the runtime-activation claim.
+- [ ] Confirm all four commands, four skills, two agents, and the `response-simplicity` rule are discoverable.
+- [ ] Confirm both auditors are read-only.
+- [ ] Confirm `response-simplicity` is always applied and affects a fresh Cursor conversation.
 
 ## Safe behavior
 
-- [ ] `rtk --version` reports RTK 0.44.0 or newer for native Cursor hook and custom TOML filter coverage.
-- [ ] `/setup-rtk` identifies RTK with `rtk gain` before offering setup.
-- [ ] `/setup-rtk` shows the global Cursor dry-run and does not apply changes without an explicit request and required approval.
-- [ ] `rtk hook check --agent cursor '<finite-command>'` reports the expected rewrite for a safe finite fixture.
-- [ ] The real Cursor hook returns the RTK rewrite in `updated_input` for both a policy-allowed fixture and an approval-required fixture.
-- [ ] The `allow` fixture executes through Cursor and appears as an RTK command in `rtk gain --history`.
-- [ ] The `ask` fixture requests Cursor approval, retains the RTK rewrite, and does not execute before approval.
+- [ ] `/setup-rtk` identifies RTK with `rtk --version` and `rtk gain` before offering setup.
+- [ ] `/setup-rtk` previews global changes and does not apply them without explicit intent and required approval.
+- [ ] A safe finite command follows the real Cursor `allow` path and appears in `rtk gain --history`.
+- [ ] A safe finite command follows the real Cursor `ask` path, retains the RTK rewrite, and does not run before approval.
 - [ ] `/create-rtk-filter` excludes interactive, streaming, destructive, lifecycle, shell, and server commands.
-- [ ] A temporary project filter preserves failures and passes `rtk verify --require-all` after the project is trusted; editing it invalidates trust until the native `rtk trust` flow is completed again.
+- [ ] A temporary project filter preserves failures and passes `rtk verify --require-all`; edits invalidate trust until the native `rtk trust` flow is completed again.
+- [ ] `/efficiency` handles before-work, in-progress, and after-work requests, identifies only concrete low-value output with a missing material benefit and practical adjustment, and does not replace project requirements or native controls.
 - [ ] `/optimize-context` does not edit context on an analysis-only request.
-- [ ] The response rule leads with the outcome and removes filler without dropping evidence, uncertainty, risks, approvals, validation status, or exact technical content.
-- [ ] Auditor agents return analysis without modifying files.
+- [ ] Auditor agents return analysis without modifying files; output-utility findings do not rely only on length, tone, or whether language appears AI-written.
 
-## Documentation and release evidence
+## Runtime receipt and release evidence
 
-- [ ] README requirements and installation steps match the tested environment.
-- [ ] Changelog and manifest version are consistent with the intended release.
-- [ ] Record tested Cursor, RTK, Node.js, and platform versions in the release notes.
-- [ ] Review the final diff for secrets, machine-specific paths, and unrelated files.
+- [ ] Complete [the live Cursor smoke](runtime-smoke.md) within its approved model-call and cost limits.
+- [ ] Record Cursor, RTK, Node.js, platform, model, invocation count, baseline commit, runtime hashes, and observed results.
+- [ ] Restore the plugin to its enabled state after baseline testing.
+- [ ] Review the final diff for secrets, machine-specific paths, unrelated files, and uncommitted runtime artifacts.
+- [ ] Do not claim runtime readiness when discovery, rule activation, or a required permission path remains unverified.
