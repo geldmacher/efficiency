@@ -68,7 +68,7 @@ test("removed 1.x components have no compatibility files", () => {
   ]) assert.equal(existsSync(join(defaultRoot, path)), false, `${path} must be removed in 2.0`);
 });
 
-test("auditors are read-only and the general auditor supports task and context focus", () => {
+test("auditors are read-only and the general auditor supports task, context, and code focus", () => {
   for (const agentFile of componentFiles("agents", ".md")) {
     const fields = parseFrontmatter(join(defaultRoot, "agents", agentFile));
     assert.equal(fields.readonly, true, `${agentFile} must be read-only`);
@@ -77,14 +77,18 @@ test("auditors are read-only and the general auditor supports task and context f
   const auditor = read("agents/efficiency-auditor.md");
   assert.match(auditor, /task review/i);
   assert.match(auditor, /context review/i);
+  assert.match(auditor, /code review/i);
   assert.match(auditor, /output utility/i);
   assert.match(auditor, /concrete item/i);
   assert.match(auditor, /length, tone.*AI-written/i);
+  for (const protectedTerm of ["observable behavior", "public interfaces", "persisted formats"]) {
+    assert.ok(auditor.includes(protectedTerm), `auditor is missing code boundary: ${protectedTerm}`);
+  }
   assert.match(auditor, /functional correctness, security, or domain acceptance/i);
   assert.match(auditor, /Do not implement corrections/);
 });
 
-test("efficiency covers before, during, and after work without replacing native controls", () => {
+test("efficiency covers task phases and scoped code simplicity without replacing native controls", () => {
   const efficiency = `${read("commands/efficiency.md")}\n${read("skills/efficiency/SKILL.md")}`;
   for (const phase of ["Before work", "During work", "After work"]) assert.match(efficiency, new RegExp(phase, "i"));
   assert.match(efficiency, /same-session measurements/);
@@ -98,6 +102,23 @@ test("efficiency covers before, during, and after work without replacing native 
   assert.match(efficiency, /Never remove necessary evidence/);
   assert.match(efficiency, /Cursor's native approvals/);
   assert.match(efficiency, /functional correctness/);
+  assert.match(efficiency, /code simplicity/i);
+  for (const changeKind of ["staged changes", "unstaged changes", "untracked files"]) {
+    assert.ok(efficiency.includes(changeKind), `missing default code scope: ${changeKind}`);
+  }
+  assert.match(efficiency, /ask one focused question for the scope/i);
+  assert.match(efficiency, /explicitly asks to change, simplify, or refactor/i);
+  for (const protectedTerm of [
+    "observable behavior",
+    "public interfaces",
+    "persisted formats",
+    "security",
+    "performance",
+    "project conventions",
+    "relevant existing checks",
+  ]) assert.ok(efficiency.includes(protectedTerm), `missing code-simplicity boundary: ${protectedTerm}`);
+  assert.match(efficiency, /Do not commit, push, or release/);
+  assert.match(efficiency, /do not trigger it automatically after implementation/i);
 });
 
 test("RTK setup preserves identification, preview, approval, verification, and rollback gates", () => {
@@ -202,7 +223,10 @@ test("README and changelog document the complete 2.0 migration", () => {
   }
   assert.match(readme, /AI-Slop.*low-value generated output/i);
   assert.match(readme, /observable utility, not whether text appears AI-written/i);
+  assert.match(readme, /Review the current changes for code simplicity/);
+  assert.match(readme, /Review requests never edit code/);
   assert.match(changelog, /output utility checks for low-value generated output/i);
+  assert.match(changelog, /opt-in code-simplicity focus/i);
   assert.match(changelog, /## 2\.0\.0 - 2026-08-01/);
 });
 
@@ -211,6 +235,8 @@ test("release guidance verifies output utility within the existing runtime budge
   const smoke = read("docs/runtime-smoke.md");
   assert.match(checklist, /concrete low-value output.*missing material benefit.*practical adjustment/i);
   assert.match(checklist, /length, tone.*AI-written/i);
+  assert.match(checklist, /code-simplicity review.*explicit scope or current Git change set.*does not modify files/i);
+  assert.match(checklist, /code-simplicity change.*approved scope.*relevant existing checks/i);
   assert.match(smoke, /at most two short fresh conversations/i);
   assert.match(smoke, /avoids redundant restatement and unrequested artifacts/i);
   assert.match(smoke, /concrete item, missing material benefit, and practical adjustment/i);

@@ -36,8 +36,10 @@ Complete this checklist before tagging a plugin release. Use a clean checkout or
 - [ ] `/create-rtk-filter` excludes interactive, streaming, destructive, lifecycle, shell, and server commands.
 - [ ] A temporary project filter preserves failures and passes `rtk verify --require-all`; edits invalidate trust until the native `rtk trust` flow is completed again.
 - [ ] `/efficiency` handles before-work, in-progress, and after-work requests, identifies only concrete low-value output with a missing material benefit and practical adjustment, and does not replace project requirements or native controls.
+- [ ] A code-simplicity review through `/efficiency` uses the explicit scope or current Git change set and does not modify files.
+- [ ] An explicitly requested code-simplicity change stays inside the approved scope, preserves protected behavior and interfaces, and runs the relevant existing checks.
 - [ ] `/optimize-context` does not edit context on an analysis-only request.
-- [ ] Auditor agents return analysis without modifying files; output-utility findings do not rely only on length, tone, or whether language appears AI-written.
+- [ ] Auditor agents return task, context, or code analysis without modifying files; output-utility findings do not rely only on length, tone, or whether language appears AI-written.
 
 ## Runtime receipt and release evidence
 

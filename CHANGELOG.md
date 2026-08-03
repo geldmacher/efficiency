@@ -7,6 +7,7 @@ All notable changes to this project are documented in this file.
 ### Changed
 
 - Extended `response-simplicity`, `/efficiency`, and `efficiency-auditor` with evidence-based output utility checks for low-value generated output without adding a style detector or new component.
+- Added an opt-in code-simplicity focus to `/efficiency` and `efficiency-auditor` for scoped reviews and explicitly requested behavior-preserving improvements without adding a component.
 
 ## 2.0.0 - 2026-08-01
 

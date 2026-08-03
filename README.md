@@ -8,7 +8,7 @@ Efficiency is a lightweight Cursor plugin for concise model responses, deliberat
 | --- | --- | --- |
 | `/setup-rtk` | Inspect or prepare RTK's native Cursor integration | `rtk-setup` |
 | `/create-rtk-filter` | Design safe project-specific RTK filters | `rtk-filter-design` |
-| `/efficiency` | Set or review proportional task effort | `efficiency` |
+| `/efficiency` | Set or review proportional task effort and scoped code simplicity | `efficiency` |
 | `/optimize-context` | Analyze or improve recurring Cursor context | `context-optimization` |
 
 The `response-simplicity` rule leads with outcomes, removes filler and repetition, uses natural complete sentences, and preserves evidence, uncertainty, risks, approvals, validation status, and exact technical content.
@@ -16,7 +16,7 @@ The `response-simplicity` rule leads with outcomes, removes filler and repetitio
 Two optional read-only auditors provide independent review when the extra model call is justified:
 
 - `rtk-filter-auditor` checks matcher precision, diagnostic preservation, and verification evidence.
-- `efficiency-auditor` checks task economy or whether a context reduction preserves material constraints.
+- `efficiency-auditor` checks task economy, whether a context reduction preserves material constraints, or scoped code simplicity.
 
 ## Design boundaries
 
@@ -28,6 +28,8 @@ Two optional read-only auditors provide independent review when the extra model 
 - Auditors analyze supplied evidence and do not modify files.
 - Efficiency guidance does not replace functional correctness, security review, project requirements, or Cursor's native approvals.
 - RTK statistics are cumulative unless a same-task baseline and comparison are available.
+- Code-simplicity reviews default to the current Git change set and remain read-only unless the user explicitly requests a scoped change.
+- Code simplification preserves observable behavior, public interfaces, persisted formats, security, performance, and project conventions unless the user authorizes otherwise.
 
 ## Requirements
 
@@ -68,8 +70,17 @@ The response rule applies automatically when Cursor loads it; it does not requir
 
 1. Run `/setup-rtk` to inspect the installed RTK binary and current Cursor integration. A Cursor hook result of `ask` with an RTK `updated_input` is a working approval path, not a failed rewrite.
 2. Run `/create-rtk-filter` for recurring noisy finite commands. Complete `rtk verify --require-all`, use RTK's native `rtk trust` flow, and re-trust the filter after every edit.
-3. Run `/efficiency` before, during, or after meaningful work. The skill infers whether to set a budget, adjust execution, or review the result.
+3. Run `/efficiency` before, during, or after meaningful work. The skill infers whether to set a budget, adjust execution, review the result, or assess scoped code simplicity.
 4. Run `/optimize-context` when recurring instructions or duplicated guidance inflate every session.
+
+Code simplicity uses natural-language intent rather than a new subcommand:
+
+```text
+/efficiency Review the current changes for code simplicity
+/efficiency Simplify src/example.ts without changing behavior
+```
+
+Without an explicit path, the review covers staged, unstaged, and Git-reported untracked files. If no Git changes are available, the skill asks for a focused scope instead of reviewing the whole repository. Review requests never edit code; explicit change requests stay within the approved scope and run the relevant existing checks afterward.
 
 ## Migrating from 1.x
 
