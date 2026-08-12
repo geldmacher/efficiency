@@ -1,8 +1,8 @@
 {
   "name": "geldmacher-efficiency",
   "displayName": "Efficiency",
-  "description": "Lightweight Cursor-native helpers for concise responses, RTK, context economy, and proportional validation.",
-  "version": "2.0.0",
+  "description": "Lightweight Cursor and Codex helpers for concise responses, RTK, context economy, and proportional validation.",
+  "version": "2.2.0",
   "author": {
     "name": "Dennis Geldmacher",
     "email": "geldmacher.dennis@outlook.de"
@@ -17,7 +17,6 @@
     "tokens",
     "context",
     "optimization",
-    "cursor",
     "review"
   ],
   "tags": [
@@ -29,6 +28,11 @@
   "logo": "assets/logo.svg",
   "commands": "./commands/",
   "agents": "./agents/",
-  "skills": "./skills/",
+  "skills": [
+    "./skills/context-optimization/SKILL.md",
+    "./skills/efficiency/SKILL.md",
+    "./skills/rtk-filter-design/SKILL.md",
+    "./skills/rtk-setup/SKILL.md"
+  ],
   "rules": "./rules/"
 }

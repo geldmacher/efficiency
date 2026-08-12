@@ -1,0 +1,42 @@
+{
+  "name": "geldmacher-efficiency",
+  "version": "2.2.0",
+  "description": "Lightweight Cursor and Codex helpers for concise responses, RTK, context economy, and proportional validation.",
+  "author": {
+    "name": "Dennis Geldmacher",
+    "email": "geldmacher.dennis@outlook.de",
+    "url": "https://github.com/geldmacher"
+  },
+  "homepage": "https://github.com/geldmacher/efficiency",
+  "repository": "https://github.com/geldmacher/efficiency",
+  "license": "MIT",
+  "keywords": [
+    "rtk",
+    "efficiency",
+    "tokens",
+    "context",
+    "optimization",
+    "review"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Efficiency",
+    "shortDescription": "Use RTK, context, and validation effort deliberately.",
+    "longDescription": "Efficiency adds lightweight workflows for proportional task effort, scoped code simplicity, RTK setup and filters, context economy, and an optional Codex response-simplicity instruction.",
+    "developerName": "Dennis Geldmacher",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/geldmacher/efficiency",
+    "defaultPrompt": [
+      "Review this task for proportional effort.",
+      "Review the current changes for code simplicity.",
+      "Inspect my RTK setup for Codex."
+    ],
+    "logo": "./assets/logo.svg",
+    "screenshots": []
+  }
+}

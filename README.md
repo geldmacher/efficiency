@@ -1,92 +1,152 @@
 # Efficiency
 
-Efficiency is a lightweight Cursor plugin for concise model responses, deliberate RTK usage, context economy, and proportional validation. Its commands and skills remain opt-in; one minimal always-on rule improves response clarity without imposing a compressed writing style.
+**Less noise. Less over-engineering. The right rigor where it matters.**
 
-## What it provides
+Efficiency is a lightweight plugin for Agent Plugins v1 clients, Cursor, and Codex that makes agent work leaner without making it careless:
 
-| Command | Purpose | Backing skill |
+- match effort and validation to the actual risk,
+- simplify changed code without changing behavior,
+- reduce recurring context and instruction bloat,
+- use RTK and project filters safely, and
+- keep responses direct, understandable, and actionable without losing important evidence.
+
+RTK (Rust Token Killer) is optional; it trims noisy terminal output before it reaches the model. Efficiency adds no custom MCP server, telemetry, or background automation.
+
+Across its four portable workflows, Efficiency starts with the outcome, translates non-obvious technical consequences into practical meaning, and names the next useful action when one exists. The guidance is written for mixed technical knowledge, preserves exact technical text, and does not force every answer into one template.
+
+## What you get
+
+| Goal | Agent Plugins v1 | Cursor | Codex |
+| --- | --- | --- | --- |
+| Right-size work and validation | `efficiency` skill | `/efficiency` | `$efficiency` |
+| Review scoped code simplicity | `efficiency` skill | `/efficiency` | `$efficiency` |
+| Reduce recurring context | `context-optimization` skill | `/optimize-context` | `$context-optimization` |
+| Inspect or prepare RTK | `rtk-setup` skill | `/setup-rtk` | `$rtk-setup` |
+| Design a safe RTK filter | `rtk-filter-design` skill | `/create-rtk-filter` | `$rtk-filter-design` |
+| Keep responses concise | Not in the portable core | Automatic `response-simplicity` rule | Optional `$response-simplicity-setup` |
+
+Cursor also includes the optional read-only `efficiency-auditor` and `rtk-filter-auditor`. Codex can run the same checks through an inherited subagent when you explicitly request a second pass.
+
+The Agent Plugins target contains four portable skills: `efficiency`, `context-optimization`, `rtk-filter-design`, and `rtk-setup`. Cursor exposes those four workflows as skills and slash commands. Codex discovers five skills: the same four portable skills plus its native `response-simplicity-setup` adapter.
+
+## Three deterministic targets
+
+`npm run build:targets` creates three isolated bundles:
+
+| Target | Output | Surface |
 | --- | --- | --- |
-| `/setup-rtk` | Inspect or prepare RTK's native Cursor integration | `rtk-setup` |
-| `/create-rtk-filter` | Design safe project-specific RTK filters | `rtk-filter-design` |
-| `/efficiency` | Set or review proportional task effort and scoped code simplicity | `efficiency` |
-| `/optimize-context` | Analyze or improve recurring Cursor context | `context-optimization` |
+| Agent Plugins v1 | `.build/plugins/agent-plugins/geldmacher-efficiency` | Root `plugin.json` and exactly four portable skills |
+| Cursor | `.build/plugins/cursor/geldmacher-efficiency` | Cursor manifest, four skills, commands, agents, and rule |
+| Codex | `.build/plugins/codex/geldmacher-efficiency` | Codex manifest, four portable skills, and the private setup skill |
 
-The `response-simplicity` rule leads with outcomes, removes filler and repetition, uses natural complete sentences, and preserves evidence, uncertainty, risks, approvals, validation status, and exact technical content.
+The portable manifest targets the Agent Plugins 1.0.0 Working Draft pinned in the [vendored schema](schemas/agent-plugins/1.0.0/plugin.schema.json). It has no MCP server, extensions, commands, agents, rules, or hooks. Native bundles intentionally omit root `plugin.json` so manifest selection stays unambiguous.
 
-Two optional read-only auditors provide independent review when the extra model call is justified:
+The Codex manifest uses the documented `./skills/` root and `.codex-plugin` contains only `plugin.json`. The Codex-only setup skill is maintained under `adapters/codex/skills` in the repository and projected into the generated Codex bundle as `skills/response-simplicity-setup`; it never enters the Agent Plugins or Cursor targets.
 
-- `rtk-filter-auditor` checks matcher precision, diagnostic preservation, and verification evidence.
-- `efficiency-auditor` checks task economy, whether a context reduction preserves material constraints, or scoped code simplicity.
+On Agent Plugins clients other than Cursor or Codex, the portable skills use conservative host-neutral behavior. They inspect only documented context or RTK integration surfaces, report unknown host integration as unverified, and do not assume Cursor hooks or Codex guidance paths.
 
-## Design boundaries
+## Install locally
 
-- The only always-on context is the short `response-simplicity` rule. The plugin has no custom runtime hooks, MCP servers, or telemetry.
-- **AI-Slop** is used only as shorthand for low-value generated output. Efficiency evaluates observable utility, not whether text appears AI-written.
-- A low-value finding must identify the concrete output, artifact, or step, explain why it did not materially improve the result, a decision, or necessary verification, and propose a practical adjustment.
-- Response economy must not remove material evidence, uncertainty, risks, blockers, approvals, validation status, or exact technical content.
-- RTK remains optional. Only `/setup-rtk` concerns machine-level integration, and it previews changes before an explicitly requested application.
-- Auditors analyze supplied evidence and do not modify files.
-- Efficiency guidance does not replace functional correctness, security review, project requirements, or Cursor's native approvals.
-- RTK statistics are cumulative unless a same-task baseline and comparison are available.
-- Code-simplicity reviews default to the current Git change set and remain read-only unless the user explicitly requests a scoped change.
-- Code simplification preserves observable behavior, public interfaces, persisted formats, security, performance, and project conventions unless the user authorizes otherwise.
+Efficiency is not yet available in a public plugin store. Keep the Git checkout as the canonical source and deploy generated host copies from it. Do not clone into `~/.cursor/plugins/local` or `~/.codex/plugins`; those directories contain managed deployment copies and are atomically replaced.
+
+### Requirements and clone
+
+Install Git, Node.js 22 or newer, and npm. The selected host must also be installed: Cursor for a Cursor deployment, or the Codex CLI with plugin support for a Codex deployment.
+
+```bash
+mkdir -p ~/src/geldmacher-plugins
+git clone https://github.com/geldmacher/efficiency.git ~/src/geldmacher-plugins/efficiency
+cd ~/src/geldmacher-plugins/efficiency
+npm ci
+```
+
+If you already have a checkout, use it instead and run `npm ci` from its repository root.
+
+### Preview and install
+
+Choose one host or deploy both:
+
+| Target | Preview without changing host state | Install or update |
+| --- | --- | --- |
+| Cursor only | `npm run deploy:local -- --dry-run --cursor-only` | `npm run deploy:local -- --cursor-only` |
+| Codex only | `npm run deploy:local -- --dry-run --codex-only` | `npm run deploy:local -- --codex-only` |
+| Cursor and Codex | `npm run deploy:local -- --dry-run` | `npm run deploy:local` |
+
+Append `--full` to an install command to run the complete repository `release-check` before deployment. Inspect the current installed state with `npm run deploy:status`; add `--cursor-only` or `--codex-only` to limit that check to one host.
+
+The deploy command builds and validates all three deterministic bundles, then atomically replaces only the selected Cursor and Codex copies. There is no Agent Plugins deploy flag; `.build/plugins/agent-plugins/geldmacher-efficiency` is a conformance, package, and client-integration output.
+
+- Cursor: `~/.cursor/plugins/local/geldmacher-efficiency`
+- Codex source: `~/.codex/plugins/geldmacher-efficiency`
+
+Every installed copy contains a `.local-deploy.json` receipt with its content-derived local version, Git revision, dirty status, source path, and deployment time. Dirty checkouts are allowed and explicitly recorded. For Codex, the command also creates or updates only this plugin's entry in the `personal` Marketplace and refreshes the verified Codex cache with `codex plugin add geldmacher-efficiency@personal --json`. Do not delete Codex caches manually.
+
+After installation or an update, reload Cursor before testing its plugin surface and start a new Codex task before testing Codex discovery. Review changed hooks manually before granting trust. The deploy command does not restart either host or grant hook trust. See the [Cursor plugin documentation](https://cursor.com/docs/plugins) and OpenAI's [local plugin documentation](https://developers.openai.com/plugins/build/plugins).
+
+### Update from the origin repository
+
+First protect any local work, then fast-forward the checkout and redeploy:
+
+```bash
+cd ~/src/geldmacher-plugins/efficiency
+git status --short
+git fetch origin
+git pull --ff-only
+npm ci
+npm run deploy:local -- --dry-run
+npm run deploy:local
+npm run deploy:status
+```
+
+Inspect a dirty status before pulling; commit or stash intentional local changes rather than discarding them. `git pull --ff-only` refuses a divergent history instead of creating an implicit merge. `npm ci` synchronizes dependencies with the updated lockfile. The last three commands above update both hosts; use the matching `--cursor-only` or `--codex-only` flag when only one host is installed. An unchanged bundle is a verified no-op; changed content receives a new host-specific local version and replaces the previous copy transactionally.
+
+## Use it
+
+Ask for the outcome you want; Efficiency infers whether you are planning, adjusting, or reviewing work.
+
+```text
+/efficiency Keep this small refactor proportional and verify the risky paths.
+/efficiency Review the current changes for code simplicity.
+/efficiency Draft a verifiable pull request summary and identify open validation gaps.
+/optimize-context Find recurring instructions that can be consolidated.
+/setup-rtk Inspect my RTK setup without changing it.
+```
+
+Use the matching `$efficiency`, `$context-optimization`, or `$rtk-setup` skill in Codex.
+
+Without an explicit path, code review covers the current Git change set. If none exists, Efficiency asks for a focused scope instead of reviewing the entire repository.
+
+For commit messages, pull request descriptions, release notes, and change summaries, the `efficiency` workflow follows project conventions first. It distinguishes verified behavior, intended behavior, and open work; material claims should trace to the diff, a check, other evidence, or a labelled assumption. This is communication guidance, not proof that a change works.
+
+## Designed to stay useful—not reckless
+
+- Skills are opt-in. Only Cursor loads the short response rule automatically.
+- Review requests never edit code. Simplification requires an explicit scoped change request.
+- RTK setup, filter trust, and global guidance changes are previewed before approval.
+- Auditors are read-only; independent model work happens only when requested.
+- Concision never removes material evidence, uncertainty, risks, blockers, approvals, or validation status. Efficiency does not replace correctness, security review, project requirements, or host approvals.
+- The communication guidance supports quick understanding and action, but repository checks cannot prove live activation or actual human comprehension.
+- **AI-Slop** means low-value generated output here. The plugin judges observable utility, not whether content looks AI-written.
+
+Code simplification preserves observable behavior, public interfaces, persisted formats, security, performance, and project conventions unless you authorize otherwise. RTK statistics are cumulative unless a same-task baseline exists.
 
 ## Requirements
 
 | Component | Requirement |
 | --- | --- |
-| Cursor | A version with local plugin support enabled |
-| RTK | Optional; 0.44.0 is the locally verified baseline for the native Cursor hook |
+| Cursor | Local plugin support enabled |
+| Codex | Plugin support enabled |
+| RTK | Optional; 0.44.0 for the verified Cursor hook baseline, 0.44.2 for the verified Codex command baseline |
 | Development | Node.js 22 or newer |
-| Platforms | macOS, Linux, or WSL for RTK's Cursor hook workflow |
+| Platform | macOS, Linux, or WSL for the documented RTK workflows |
 
-`minClientVersions` remains unset until a tested compatibility range exists. Release receipts record the exact Cursor version used for live verification.
-
-## Local installation
-
-Clone the public repository directly into Cursor's local plugin directory:
-
-```bash
-git clone https://github.com/geldmacher/efficiency.git ~/.cursor/plugins/local/geldmacher-efficiency
-```
-
-SSH is an alternative for an already configured GitHub account:
-
-```bash
-git clone git@github.com:geldmacher/efficiency.git ~/.cursor/plugins/local/geldmacher-efficiency
-```
-
-For development from another directory, link the repository instead:
-
-```bash
-ln -s /absolute/path/to/efficiency ~/.cursor/plugins/local/geldmacher-efficiency
-```
-
-Reload Cursor with `Developer: Reload Window` or restart it afterward.
-
-## Typical usage
-
-The response rule applies automatically when Cursor loads it; it does not require a command. Repository validation proves its declaration and content, while a fresh real Cursor session is required to prove plugin discovery and runtime behavior.
-
-1. Run `/setup-rtk` to inspect the installed RTK binary and current Cursor integration. A Cursor hook result of `ask` with an RTK `updated_input` is a working approval path, not a failed rewrite.
-2. Run `/create-rtk-filter` for recurring noisy finite commands. Complete `rtk verify --require-all`, use RTK's native `rtk trust` flow, and re-trust the filter after every edit.
-3. Run `/efficiency` before, during, or after meaningful work. The skill infers whether to set a budget, adjust execution, review the result, or assess scoped code simplicity.
-4. Run `/optimize-context` when recurring instructions or duplicated guidance inflate every session.
-
-Code simplicity uses natural-language intent rather than a new subcommand:
-
-```text
-/efficiency Review the current changes for code simplicity
-/efficiency Simplify src/example.ts without changing behavior
-```
-
-Without an explicit path, the review covers staged, unstaged, and Git-reported untracked files. If no Git changes are available, the skill asks for a focused scope instead of reviewing the whole repository. Review requests never edit code; explicit change requests stay within the approved scope and run the relevant existing checks afterward.
+Broad compatibility ranges are not certified yet; release receipts record exact tested versions.
 
 ## Migrating from 1.x
 
-Efficiency 2.0 deliberately removes compatibility aliases:
+Efficiency 2.0 removed the old aliases; 2.2 keeps the smaller surface:
 
-| 1.x entry point | 2.0 replacement |
+| 1.x entry point | Replacement |
 | --- | --- |
 | `/budget-efficiency` | `/efficiency` with a before-work request |
 | `/review-efficiency` | `/efficiency` with an in-progress or after-work request |
@@ -94,9 +154,7 @@ Efficiency 2.0 deliberately removes compatibility aliases:
 | `efficiency-review` | `efficiency` |
 | `context-change-auditor` | `efficiency-auditor` with a context focus |
 
-## Development
-
-Install the lockfile-defined dependencies and run the complete local gate:
+## Development and verification
 
 ```bash
 npm ci
@@ -104,36 +162,27 @@ npm run release-check
 git diff --check
 ```
 
-The release check separates Cursor manifest/component validation from repository policy, verifies relative Markdown links, and runs structural and policy contract tests. Before tagging a release, complete the [release checklist](docs/release-checklist.md), execute the [runtime smoke](docs/runtime-smoke.md), and update the [changelog](CHANGELOG.md).
+The release check validates all three manifests and target bundles, Agent Skills discovery and frontmatter, path containment, version alignment, links, and policy contracts. Source links exclude ignored `.build` output, while every newly generated target is checked directly for bundle-local links. It proves repository format and bundle state—not installation, live host behavior, broad client compatibility, Marketplace state, or publication.
 
-## Repository layout
-
-```text
-.cursor-plugin/plugin.json  Plugin metadata and component paths
-agents/                     Optional read-only auditors
-commands/                   User-facing slash commands
-skills/                     Reusable workflows and references
-rules/                      Minimal always-on response guidance
-assets/                     Plugin artwork
-schemas/                    Vendored Cursor schema and provenance
-scripts/                    Validation utilities
-tests/                      Structural and policy tests
-docs/                       Release and runtime verification material
-```
+Before a release, complete the [release checklist](docs/release-checklist.md). Runtime checks remain separate: [Agent Plugins runtime smoke](docs/agent-plugins-runtime-smoke.md), [Cursor runtime smoke](docs/runtime-smoke.md), and [Codex runtime smoke](docs/codex-runtime-smoke.md).
 
 ## Troubleshooting
 
-- **`rtk gain` fails:** verify that Rust Token Killer, rather than an unrelated `rtk` binary, is installed.
-- **The plugin is missing:** verify the local path, local-plugin policy, and `.cursor-plugin/plugin.json`, then reload Cursor.
-- **Project filters are skipped:** complete `rtk trust` from the intended project root and re-trust after filter edits before rerunning `rtk verify --require-all`.
-- **Hook rewriting is uncertain:** inspect `rtk hook check --agent cursor '<finite-command>'`, the real Cursor `updated_input`, the native permission result, and `rtk gain --history`.
-- **The response rule is not applied:** confirm that `response-simplicity` is always applied after reloading Cursor, then verify it in a fresh conversation. Treat missing runtime evidence as unverified rather than inferring success from `alwaysApply: true`.
+- **Missing in Cursor:** verify the local path and `.cursor-plugin/plugin.json`, then reload Cursor.
+- **Missing in Codex:** verify the personal marketplace entry and `.codex-plugin/plugin.json`, reinstall, restart Codex, and open a new task.
+- **Rejected by an Agent Plugins client:** inspect that client's stated v1 support, then test only the generated `agent-plugins` bundle; repository conformance does not certify every client.
+- **`rtk gain` fails:** verify that Rust Token Killer—not another `rtk` binary—is installed.
+- **Project filters are skipped:** run `rtk verify --require-all`, complete RTK's trust flow, and re-trust after every filter edit.
+- **Codex response guidance is inactive:** run `$response-simplicity-setup` for status; manifest installation alone does not activate global guidance.
 
 ## References
 
+- [Codex plugin structure](https://developers.openai.com/codex/build-plugins)
+- [Codex AGENTS.md precedence](https://developers.openai.com/codex/guides/agents-md)
 - [Cursor plugin specification](https://github.com/cursor/plugins)
+- [Agent Plugins 1.0.0 specification](https://agent-plugins.org/specification)
+- [Agent Skills specification](https://agentskills.io/specification)
 - [RTK documentation](https://www.rtk-ai.app/docs/)
-- [RTK 0.44.0 release notes](https://github.com/rtk-ai/rtk/releases/tag/v0.44.0)
 
 ## License
 

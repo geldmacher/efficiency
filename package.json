@@ -1,16 +1,37 @@
 {
   "name": "geldmacher-efficiency-plugin-development",
-  "version": "2.0.0",
+  "version": "2.2.0",
   "private": true,
-  "description": "Development validation for the Geldmacher Efficiency Cursor plugin.",
+  "description": "Development validation for the Geldmacher Efficiency Agent Plugins, Cursor, and Codex targets.",
+  "files": [
+    "plugin.json",
+    ".codex-plugin",
+    ".cursor-plugin",
+    "adapters/codex",
+    "agents",
+    "assets",
+    "CHANGELOG.md",
+    "commands",
+    "docs",
+    "LICENSE",
+    "README.md",
+    "rules",
+    "schemas/agent-plugins",
+    "skills"
+  ],
   "engines": {
     "node": ">=22"
   },
   "scripts": {
+    "build:targets": "node scripts/build-plugin-targets.mjs",
+    "check:targets": "node scripts/build-plugin-targets.mjs --check",
+    "deploy:prepare": "npm run build:targets && npm run check:targets && npm run validate && node --test tests/plugin-targets.test.mjs tests/local-plugin-deploy.test.mjs",
+    "deploy:status": "node scripts/local-plugin-deploy.mjs status",
+    "deploy:local": "node scripts/local-plugin-deploy.mjs deploy",
     "validate": "node scripts/validate-plugin.mjs",
     "check:links": "node scripts/check-links.mjs",
     "test": "node --test",
-    "release-check": "npm run validate && npm run check:links && npm test"
+    "release-check": "npm run check:targets && npm run validate && npm run check:links && npm test"
   },
   "devDependencies": {
     "ajv": "^8.17.1",

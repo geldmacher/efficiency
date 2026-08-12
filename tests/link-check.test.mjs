@@ -24,3 +24,13 @@ test("rejects missing and escaping Markdown links", async () => {
     assert.match(failures, /link escapes plugin root/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+test("source link checks ignore persisted build output", async () => {
+  const root = await mkdtemp(join(tmpdir(), "efficiency-links-build-"));
+  try {
+    await mkdir(join(root, ".build", "plugins", "stale"), { recursive: true });
+    await writeFile(join(root, "README.md"), "# Source\n");
+    await writeFile(join(root, ".build", "plugins", "stale", "README.md"), "[missing](missing.md)\n");
+    assert.deepEqual(checkLinks(root), []);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});

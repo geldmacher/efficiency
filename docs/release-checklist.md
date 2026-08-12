@@ -1,50 +1,89 @@
-# Cursor release checklist
+# Three-target release checklist
 
-Complete this checklist before tagging a plugin release. Use a clean checkout or local plugin link and record every skipped item with a reason.
+Complete this checklist before tagging a plugin release. Use a clean checkout or a recorded dirty baseline and record every skipped item with a reason.
 
-## Automated gates
+## Automated repository gates
 
 - [ ] `npm ci`
 - [ ] `npm run release-check`
+- [ ] `npm pack --dry-run --json` with an isolated temporary npm cache
 - [ ] `git diff --check`
 - [ ] The working tree contains no unexpected generated changes after the gates.
 
-## Repository integrity
+## Format and repository integrity
 
-- [ ] Manifest, package, lockfile, changelog, and intended release versions agree.
-- [ ] Declared component paths or globs resolve inside the plugin root and match at least one component.
-- [ ] The plugin contains exactly four commands, four skills, two agents, and one rule.
-- [ ] Component names and frontmatter match their files or skill directories.
-- [ ] `schemas/plugin.schema.json` matches the source commit and SHA-256 in `schemas/README.md` byte-for-byte.
-- [ ] Documentation links resolve and the 1.x migration table covers every removed entry point.
+- [ ] Root `plugin.json`, Cursor manifest, Codex manifest, package, lockfile, and changelog versions agree at 2.2.0.
+- [ ] Agent Plugins 1.0.0 remains visibly marked as a Working Draft and pinned to commit `bd383552095128f6effe895b9257cfd580a6d179`.
+- [ ] `schemas/agent-plugins/1.0.0/plugin.schema.json` and `schemas/plugin.schema.json` match their recorded SHA-256 values byte-for-byte.
+- [ ] Root `plugin.json` validates through the vendored Draft 2020-12 schema and has no `extensions` field.
+- [ ] Agent Skills frontmatter, directory names, immediate discovery, regular-file requirements, and realpath containment validate.
+- [ ] The repository contains four portable skills, four Cursor skills, and one Codex-only adapter source under `adapters/codex/skills`.
+- [ ] The portable source has no `mcp.json`; native targets declare no plugin hooks, MCP servers, apps, or telemetry.
+- [ ] Cursor declares the four shared skills explicitly and excludes `response-simplicity-setup`.
+- [ ] Codex declares `./skills/`; `.codex-plugin` contains only `plugin.json`; the generated Codex target has exactly five immediate root skills.
+- [ ] Shared skill names and frontmatter match their directories.
+- [ ] Cursor agents are read-only adapters and their authoritative policies live under shared skill references.
+- [ ] Cursor response-rule content matches the canonical Codex response guidance.
+- [ ] All four portable skills link to the shared human communication contract; only the `efficiency` workflow conditionally loads the focused change communication contract.
+- [ ] Communication contracts preserve evidence and exact technical text, distinguish verified, intended, and open status, and add no style detector, score, or fixed response template.
+- [ ] Source documentation links resolve independently of `.build`, and the 1.x migration table covers every removed entry point.
 
-## Cursor discovery
+## Built-bundle isolation
 
-- [ ] Install or link the repository at `~/.cursor/plugins/local/geldmacher-efficiency`.
-- [ ] Run `Developer: Reload Window` or restart Cursor.
-- [ ] Confirm the Efficiency plugin is visible in Cursor settings.
-- [ ] Confirm all four commands, four skills, two agents, and the `response-simplicity` rule are discoverable.
-- [ ] Confirm both auditors are read-only.
-- [ ] Confirm `response-simplicity` is always applied and affects a fresh Cursor conversation.
+- [ ] `.build/plugins/agent-plugins/geldmacher-efficiency` contains root `plugin.json`, exactly four portable skills, and no Cursor or Codex components.
+- [ ] `.build/plugins/cursor/geldmacher-efficiency` contains `.cursor-plugin` and its native surface but no root `plugin.json`, `.codex-plugin`, or Codex-only skill.
+- [ ] `.build/plugins/codex/geldmacher-efficiency` contains a manifest-only `.codex-plugin`, four portable root skills, and `skills/response-simplicity-setup`, but no root `plugin.json` or Cursor-only surface.
+- [ ] Every generated target passes its own bundle-local Markdown link check and contains the vendored schema referenced by the shared README.
+- [ ] Every generated target contains both communication references under `skills/efficiency/references` without changing portable or native component counts.
+- [ ] Repeated builds produce identical hashes for all three targets.
+- [ ] The positive npm allowlist includes root `plugin.json`, the Codex adapter source, and only intended runtime, metadata, documentation, and schema content.
+- [ ] `deploy:local` still accepts only Cursor and Codex host scopes; it has no Agent Plugins or `--all` deployment mode.
 
-## Safe behavior
+## Cursor discovery and behavior
 
-- [ ] `/setup-rtk` identifies RTK with `rtk --version` and `rtk gain` before offering setup.
-- [ ] `/setup-rtk` previews global changes and does not apply them without explicit intent and required approval.
-- [ ] A safe finite command follows the real Cursor `allow` path and appears in `rtk gain --history`.
-- [ ] A safe finite command follows the real Cursor `ask` path, retains the RTK rewrite, and does not run before approval.
-- [ ] `/create-rtk-filter` excludes interactive, streaming, destructive, lifecycle, shell, and server commands.
-- [ ] A temporary project filter preserves failures and passes `rtk verify --require-all`; edits invalidate trust until the native `rtk trust` flow is completed again.
-- [ ] `/efficiency` handles before-work, in-progress, and after-work requests, identifies only concrete low-value output with a missing material benefit and practical adjustment, and does not replace project requirements or native controls.
-- [ ] A code-simplicity review through `/efficiency` uses the explicit scope or current Git change set and does not modify files.
-- [ ] An explicitly requested code-simplicity change stays inside the approved scope, preserves protected behavior and interfaces, and runs the relevant existing checks.
+- [ ] Install or link only the Cursor target at `~/.cursor/plugins/local/geldmacher-efficiency` after separate approval.
+- [ ] Reload the Cursor window or restart Cursor.
+- [ ] Confirm all four commands, four skills, two agents, and the always-on `response-simplicity` rule are discoverable.
+- [ ] Confirm both agents remain read-only and inherit the selected parent model.
+- [ ] `/setup-rtk` identifies RTK, previews setup, and preserves the existing `allow`/`ask` path.
+- [ ] A finite supported command retains its RTK `updated_input`; `ask` does not execute before approval.
+- [ ] `/create-rtk-filter` preserves failures and warnings, passes `rtk verify --require-all`, and requires renewed trust after edits.
+- [ ] `/efficiency` handles task economy and scoped code-simplicity review without modifying files on a review request.
 - [ ] `/optimize-context` does not edit context on an analysis-only request.
-- [ ] Auditor agents return task, context, or code analysis without modifying files; output-utility findings do not rely only on length, tone, or whether language appears AI-written.
 
-## Runtime receipt and release evidence
+## Codex discovery and behavior
 
-- [ ] Complete [the live Cursor smoke](runtime-smoke.md) within its approved model-call and cost limits.
-- [ ] Record Cursor, RTK, Node.js, platform, model, invocation count, baseline commit, runtime hashes, and observed results.
-- [ ] Restore the plugin to its enabled state after baseline testing.
-- [ ] Review the final diff for secrets, machine-specific paths, unrelated files, and uncommitted runtime artifacts.
-- [ ] Do not claim runtime readiness when discovery, rule activation, or a required permission path remains unverified.
+- [ ] Resolve the intended Codex source path before changing it; do not overwrite a foreign target.
+- [ ] Add or update the personal Marketplace entry only after separate approval.
+- [ ] Install with `codex plugin add geldmacher-efficiency@<personal-marketplace-name>` only after separate approval.
+- [ ] Restart Codex and use a fresh task.
+- [ ] Confirm exactly five skills are discoverable and Cursor-only directories are not exposed as Codex components.
+- [ ] `$rtk-setup` selects `rtk init --codex --show`, previews `rtk init --global --codex --dry-run`, and does not promise Cursor hook evidence.
+- [ ] Direct RTK execution of one approved finite command appears in `rtk gain --history`.
+- [ ] Independent review delegation occurs only after an explicit request, stays bounded and read-only, and inherits the parent model.
+- [ ] `$response-simplicity-setup` status and diff preview are read-only by default.
+
+## Global AGENTS safety fixtures
+
+- [ ] Tests use temporary directories only; they never edit the real Codex home.
+- [ ] A non-empty `AGENTS.override.md` wins; otherwise `AGENTS.md` is selected.
+- [ ] Existing content, including an RTK import, remains byte-for-byte unchanged outside the managed block.
+- [ ] Install and update are idempotent and replace one well-formed block rather than duplicating it.
+- [ ] Removal deletes only the marked Efficiency block.
+- [ ] Missing, duplicated, malformed, or similar unmarked guidance causes a stop.
+- [ ] Every real install, update, or removal shows the exact diff and waits for explicit approval.
+- [ ] A successful real change is tested only in a new Codex task.
+
+## Runtime receipts and publication status
+
+- [ ] Approve an explicit model-call and cost limit before any live smoke.
+- [ ] Test the [Agent Plugins target](agent-plugins-runtime-smoke.md), [Cursor target](runtime-smoke.md), and [Codex target](codex-runtime-smoke.md) separately.
+- [ ] Use an isolated, conflict-free client state for the Agent Plugins target; do not load a native target in the same smoke.
+- [ ] Record client, host, RTK, Node.js, platform, model, invocation count, cost ceiling, baseline commit, runtime hashes, and observed results.
+- [ ] Restore the intended enabled state after baseline tests.
+- [ ] Review the final diff for secrets, machine-specific paths, unrelated files, and runtime artifacts.
+- [ ] Report Format conformance, Built bundle, Cursor runtime, Codex runtime, and publication status as separate evidence classes.
+- [ ] Do not infer installation or runtime activation from repository validation, bundle generation, or local Marketplace availability.
+- [ ] Do not infer actual human comprehension from static communication-policy checks; record a separately authorized fresh-host comparison if that evidence is required.
+- [ ] Do not claim compatibility with every Agent Plugins client from repository checks or one smoke.
+- [ ] Commit, push, tag, Marketplace submission, and public publication require separate instructions and are not part of this checklist execution.

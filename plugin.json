@@ -1,0 +1,22 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "geldmacher-efficiency",
+  "version": "2.2.0",
+  "description": "Lightweight Cursor and Codex helpers for concise responses, RTK, context economy, and proportional validation.",
+  "author": {
+    "name": "Dennis Geldmacher",
+    "email": "geldmacher.dennis@outlook.de",
+    "url": "https://github.com/geldmacher"
+  },
+  "homepage": "https://github.com/geldmacher/efficiency",
+  "repository": "https://github.com/geldmacher/efficiency",
+  "license": "MIT",
+  "keywords": [
+    "rtk",
+    "efficiency",
+    "tokens",
+    "context",
+    "optimization",
+    "review"
+  ]
+}

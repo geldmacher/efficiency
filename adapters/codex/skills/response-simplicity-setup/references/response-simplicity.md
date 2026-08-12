@@ -1,8 +1,3 @@
----
-description: Keep model responses clear, concise, and complete.
-alwaysApply: true
----
-
 # Response Simplicity
 
 - Lead with the answer, result, or decision.

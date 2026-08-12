@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 export const defaultRoot = dirname(scriptDirectory);
-const ignoredDirectories = new Set([".git", "node_modules"]);
+const ignoredDirectories = new Set([".build", ".git", "node_modules"]);
 
 function markdownFiles(directory) {
   const files = [];
