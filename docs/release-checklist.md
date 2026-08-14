@@ -25,6 +25,9 @@ Complete this checklist before tagging a plugin release. Use a clean checkout or
 - [ ] Cursor agents are read-only adapters and their authoritative policies live under shared skill references.
 - [ ] Cursor response-rule content matches the canonical Codex response guidance.
 - [ ] All four portable skills link to the shared human communication contract; only the `efficiency` workflow conditionally loads the focused change communication contract.
+- [ ] `context-optimization` loads agent-document design only for agent-consumed context and retains read-only analysis unless an edit is explicitly authorized.
+- [ ] `efficiency` and its auditor use one shared design-and-code simplicity reference and perform at most one bounded challenge without manufacturing a finding.
+- [ ] Debugging-feedback guidance remains advisory and does not authorize diagnosis, instrumentation, tests, fixes, delegation, servers, or persisted artifacts.
 - [ ] Communication contracts preserve evidence and exact technical text, distinguish verified, intended, and open status, and add no style detector, score, or fixed response template.
 - [ ] Source documentation links resolve independently of `.build`, and the 1.x migration table covers every removed entry point.
 
@@ -34,7 +37,7 @@ Complete this checklist before tagging a plugin release. Use a clean checkout or
 - [ ] `.build/plugins/cursor/geldmacher-efficiency` contains `.cursor-plugin` and its native surface but no root `plugin.json`, `.codex-plugin`, or Codex-only skill.
 - [ ] `.build/plugins/codex/geldmacher-efficiency` contains a manifest-only `.codex-plugin`, four portable root skills, and `skills/response-simplicity-setup`, but no root `plugin.json` or Cursor-only surface.
 - [ ] Every generated target passes its own bundle-local Markdown link check and contains the vendored schema referenced by the shared README.
-- [ ] Every generated target contains both communication references under `skills/efficiency/references` without changing portable or native component counts.
+- [ ] Every generated target contains all references linked from `context-optimization` and `efficiency` without changing portable or native component counts.
 - [ ] Repeated builds produce identical hashes for all three targets.
 - [ ] The positive npm allowlist includes root `plugin.json`, the Codex adapter source, and only intended runtime, metadata, documentation, and schema content.
 - [ ] `deploy:local` still accepts only Cursor and Codex host scopes; it has no Agent Plugins or `--all` deployment mode.
@@ -48,8 +51,8 @@ Complete this checklist before tagging a plugin release. Use a clean checkout or
 - [ ] `/setup-rtk` identifies RTK, previews setup, and preserves the existing `allow`/`ask` path.
 - [ ] A finite supported command retains its RTK `updated_input`; `ask` does not execute before approval.
 - [ ] `/create-rtk-filter` preserves failures and warnings, passes `rtk verify --require-all`, and requires renewed trust after edits.
-- [ ] `/efficiency` handles task economy and scoped code-simplicity review without modifying files on a review request.
-- [ ] `/optimize-context` does not edit context on an analysis-only request.
+- [ ] `/efficiency` handles task economy, one scoped design/code-simplicity challenge, and advisory debugging-feedback review without modifying files on a review request.
+- [ ] `/optimize-context` can review agent-consumed documents without editing context on an analysis-only request.
 
 ## Codex discovery and behavior
 
@@ -60,6 +63,7 @@ Complete this checklist before tagging a plugin release. Use a clean checkout or
 - [ ] Confirm exactly five skills are discoverable and Cursor-only directories are not exposed as Codex components.
 - [ ] `$rtk-setup` selects `rtk init --codex --show`, previews `rtk init --global --codex --dry-run`, and does not promise Cursor hook evidence.
 - [ ] Direct RTK execution of one approved finite command appears in `rtk gain --history`.
+- [ ] `$efficiency` and `$context-optimization` expose the same conditional design, debugging-feedback, and agent-document behavior as the portable source without adding a skill.
 - [ ] Independent review delegation occurs only after an explicit request, stays bounded and read-only, and inherits the parent model.
 - [ ] `$response-simplicity-setup` status and diff preview are read-only by default.
 

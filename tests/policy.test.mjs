@@ -190,7 +190,79 @@ test("efficiency uses host-native controls and delegates only on explicit reques
   assert.match(efficiency, /selected parent model through inheritance/i);
   assert.match(efficiency, /label it as not independent/);
   assert.match(efficiency, /do not trigger an auditor automatically after implementation/i);
+  assert.match(efficiency, /Treat review, assessment, and analysis requests as read-only/i);
+  assert.match(efficiency, /Change code only when the user explicitly asks to change, simplify, or refactor it/i);
+  assert.match(efficiency, /candidate rather than implementing it.*materially broadens the approved scope/is);
   assert.match(efficiency, /Do not commit, push, or release/);
+});
+
+test("efficiency performs one bounded design and code simplicity challenge without making it always-on", () => {
+  const efficiency = `${read("commands/efficiency.md")}\n${read("skills/efficiency/SKILL.md")}`;
+  const auditor = read("skills/efficiency/references/auditor.md");
+  const design = read("skills/efficiency/references/design-and-code-simplicity.md");
+  const responseRule = read("rules/response-simplicity.mdc");
+
+  assert.match(efficiency, /read \[design and code simplicity\]\(references\/design-and-code-simplicity\.md\)/i);
+  assert.match(auditor, /read and apply \[design and code simplicity\]\(design-and-code-simplicity\.md\) once/i);
+  for (const required of [
+    /exactly one bounded simplicity challenge/i,
+    /required behavior.*fixed constraints.*available evidence/is,
+    /root decision.*variants.*branches.*states.*sources of truth.*interface burden.*compatibility handling/is,
+    /interface burden/i,
+    /locality/i,
+    /real variation/i,
+    /deletion test.*complexity disappear.*complexity spreads/is,
+    /smallest viable alternative/i,
+    /observable behavior, risk, validation effort, locality, and interface burden/i,
+    /current design is already proportionate/i,
+    /Do not repeat the challenge recursively/i,
+    /project-specific wording/i,
+  ]) assert.match(design, required);
+
+  assert.match(design, /codebase-design.*8b78b531ab965735c5dc74f6f7a219e1e37326df/is);
+  assert.doesNotMatch(responseRule, /bounded simplicity challenge|root decision|smallest viable alternative/i);
+});
+
+test("context optimization conditionally audits agent documents without weakening authority", () => {
+  const context = read("skills/context-optimization/SKILL.md");
+  const reference = read("skills/context-optimization/references/agent-document-design.md");
+
+  assert.match(context, /When the scoped context includes skills, `AGENTS\.md`, rules, commands.*read \[agent document design\]/is);
+  assert.match(context, /Do not load that reference for ordinary human-facing documentation/i);
+  for (const required of [
+    /persistent pointers.*matching task/is,
+    /identify what it leads to.*distinct task branches/is,
+    /instructions needed by every branch.*main workflow/is,
+    /branch-specific policy or detail.*conditional link/is,
+    /one authoritative location for each meaning/i,
+    /scripts, configuration, directory layout, and command help as sources of truth/i,
+    /required behavior directly.*hard guardrails.*safe target behavior/is,
+    /completion conditions observable and proportional/i,
+    /Edit only after explicit authorization/i,
+  ]) assert.match(reference, required);
+  assert.match(reference, /writing-for-agents.*8b78b531ab965735c5dc74f6f7a219e1e37326df/is);
+});
+
+test("debugging feedback guidance stays conditional, advisory, and non-authorizing", () => {
+  const efficiency = read("skills/efficiency/SKILL.md");
+  const auditor = read("skills/efficiency/references/auditor.md");
+  const debugging = read("skills/efficiency/references/debugging-feedback-economy.md");
+  const responseRule = read("rules/response-simplicity.mdc");
+
+  assert.match(efficiency, /When task economy concerns debugging.*read \[debugging feedback economy\]/is);
+  assert.match(efficiency, /does not authorize diagnosis, instrumentation, tests, fixes, delegation, or artifact creation/i);
+  assert.match(auditor, /debugging or performance work.*read \[debugging feedback economy\].*read-only and non-authorizing/is);
+  for (const required of [
+    /exact observed symptom/i,
+    /finite feedback loop.*symptom specifically/is,
+    /signal, speed, determinism, safety/is,
+    /minimizing the reproducer.*hypothesis set.*instrumentation/is,
+    /measured baseline.*optimization/is,
+    /precise access, redacted artifact, or separate permission/is,
+    /does not authorize creating tests, starting servers, instrumenting production, changing code, dispatching agents, or persisting debugging artifacts/i,
+  ]) assert.match(debugging, required);
+  assert.match(debugging, /diagnosing-bugs.*8b78b531ab965735c5dc74f6f7a219e1e37326df/is);
+  assert.doesNotMatch(responseRule, /debugging feedback|reproducer|instrumenting production/i);
 });
 
 test("RTK setup keeps Cursor receipts separate from Codex direct execution", () => {

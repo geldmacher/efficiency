@@ -5,7 +5,7 @@
 Efficiency is a lightweight plugin for Agent Plugins v1 clients, Cursor, and Codex that makes agent work leaner without making it careless:
 
 - match effort and validation to the actual risk,
-- simplify changed code without changing behavior,
+- simplify designs and changed code without changing behavior,
 - reduce recurring context and instruction bloat,
 - use RTK and project filters safely, and
 - keep responses direct, understandable, and actionable without losing important evidence.
@@ -19,7 +19,7 @@ Across its four portable workflows, Efficiency starts with the outcome, translat
 | Goal | Agent Plugins v1 | Cursor | Codex |
 | --- | --- | --- | --- |
 | Right-size work and validation | `efficiency` skill | `/efficiency` | `$efficiency` |
-| Review scoped code simplicity | `efficiency` skill | `/efficiency` | `$efficiency` |
+| Challenge design and code simplicity | `efficiency` skill | `/efficiency` | `$efficiency` |
 | Reduce recurring context | `context-optimization` skill | `/optimize-context` | `$context-optimization` |
 | Inspect or prepare RTK | `rtk-setup` skill | `/setup-rtk` | `$rtk-setup` |
 | Design a safe RTK filter | `rtk-filter-design` skill | `/create-rtk-filter` | `$rtk-filter-design` |
@@ -106,15 +106,20 @@ Ask for the outcome you want; Efficiency infers whether you are planning, adjust
 
 ```text
 /efficiency Keep this small refactor proportional and verify the risky paths.
+/efficiency Challenge this design once for simplicity before implementation.
 /efficiency Review the current changes for code simplicity.
+/efficiency Review whether this bug investigation has a tight, proportionate feedback loop.
 /efficiency Draft a verifiable pull request summary and identify open validation gaps.
 /optimize-context Find recurring instructions that can be consolidated.
+/optimize-context Reduce these agent instructions without weakening their trigger coverage.
 /setup-rtk Inspect my RTK setup without changing it.
 ```
 
 Use the matching `$efficiency`, `$context-optimization`, or `$rtk-setup` skill in Codex.
 
-Without an explicit path, code review covers the current Git change set. If none exists, Efficiency asks for a focused scope instead of reviewing the entire repository.
+Design reviews use the supplied proposal as their scope. Without an explicit path, code review covers the current Git change set. If none exists, Efficiency asks for a focused scope instead of reviewing the entire repository.
+
+For debugging or performance work, Efficiency can assess whether the investigation has a focused, fast, deterministic feedback loop. It recommends the next proportionate step but does not start diagnosis, instrumentation, tests, fixes, delegation, or artifact creation without separate authorization. Context optimization can also review agent-consumed documents, keeping universal instructions available while moving branch-specific material behind precise conditional references.
 
 For commit messages, pull request descriptions, release notes, and change summaries, the `efficiency` workflow follows project conventions first. It distinguishes verified behavior, intended behavior, and open work; material claims should trace to the diff, a check, other evidence, or a labelled assumption. This is communication guidance, not proof that a change works.
 
@@ -124,11 +129,12 @@ For commit messages, pull request descriptions, release notes, and change summar
 - Review requests never edit code. Simplification requires an explicit scoped change request.
 - RTK setup, filter trust, and global guidance changes are previewed before approval.
 - Auditors are read-only; independent model work happens only when requested.
+- Specialized design, debugging, and agent-document guidance loads only for the matching workflow branch.
 - Concision never removes material evidence, uncertainty, risks, blockers, approvals, or validation status. Efficiency does not replace correctness, security review, project requirements, or host approvals.
 - The communication guidance supports quick understanding and action, but repository checks cannot prove live activation or actual human comprehension.
 - **AI-Slop** means low-value generated output here. The plugin judges observable utility, not whether content looks AI-written.
 
-Code simplification preserves observable behavior, public interfaces, persisted formats, security, performance, and project conventions unless you authorize otherwise. RTK statistics are cumulative unless a same-task baseline exists.
+Design and code simplification preserve observable behavior, public interfaces, persisted formats, security, performance, and project conventions unless you authorize otherwise. The workflow challenges the current design once, recommends a smaller alternative only when it is materially better, and can conclude that the existing design is already proportionate. RTK statistics are cumulative unless a same-task baseline exists.
 
 ## Requirements
 

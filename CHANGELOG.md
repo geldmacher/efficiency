@@ -8,11 +8,15 @@ All notable changes to this project are documented in this file.
 
 - Added one shared human communication contract for all four portable workflows, with outcome-first explanations, practical meaning, evidence status, and useful next actions for mixed technical knowledge.
 - Added conditional, project-convention-first guidance for verifiable commit messages, pull request descriptions, release notes, and change summaries.
+- Added one bounded design-and-code simplicity challenge that identifies the root complexity decision, compares the smallest viable alternative, and accepts an already-proportionate design without forcing a finding.
+- Added conditional agent-document guidance for precise context pointers, progressive disclosure, single-source instructions, and observable completion criteria.
+- Added advisory debugging-feedback guidance that favors a focused, fast, deterministic loop without granting diagnosis, instrumentation, test, fix, delegation, or artifact authority.
 
 ### Changed
 
 - Aligned the Cursor response rule and canonical Codex guidance around understandable, actionable communication without a fixed response template or loss of technical evidence.
 - Kept both optional auditors read-only and model-inheriting while applying the shared communication contract and the focused change contract when relevant.
+- Recorded pinned upstream influences for agent-document design, design simplicity, and debugging economy using original project-specific wording.
 - Extended policy and generated-target checks without changing manifests, versions, dependencies, or component counts.
 
 ## 2.2.0 - 2026-08-11
