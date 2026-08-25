@@ -11,13 +11,18 @@ All notable changes to this project are documented in this file.
 - Added one bounded design-and-code simplicity challenge that identifies the root complexity decision, compares the smallest viable alternative, and accepts an already-proportionate design without forcing a finding.
 - Added conditional agent-document guidance for precise context pointers, progressive disclosure, single-source instructions, and observable completion criteria.
 - Added advisory debugging-feedback guidance that favors a focused, fast, deterministic loop without granting diagnosis, instrumentation, test, fix, delegation, or artifact authority.
+- Added conditional verification-economy guidance for at most two risk-bearing facts, the cheapest adequate direct evidence, explicit proxy and live-evidence boundaries, and proportionate verifiable units.
+- Added conditional repeatable-work guidance that weighs direct edits against deterministic, safely rerunnable tooling without granting test, check, script, tool, file, artifact, delegation, server, deployment, live-access, or scope-expansion authority.
 
 ### Changed
 
 - Aligned the Cursor response rule and canonical Codex guidance around understandable, actionable communication without a fixed response template or loss of technical evidence.
+- Added an internal plain-language restatement behavior that rewrites only the last response without new analysis or claims and without a `bro` skill, plus purpose-led writing for existing responses and change communication without expanding into documentation or RFC workflows.
+- Extended the one bounded simplicity challenge with trace-depth and hidden-state reader load, subtraction before addition, and safe encoding of comment constraints.
 - Kept both optional auditors read-only and model-inheriting while applying the shared communication contract and the focused change contract when relevant.
-- Recorded pinned upstream influences for agent-document design, design simplicity, and debugging economy using original project-specific wording.
+- Recorded pinned upstream influences for agent-document design, design simplicity, debugging economy, verification, repeatable work, and communication using original project-specific wording.
 - Extended policy and generated-target checks without changing manifests, versions, dependencies, or component counts.
+- Clarified bounded restatement evidence: Cursor checks a supplied baseline, while Codex combines a preceding-response restatement with setup status; neither proves exclusive restatement-only behavior without a separately approved extra model invocation.
 
 ## 2.2.0 - 2026-08-11
 

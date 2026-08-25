@@ -2,6 +2,8 @@
 
 Use this guidance only for commit messages, pull request descriptions, release notes, and change summaries. Follow the project's own communication conventions first.
 
+Identify whether the intended reader must act, decide, or understand. Use exact project terms and symbols, put applicable conditions before requested actions, and present the common path before exceptions. Keep reviewer actions separate from rationale so neither is buried. This contract does not extend the workflow to tutorials, READMEs, RFCs, or general documentation.
+
 ## Commit messages
 
 - Make the subject concrete, capitalized, imperative, and free of a final period.
@@ -17,3 +19,5 @@ Use this guidance only for commit messages, pull request descriptions, release n
 - Keep verified behavior, intended behavior, and open work distinct.
 
 Do not score style, assess whether text appears AI-written, or trade necessary evidence for brevity.
+
+Source influence: [technical-writing at `bdf7aa355337897f167153e05069aca505dae17c`](https://github.com/cursor/plugins/blob/bdf7aa355337897f167153e05069aca505dae17c/pstack/skills/technical-writing/SKILL.md). This reference uses original project-specific wording.

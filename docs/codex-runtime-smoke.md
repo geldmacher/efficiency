@@ -25,10 +25,14 @@ In the fresh task:
 
 Use the second invocation only if needed:
 
-1. Ask `$response-simplicity-setup` for status or a preview only.
-2. Confirm that it selects a non-empty `AGENTS.override.md` before `AGENTS.md`, preserves existing content including an RTK import, and presents a marked exact diff without writing.
-3. Confirm that install, update, or removal stops for explicit approval.
-4. If testing an independent audit, request it explicitly and confirm bounded read-only inherited delegation. Otherwise confirm that no subagent starts automatically.
+Because this invocation also requests setup status, it tests selection and fidelity of the restatement segment, not exclusive restatement-only behavior.
+
+1. Ask `$response-simplicity-setup` for status or a preview only and explicitly request a shorter plain-language restatement of the immediately preceding Smoke 1 response before the status.
+2. Confirm that the restatement segment preserves material facts, evidence, risks, and open gaps without adding analysis or claims within that segment. Treat the separately requested status as distinct output.
+3. Confirm that the setup selects a non-empty `AGENTS.override.md` before `AGENTS.md`, preserves existing content including an RTK import, and presents a marked exact diff without writing.
+4. Confirm that install, update, or removal stops for explicit approval.
+5. If testing an independent audit, request it explicitly and confirm bounded read-only inherited delegation. Otherwise confirm that no subagent starts automatically.
+6. Record exclusive restatement-only behavior as `unverified`. Testing it requires separate approval for an additional model invocation and is not part of this bounded smoke.
 
 Any approved real global guidance change is a separate operation. After such a change, restart with another fresh task before claiming instruction activation.
 

@@ -109,7 +109,15 @@ test("all portable workflows share one human communication contract", () => {
     /verified facts.*open gaps/is,
     /evidence close to the claim/i,
     /do not force a fixed template/i,
+    /reader needs to act, decide, or understand/i,
+    /project's exact terms and symbols/i,
+    /conditions before an instruction.*common path before exceptions/is,
+    /explicitly asks to restate the last response.*plainer, shorter language/is,
+    /rewrite only that response/i,
+    /material facts, evidence, risks, and open gaps.*no new analysis or claims/is,
   ]) assert.match(contract, required);
+
+  assert.match(contract, /pstack.*bro.*technical-writing.*bdf7aa355337897f167153e05069aca505dae17c/is);
 
   assert.match(read("skills/rtk-setup/SKILL.md"), /current RTK state.*next safe action/is);
   assert.match(read("skills/rtk-filter-design/SKILL.md"), /filter coverage.*diagnostics.*trust action/is);
@@ -140,7 +148,11 @@ test("change communication is evidence-based and loaded only for relevant effici
     /diff, check, other evidence.*labelled assumption/is,
     /verified behavior, intended behavior, and open work/i,
     /Do not score style.*AI-written/is,
+    /reader must act, decide, or understand/i,
+    /exact project terms and symbols.*conditions before requested actions.*common path before exceptions/is,
+    /does not extend.*tutorials, READMEs, RFCs, or general documentation/is,
   ]) assert.match(contract, required);
+  assert.match(contract, /technical-writing.*bdf7aa355337897f167153e05069aca505dae17c/is);
 });
 
 test("Cursor auditors are thin read-only adapters over shared policies", () => {
@@ -212,15 +224,65 @@ test("efficiency performs one bounded design and code simplicity challenge witho
     /locality/i,
     /real variation/i,
     /deletion test.*complexity disappear.*complexity spreads/is,
+    /reader load.*layers.*trace.*hidden or mutable state/is,
+    /dead paths.*duplicated decisions or validation.*empty stubs.*speculative protection/is,
     /smallest viable alternative/i,
-    /observable behavior, risk, validation effort, locality, and interface burden/i,
+    /observable behavior, risk, validation effort, locality, reader load, and interface burden/i,
     /current design is already proportionate/i,
+    /comment claims an invariant.*type.*test.*lint rule.*boundary check/is,
+    /Keep comments.*rationale, external constraints.*code cannot express/is,
     /Do not repeat the challenge recursively/i,
     /project-specific wording/i,
   ]) assert.match(design, required);
 
   assert.match(design, /codebase-design.*8b78b531ab965735c5dc74f6f7a219e1e37326df/is);
+  assert.match(design, /minimize-reader-load.*subtract-before-you-add.*no-comments.*bdf7aa355337897f167153e05069aca505dae17c/is);
   assert.doesNotMatch(responseRule, /bounded simplicity challenge|root decision|smallest viable alternative/i);
+});
+
+test("verification economy selects bounded direct evidence without granting execution authority", () => {
+  const efficiency = read("skills/efficiency/SKILL.md");
+  const auditor = read("skills/efficiency/references/auditor.md");
+  const verification = read("skills/efficiency/references/verification-economy.md");
+  const responseRule = read("rules/response-simplicity.mdc");
+
+  assert.match(efficiency, /choosing, reviewing, or reporting validation.*read \[verification economy\]/is);
+  assert.match(auditor, /validation selection or evidence claims.*read \[verification economy\]/is);
+  for (const required of [
+    /at most two facts.*material risk/is,
+    /cheapest adequate direct observation/i,
+    /Source inspection.*focused check.*live path/is,
+    /builds, summaries, caches, timestamps, generated reports, and derived state as proxies/i,
+    /risk-bearing input-to-output path/i,
+    /failure isolation, rollback, or reviewer confidence/i,
+    /intended behavior, source-supported behavior, executed checks, and live observation/i,
+    /does not authorize creating or running tests or scripts.*starting servers.*deploying.*live system.*dispatching agents/is,
+  ]) assert.match(verification, required);
+  assert.match(verification, /prove-it-works.*blast-radius.*sequence-verifiable-units.*bdf7aa355337897f167153e05069aca505dae17c/is);
+  assert.doesNotMatch(responseRule, /risk-bearing facts|verification economy|sequence-verifiable-units/i);
+});
+
+test("repeatable-work economy chooses tools only when their full cost is repaid", () => {
+  const efficiency = read("skills/efficiency/SKILL.md");
+  const auditor = read("skills/efficiency/references/auditor.md");
+  const repeatable = read("skills/efficiency/references/repeatable-work-economy.md");
+  const responseRule = read("rules/response-simplicity.mdc");
+  const authorityBoundary = /does not authorize creating or running tests, checks, scripts, or tools.*changing files.*generating or persisting artifacts.*dispatching agents.*starting servers.*deploying.*accessing live systems.*broadening the approved scope/is;
+
+  assert.match(efficiency, /repeated manual work or whether to automate it.*read \[repeatable-work economy\]/is);
+  assert.match(efficiency, authorityBoundary);
+  assert.match(auditor, /repeated manual work or an automation choice.*read \[repeatable-work economy\]/is);
+  for (const required of [
+    /number and similarity of units.*likely reruns.*consistency risk.*reviewer-verification benefit/is,
+    /cost to build, check, maintain, and eventually remove the tool/i,
+    /Prefer direct work for a few obvious/i,
+    /deterministic tool.*material repetition.*drift risk.*reuse.*rerunnable verification/is,
+    /narrowly scoped.*fail visibly.*protected paths.*safe to rerun/is,
+    /identical mechanical transformations.*deterministic tool over delegating/is,
+    authorityBoundary,
+  ]) assert.match(repeatable, required);
+  assert.match(repeatable, /build-the-lever.*bdf7aa355337897f167153e05069aca505dae17c/is);
+  assert.doesNotMatch(responseRule, /repeatable-work economy|build-the-lever|rerunnable tool/i);
 });
 
 test("context optimization conditionally audits agent documents without weakening authority", () => {
@@ -326,7 +388,7 @@ test("Codex response setup uses the same compact guidance and requires explicit 
   const fields = parseFrontmatter(join(defaultRoot, "rules", "response-simplicity.mdc"));
   assert.equal(fields.alwaysApply, true);
   assert.equal(bodyWithoutFrontmatter(cursorRule), canonical.trim());
-  assert.ok(cursorRule.length < 1_200);
+  assert.ok(Buffer.byteLength(cursorRule) < 1_200);
   for (const required of [
     /mixed technical knowledge/i,
     /explain necessary jargon once/i,
@@ -335,6 +397,7 @@ test("Codex response setup uses the same compact guidance and requires explicit 
     /Preserve relevant evidence.*validation status/is,
     /Keep code, commands, paths, identifiers, and error messages exact/i,
     /Do not force a fixed template/i,
+    /restate only the last response.*plainly and briefly.*facts, evidence, risks, and open gaps.*add no analysis or claims/is,
   ]) assert.match(canonical, required);
   for (const required of [
     "AGENTS.override.md",
@@ -423,6 +486,12 @@ test("README and changelog document the three-target 2.2 surface and the 1.x mig
   assert.match(readme, /mixed technical knowledge/i);
   assert.match(readme, /verified behavior, intended behavior, and open work/i);
   assert.match(readme, /cannot prove live activation or actual human comprehension/i);
+  assert.match(readme, /at most two risk-bearing facts.*cheapest adequate direct evidence/is);
+  assert.match(readme, /recommend an approach.*do not authorize tests or checks.*scripts or tools.*file changes.*persisted artifacts.*delegation.*servers.*deployment.*live access.*scope expansion/is);
+  assert.match(readme, /rewrites only that response.*without adding new analysis or claims/is);
+  assert.match(readme, /bounded Cursor smoke.*supplied baseline restatement.*immediately preceding assistant response unverified/is);
+  assert.match(readme, /two-invocation Codex smoke.*preceding-response restatement.*setup status.*exclusive restatement-only behavior unverified/is);
+  assert.match(readme, /does not add a `bro` or technical-writing skill.*READMEs or RFCs/is);
   assert.match(readme, /Agent Plugins.*four portable skills/is);
   assert.match(readme, /Codex.*five skills/is);
   assert.match(changelog, /## 2\.2\.0 - 2026-08-11/);
@@ -430,11 +499,17 @@ test("README and changelog document the three-target 2.2 surface and the 1.x mig
   assert.match(changelog, /## 2\.1\.0 - 2026-08-03/);
   assert.match(changelog, /three deterministic targets/i);
   assert.match(changelog, /shared human communication contract/i);
+  assert.match(changelog, /verification-economy.*repeatable-work/is);
+  assert.match(changelog, /test, check, script, tool, file, artifact, delegation, server, deployment, live-access, or scope-expansion authority/i);
+  assert.match(changelog, /rewrites only the last response without new analysis or claims/i);
+  assert.match(changelog, /Cursor checks a supplied baseline.*Codex combines a preceding-response restatement with setup status.*neither proves exclusive restatement-only behavior/is);
+  assert.match(changelog, /without a `bro` skill/i);
   assert.match(changelog, /manifests, versions, dependencies, or component counts/i);
 });
 
 test("release guidance separates conformance, bundles, native runtimes, and publication evidence", () => {
   const checklist = read("docs/release-checklist.md");
+  const agentPluginsSmoke = read("docs/agent-plugins-runtime-smoke.md");
   const cursorSmoke = read("docs/runtime-smoke.md");
   const codexSmoke = read("docs/codex-runtime-smoke.md");
   assert.match(checklist, /four portable skills.*four Cursor skills.*one Codex-only adapter source/is);
@@ -443,11 +518,24 @@ test("release guidance separates conformance, bundles, native runtimes, and publ
   assert.match(checklist, /explicit model-call and cost limit/i);
   assert.match(checklist, /Agent Plugins.*Working Draft/i);
   assert.match(checklist, /All four portable skills link to the shared human communication contract/i);
+  assert.match(checklist, /at most two risk-bearing facts.*cheapest adequate direct evidence/is);
+  assert.match(checklist, /deterministic rerunnable tool.*identical delegated transformations/is);
+  assert.match(checklist, /does not authorize tests, checks, scripts, tools, file changes, artifacts, delegation, servers, deployment, live access, or scope expansion/is);
+  assert.match(checklist, /restate only the last response.*without new analysis or claims.*below 1,200 characters/is);
+  assert.match(checklist, /supplied-baseline restatement evidence.*immediate last-response binding.*unverified.*additional model invocation/is);
+  assert.match(checklist, /two-invocation Codex smoke.*preceding-response selection.*restatement-segment fidelity.*exclusive restatement-only behavior.*unverified.*additional model invocation/is);
   assert.match(checklist, /Do not infer actual human comprehension/i);
+  assert.match(agentPluginsSmoke, /only the immediately preceding answer.*without adding analysis or claims/is);
   assert.match(cursorSmoke, /at most two short fresh conversations/i);
+  assert.match(cursorSmoke, /does not prove last-response binding/i);
+  assert.match(cursorSmoke, /immediately preceding assistant response as `unverified`.*additional model invocation/is);
   assert.match(codexSmoke, /fresh Codex task/i);
   assert.match(codexSmoke, /at most two model invocations/i);
   assert.match(codexSmoke, /maximum approved cost/i);
+  assert.match(codexSmoke, /tests selection and fidelity of the restatement segment, not exclusive restatement-only behavior/is);
+  assert.match(codexSmoke, /restatement of the immediately preceding Smoke 1 response.*restatement segment preserves.*without adding analysis or claims within that segment/is);
+  assert.match(codexSmoke, /exclusive restatement-only behavior as `unverified`.*additional model invocation/is);
+  assert.doesNotMatch(codexSmoke, /restatement of only the immediately preceding/i);
   assert.match(codexSmoke, /does not prove.*Marketplace publication/i);
 });
 

@@ -27,8 +27,12 @@ Complete this checklist before tagging a plugin release. Use a clean checkout or
 - [ ] All four portable skills link to the shared human communication contract; only the `efficiency` workflow conditionally loads the focused change communication contract.
 - [ ] `context-optimization` loads agent-document design only for agent-consumed context and retains read-only analysis unless an edit is explicitly authorized.
 - [ ] `efficiency` and its auditor use one shared design-and-code simplicity reference and perform at most one bounded challenge without manufacturing a finding.
+- [ ] Verification-economy guidance names at most two risk-bearing facts, selects the cheapest adequate direct evidence, distinguishes proxy and live evidence, and remains non-authorizing.
+- [ ] Repeatable-work guidance compares direct work with the complete tool cost, prefers a deterministic rerunnable tool over identical delegated transformations only when justified, and does not authorize tests, checks, scripts, tools, file changes, artifacts, delegation, servers, deployment, live access, or scope expansion.
+- [ ] The bounded simplicity challenge assesses trace depth and hidden or mutable state, checks removable complexity before additions, and preserves comments when code cannot express their rationale or external constraint.
 - [ ] Debugging-feedback guidance remains advisory and does not authorize diagnosis, instrumentation, tests, fixes, delegation, servers, or persisted artifacts.
-- [ ] Communication contracts preserve evidence and exact technical text, distinguish verified, intended, and open status, and add no style detector, score, or fixed response template.
+- [ ] Communication contracts preserve evidence and exact technical text, distinguish verified, intended, and open status, and add no style detector, score, fixed response template, `bro` skill, technical-writing skill, README trigger, or RFC trigger.
+- [ ] Cursor and Codex response guidance restate only the last response more plainly and briefly without new analysis or claims, remain byte-identical after frontmatter removal, and keep the Cursor rule below 1,200 characters.
 - [ ] Source documentation links resolve independently of `.build`, and the 1.x migration table covers every removed entry point.
 
 ## Built-bundle isolation
@@ -51,8 +55,9 @@ Complete this checklist before tagging a plugin release. Use a clean checkout or
 - [ ] `/setup-rtk` identifies RTK, previews setup, and preserves the existing `allow`/`ask` path.
 - [ ] A finite supported command retains its RTK `updated_input`; `ask` does not execute before approval.
 - [ ] `/create-rtk-filter` preserves failures and warnings, passes `rtk verify --require-all`, and requires renewed trust after edits.
-- [ ] `/efficiency` handles task economy, one scoped design/code-simplicity challenge, and advisory debugging-feedback review without modifying files on a review request.
+- [ ] `/efficiency` handles task economy, proportionate verification, repeated-work decisions, one scoped design/code-simplicity challenge, and advisory debugging-feedback review without modifying files on a review request.
 - [ ] `/optimize-context` can review agent-consumed documents without editing context on an analysis-only request.
+- [ ] Under the bounded two-conversation Cursor smoke, distinguish supplied-baseline restatement evidence from immediate last-response binding; keep the latter `unverified` without separate approval for an additional model invocation.
 
 ## Codex discovery and behavior
 
@@ -63,9 +68,10 @@ Complete this checklist before tagging a plugin release. Use a clean checkout or
 - [ ] Confirm exactly five skills are discoverable and Cursor-only directories are not exposed as Codex components.
 - [ ] `$rtk-setup` selects `rtk init --codex --show`, previews `rtk init --global --codex --dry-run`, and does not promise Cursor hook evidence.
 - [ ] Direct RTK execution of one approved finite command appears in `rtk gain --history`.
-- [ ] `$efficiency` and `$context-optimization` expose the same conditional design, debugging-feedback, and agent-document behavior as the portable source without adding a skill.
+- [ ] `$efficiency` and `$context-optimization` expose the same conditional verification, repeatable-work, design, debugging-feedback, and agent-document behavior as the portable source without adding a skill.
 - [ ] Independent review delegation occurs only after an explicit request, stays bounded and read-only, and inherits the parent model.
 - [ ] `$response-simplicity-setup` status and diff preview are read-only by default.
+- [ ] Under the bounded two-invocation Codex smoke, distinguish immediately preceding-response selection and restatement-segment fidelity from exclusive restatement-only behavior; keep the latter `unverified` without separate approval for an additional model invocation.
 
 ## Global AGENTS safety fixtures
 

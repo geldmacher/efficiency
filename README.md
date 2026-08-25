@@ -5,7 +5,8 @@
 Efficiency is a lightweight plugin for Agent Plugins v1 clients, Cursor, and Codex that makes agent work leaner without making it careless:
 
 - match effort and validation to the actual risk,
-- simplify designs and changed code without changing behavior,
+- select direct evidence and proportionate automation for the work,
+- simplify designs and changed code without changing behavior or increasing reader load,
 - reduce recurring context and instruction bloat,
 - use RTK and project filters safely, and
 - keep responses direct, understandable, and actionable without losing important evidence.
@@ -106,8 +107,10 @@ Ask for the outcome you want; Efficiency infers whether you are planning, adjust
 
 ```text
 /efficiency Keep this small refactor proportional and verify the risky paths.
+/efficiency Identify at most two risk-bearing facts and the cheapest adequate direct evidence.
+/efficiency Decide whether these repeated edits justify a safely rerunnable tool.
 /efficiency Challenge this design once for simplicity before implementation.
-/efficiency Review the current changes for code simplicity.
+/efficiency Review the current changes for code simplicity and reader load.
 /efficiency Review whether this bug investigation has a tight, proportionate feedback loop.
 /efficiency Draft a verifiable pull request summary and identify open validation gaps.
 /optimize-context Find recurring instructions that can be consolidated.
@@ -119,9 +122,11 @@ Use the matching `$efficiency`, `$context-optimization`, or `$rtk-setup` skill i
 
 Design reviews use the supplied proposal as their scope. Without an explicit path, code review covers the current Git change set. If none exists, Efficiency asks for a focused scope instead of reviewing the entire repository.
 
+For proposed or completed work, Efficiency can identify at most two risk-bearing facts and select the cheapest adequate direct evidence while keeping source, derived, executed, and live evidence distinct. For repeated mechanical work, it compares direct edits with the full cost and verification value of a deterministic, safely rerunnable tool; identical transformations favor one tool over repeated manual delegation only when that tool clearly repays its cost. These branches recommend an approach but do not authorize tests or checks, scripts or tools, file changes, persisted artifacts, delegation, servers, deployment, live access, or scope expansion.
+
 For debugging or performance work, Efficiency can assess whether the investigation has a focused, fast, deterministic feedback loop. It recommends the next proportionate step but does not start diagnosis, instrumentation, tests, fixes, delegation, or artifact creation without separate authorization. Context optimization can also review agent-consumed documents, keeping universal instructions available while moving branch-specific material behind precise conditional references.
 
-For commit messages, pull request descriptions, release notes, and change summaries, the `efficiency` workflow follows project conventions first. It distinguishes verified behavior, intended behavior, and open work; material claims should trace to the diff, a check, other evidence, or a labelled assumption. This is communication guidance, not proof that a change works.
+For responses, Efficiency first considers whether the reader must act, decide, or understand, then keeps project terms exact, conditions before actions, and the common path before exceptions. If asked to restate the last response more simply, it rewrites only that response and preserves material facts, evidence, risks, and open gaps without adding new analysis or claims. For commit messages, pull request descriptions, release notes, and change summaries, the workflow follows project conventions first and distinguishes verified behavior, intended behavior, and open work; material claims should trace to the diff, a check, other evidence, or a labelled assumption. This guidance does not add a `bro` or technical-writing skill, extend the workflow to READMEs or RFCs, or prove that a change works.
 
 ## Designed to stay useful—not reckless
 
@@ -129,12 +134,12 @@ For commit messages, pull request descriptions, release notes, and change summar
 - Review requests never edit code. Simplification requires an explicit scoped change request.
 - RTK setup, filter trust, and global guidance changes are previewed before approval.
 - Auditors are read-only; independent model work happens only when requested.
-- Specialized design, debugging, and agent-document guidance loads only for the matching workflow branch.
+- Specialized verification, repeatable-work, design, debugging, and agent-document guidance loads only for the matching workflow branch.
 - Concision never removes material evidence, uncertainty, risks, blockers, approvals, or validation status. Efficiency does not replace correctness, security review, project requirements, or host approvals.
 - The communication guidance supports quick understanding and action, but repository checks cannot prove live activation or actual human comprehension.
 - **AI-Slop** means low-value generated output here. The plugin judges observable utility, not whether content looks AI-written.
 
-Design and code simplification preserve observable behavior, public interfaces, persisted formats, security, performance, and project conventions unless you authorize otherwise. The workflow challenges the current design once, recommends a smaller alternative only when it is materially better, and can conclude that the existing design is already proportionate. RTK statistics are cumulative unless a same-task baseline exists.
+Design and code simplification preserve observable behavior, public interfaces, persisted formats, security, performance, and project conventions unless you authorize otherwise. The workflow challenges the current design once, considers trace depth, hidden or mutable state, removable complexity, and whether code can express a claimed comment constraint, then recommends a smaller alternative only when it is materially better. It can conclude that the existing design is already proportionate. RTK statistics are cumulative unless a same-task baseline exists.
 
 ## Requirements
 
@@ -168,7 +173,7 @@ npm run release-check
 git diff --check
 ```
 
-The release check validates all three manifests and target bundles, Agent Skills discovery and frontmatter, path containment, version alignment, links, and policy contracts. Source links exclude ignored `.build` output, while every newly generated target is checked directly for bundle-local links. It proves repository format and bundle state—not installation, live host behavior, broad client compatibility, Marketplace state, or publication.
+The release check validates all three manifests and target bundles, Agent Skills discovery and frontmatter, path containment, version alignment, links, and policy contracts. Source links exclude ignored `.build` output, while every newly generated target is checked directly for bundle-local links. It proves repository format and bundle state—not installation, live host behavior, broad client compatibility, Marketplace state, or publication. The bounded Cursor smoke can check a supplied baseline restatement without an extra model call, but it leaves binding to the immediately preceding assistant response unverified unless that call is separately approved. The two-invocation Codex smoke combines a preceding-response restatement with setup status, so it can check response selection and segment fidelity but leaves exclusive restatement-only behavior unverified unless an additional call is separately approved.
 
 Before a release, complete the [release checklist](docs/release-checklist.md). Runtime checks remain separate: [Agent Plugins runtime smoke](docs/agent-plugins-runtime-smoke.md), [Cursor runtime smoke](docs/runtime-smoke.md), and [Codex runtime smoke](docs/codex-runtime-smoke.md).
 

@@ -17,8 +17,9 @@ Use at most two short model invocations unless the approved limit is lower.
 1. Install or load only the generated Agent Plugins target using the selected client's documented procedure.
 2. Start a fresh conversation and confirm discovery of exactly these four skills: `context-optimization`, `efficiency`, `rtk-filter-design`, and `rtk-setup`.
 3. Confirm that `response-simplicity-setup`, Cursor commands, Cursor agents, the Cursor rule, hooks, MCP servers, and extensions are absent.
-4. Invoke one portable skill with a read-only request, such as reviewing proposed validation effort. Confirm the response follows the skill without changing repository or global host state. If testing `rtk-setup`, `rtk-filter-design`, or `context-optimization`, confirm that an unknown host path stays generic, uses only documented client surfaces, and reports unavailable integration as unverified.
-5. Stop immediately on unexpected components, manifest ambiguity, unapproved tool use, or a cost-limit breach.
+4. Invoke `efficiency` with one read-only request that asks whether a repeated mechanical change justifies a tool, names at most two risk-bearing facts, selects direct evidence, and checks reader load. Confirm the response does not create the tool, run checks, change files, dispatch agents, or alter global host state.
+5. If the approved two-invocation budget permits, ask it to restate only the immediately preceding answer more simply. Confirm the new answer preserves material facts, evidence, risks, and open gaps without adding analysis or claims. If testing `rtk-setup`, `rtk-filter-design`, or `context-optimization` instead, confirm that an unknown host path stays generic, uses only documented client surfaces, and reports unavailable integration as unverified.
+6. Stop immediately on unexpected components, manifest ambiguity, unapproved tool use, or a cost-limit breach.
 
 ## Receipt and cleanup
 
