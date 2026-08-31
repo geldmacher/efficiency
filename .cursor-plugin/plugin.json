@@ -2,7 +2,7 @@
   "name": "geldmacher-efficiency",
   "displayName": "Efficiency",
   "description": "Lightweight Cursor and Codex helpers for concise responses, RTK, context economy, and proportional validation.",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "author": {
     "name": "Dennis Geldmacher",
     "email": "geldmacher.dennis@outlook.de"

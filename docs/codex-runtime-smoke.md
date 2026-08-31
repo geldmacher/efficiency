@@ -19,7 +19,7 @@ In the fresh task:
 2. Confirm that `.codex-plugin` contains only `plugin.json`, all five discovered skills come from the generated root `skills/`, and Cursor commands, Cursor agents, and Cursor rules are not presented as Codex plugin components.
 3. Invoke `$rtk-setup` with a read-only inspection request.
 4. Confirm that it uses `rtk init --codex --show`, identifies the installed RTK binary, and does not promise `updated_input`, `permission`, or Cursor hook-processor evidence.
-5. If a finite direct RTK command is within the approved scope, run exactly one and verify it with `rtk gain --history`.
+5. If a finite direct RTK command is within the approved scope, run exactly one and verify it with `rtk gain --history`. Treat the history entry as execution evidence and the gain figure as scoped estimated shell-output reduction; keep provider tokens or cost, agent turns, result quality, and whole-task net effect unverified without a comparable paired run.
 
 ## Smoke 2: optional guidance and review boundary
 

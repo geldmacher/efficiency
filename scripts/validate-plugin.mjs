@@ -150,6 +150,22 @@ function validateComponentNames(records, type, failures) {
   }
 }
 
+function validatePortableCommandSkillParity(records, failures) {
+  const commandNames = records.commands
+    .map((record) => record.fields.name)
+    .filter((name) => typeof name === "string")
+    .sort();
+  const skillNames = records.skills
+    .map((record) => record.fields.name)
+    .filter((name) => typeof name === "string")
+    .sort();
+  if (JSON.stringify(commandNames) !== JSON.stringify(skillNames)) {
+    failures.push(
+      `Cursor command names must exactly match portable skill names: commands=${commandNames.join(",")} skills=${skillNames.join(",")}`,
+    );
+  }
+}
+
 function componentPaths(value) {
   return Array.isArray(value) ? value : [value];
 }
@@ -469,6 +485,7 @@ export function validatePlugin(root = defaultRoot) {
   for (const record of records.skills) validateSkill(record, failures);
   for (const record of records.rules) validateRule(record, failures);
   for (const type of ["commands", "agents", "skills"]) validateComponentNames(records[type], type, failures);
+  if (manifest.name === "geldmacher-efficiency") validatePortableCommandSkillParity(records, failures);
 
   for (const field of ["hooks", "mcpServers"]) {
     if (!(field in manifest)) continue;

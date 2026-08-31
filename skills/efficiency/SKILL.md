@@ -17,7 +17,7 @@ When task economy concerns repeated manual work or whether to automate it, read 
 
 When task economy concerns debugging a failure or performance regression, read [debugging feedback economy](references/debugging-feedback-economy.md). Use it only to assess and recommend a proportionate feedback loop; an efficiency request does not authorize diagnosis, instrumentation, tests, fixes, delegation, or artifact creation.
 
-Use RTK project data when it is relevant and available. Distinguish same-session measurements, cumulative statistics, calculations, estimates, and qualitative observations. Do not present cumulative RTK gain as savings from one task or invent monetary cost without user-supplied rates.
+When RTK history, `rtk gain`, or filtered output informs an efficiency assessment, read [RTK evidence interpretation](references/rtk-evidence.md). Use relevant available project data, keep execution coverage, shell-output reduction, contributor concentration, and whole-task net effect distinct, and report the evidence scope and host attribution. Do not present cumulative RTK gain as savings from one task or invent monetary cost without user-supplied rates.
 
 Treat an item as low-value only when the available evidence identifies the concrete item, why it does not materially improve the result, a decision, or necessary verification, and a practical reduction or alternative. Do not infer low value from length, tone, or whether language appears AI-written. Never remove necessary evidence, uncertainty, risks, blockers, approvals, validation status, or exact technical details in the name of efficiency.
 

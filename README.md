@@ -11,7 +11,7 @@ Efficiency is a lightweight plugin for Agent Plugins v1 clients, Cursor, and Cod
 - use RTK and project filters safely, and
 - keep responses direct, understandable, and actionable without losing important evidence.
 
-RTK (Rust Token Killer) is optional; it trims noisy terminal output before it reaches the model. Efficiency adds no custom MCP server, telemetry, or background automation.
+RTK (Rust Token Killer) is optional; it trims noisy terminal output before it reaches the model. Efficiency treats RTK gain figures as estimated shell-output reduction, not as proof of fewer provider-billed tokens, lower cost, or fewer agent turns. Efficiency adds no custom MCP server, telemetry, or background automation.
 
 Across its four portable workflows, Efficiency starts with the outcome, translates non-obvious technical consequences into practical meaning, and names the next useful action when one exists. The guidance is written for mixed technical knowledge, preserves exact technical text, and does not force every answer into one template.
 
@@ -21,9 +21,9 @@ Across its four portable workflows, Efficiency starts with the outcome, translat
 | --- | --- | --- | --- |
 | Right-size work and validation | `efficiency` skill | `/efficiency` | `$efficiency` |
 | Challenge design and code simplicity | `efficiency` skill | `/efficiency` | `$efficiency` |
-| Reduce recurring context | `context-optimization` skill | `/optimize-context` | `$context-optimization` |
-| Inspect or prepare RTK | `rtk-setup` skill | `/setup-rtk` | `$rtk-setup` |
-| Design a safe RTK filter | `rtk-filter-design` skill | `/create-rtk-filter` | `$rtk-filter-design` |
+| Reduce recurring context | `context-optimization` skill | `/context-optimization` | `$context-optimization` |
+| Inspect or prepare RTK | `rtk-setup` skill | `/rtk-setup` | `$rtk-setup` |
+| Design a safe RTK filter | `rtk-filter-design` skill | `/rtk-filter-design` | `$rtk-filter-design` |
 | Keep responses concise | Not in the portable core | Automatic `response-simplicity` rule | Optional `$response-simplicity-setup` |
 
 Cursor also includes the optional read-only `efficiency-auditor` and `rtk-filter-auditor`. Codex can run the same checks through an inherited subagent when you explicitly request a second pass.
@@ -113,9 +113,9 @@ Ask for the outcome you want; Efficiency infers whether you are planning, adjust
 /efficiency Review the current changes for code simplicity and reader load.
 /efficiency Review whether this bug investigation has a tight, proportionate feedback loop.
 /efficiency Draft a verifiable pull request summary and identify open validation gaps.
-/optimize-context Find recurring instructions that can be consolidated.
-/optimize-context Reduce these agent instructions without weakening their trigger coverage.
-/setup-rtk Inspect my RTK setup without changing it.
+/context-optimization Find recurring instructions that can be consolidated.
+/context-optimization Reduce these agent instructions without weakening their trigger coverage.
+/rtk-setup Inspect my RTK setup without changing it.
 ```
 
 Use the matching `$efficiency`, `$context-optimization`, or `$rtk-setup` skill in Codex.
@@ -139,7 +139,9 @@ For responses, Efficiency first considers whether the reader must act, decide, o
 - The communication guidance supports quick understanding and action, but repository checks cannot prove live activation or actual human comprehension.
 - **AI-Slop** means low-value generated output here. The plugin judges observable utility, not whether content looks AI-written.
 
-Design and code simplification preserve observable behavior, public interfaces, persisted formats, security, performance, and project conventions unless you authorize otherwise. The workflow challenges the current design once, considers trace depth, hidden or mutable state, removable complexity, and whether code can express a claimed comment constraint, then recommends a smaller alternative only when it is materially better. It can conclude that the existing design is already proportionate. RTK statistics are cumulative unless a same-task baseline exists.
+Design and code simplification preserve observable behavior, public interfaces, persisted formats, security, performance, and project conventions unless you authorize otherwise. The workflow challenges the current design once, considers trace depth, hidden or mutable state, removable complexity, and whether code can express a claimed comment constraint, then recommends a smaller alternative only when it is materially better. It can conclude that the existing design is already proportionate.
+
+RTK reporting keeps four evidence classes separate: whether RTK actually executed, the estimated shell-output reduction within the stated scope, which commands contribute most in absolute terms, and the whole-task net effect. The last remains unverified without a comparable paired run for the same task, host, model, effort, and environment that also observes provider tokens or cost, agent turns, and result quality. Filters are recommended only when complete exact paths, material ordering, visible truncation, exit status, warnings, and machine-consumed or piped output remain semantically equivalent to the native command.
 
 ## Requirements
 
@@ -153,9 +155,21 @@ Design and code simplification preserve observable behavior, public interfaces, 
 
 Broad compatibility ranges are not certified yet; release receipts record exact tested versions.
 
+## Migrating to 3.0
+
+Efficiency 3.0 gives each portable workflow one name across its skill and Cursor command. The old Cursor command names are removed without compatibility aliases:
+
+| Before 3.0 | 3.0 replacement |
+| --- | --- |
+| `/optimize-context` | `/context-optimization` |
+| `/create-rtk-filter` | `/rtk-filter-design` |
+| `/setup-rtk` | `/rtk-setup` |
+
+Agent Plugins and Codex remain skill-only surfaces. The Codex-only `$response-simplicity-setup` adapter is outside this four-workflow name parity.
+
 ## Migrating from 1.x
 
-Efficiency 2.0 removed the old aliases; 2.2 keeps the smaller surface:
+Efficiency 2.0 removed the old aliases; 3.0 keeps the smaller surface:
 
 | 1.x entry point | Replacement |
 | --- | --- |

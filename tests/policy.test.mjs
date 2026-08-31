@@ -26,10 +26,10 @@ function bodyWithoutFrontmatter(contents) {
 
 test("the three-target surface keeps four portable skills and one Codex-only adapter skill", () => {
   assert.deepEqual(componentFiles("commands", ".md"), [
-    "create-rtk-filter.md",
+    "context-optimization.md",
     "efficiency.md",
-    "optimize-context.md",
-    "setup-rtk.md",
+    "rtk-filter-design.md",
+    "rtk-setup.md",
   ]);
   assert.deepEqual(skillDirectories(), [
     "context-optimization",
@@ -58,12 +58,6 @@ test("the three-target surface keeps four portable skills and one Codex-only ada
 });
 
 test("every Cursor command delegates to its declared shared skill", () => {
-  const expectedSkills = new Map([
-    ["create-rtk-filter", "rtk-filter-design"],
-    ["efficiency", "efficiency"],
-    ["optimize-context", "context-optimization"],
-    ["setup-rtk", "rtk-setup"],
-  ]);
   for (const commandFile of componentFiles("commands", ".md")) {
     const commandPath = join(defaultRoot, "commands", commandFile);
     const command = readFileSync(commandPath, "utf8");
@@ -71,12 +65,15 @@ test("every Cursor command delegates to its declared shared skill", () => {
     const match = command.match(/\.\.\/skills\/([^/]+)\/SKILL\.md/);
     assert.ok(match, `${commandFile} does not link to a skill`);
     assert.equal(basename(commandFile, ".md"), fields.name);
-    assert.equal(match[1], expectedSkills.get(fields.name), `${commandFile} links to the wrong skill`);
+    assert.equal(match[1], fields.name, `${commandFile} must link to the identically named portable skill`);
   }
 });
 
-test("removed 1.x components have no compatibility files", () => {
+test("removed and renamed components have no compatibility files", () => {
   for (const path of [
+    "commands/create-rtk-filter.md",
+    "commands/optimize-context.md",
+    "commands/setup-rtk.md",
     "commands/budget-efficiency.md",
     "commands/review-efficiency.md",
     "skills/efficiency-budget/SKILL.md",
@@ -189,8 +186,7 @@ test("efficiency uses host-native controls and delegates only on explicit reques
   const efficiency = `${read("commands/efficiency.md")}\n${read("skills/efficiency/SKILL.md")}`;
   for (const phase of ["Before work", "During work", "After work"]) assert.match(efficiency, new RegExp(phase, "i"));
   for (const protectedTerm of [
-    "same-session measurements",
-    "cumulative statistics",
+    "cumulative RTK gain",
     "observable behavior",
     "public interfaces",
     "persisted formats",
@@ -328,7 +324,7 @@ test("debugging feedback guidance stays conditional, advisory, and non-authorizi
 });
 
 test("RTK setup keeps Cursor receipts separate from Codex direct execution", () => {
-  const setup = `${read("commands/setup-rtk.md")}\n${read("skills/rtk-setup/SKILL.md")}`;
+  const setup = `${read("commands/rtk-setup.md")}\n${read("skills/rtk-setup/SKILL.md")}`;
   for (const required of [
     "rtk --version",
     "rtk gain",
@@ -350,6 +346,33 @@ test("RTK setup keeps Cursor receipts separate from Codex direct execution", () 
   assert.match(setup, /do not run Cursor or Codex setup commands/i);
 });
 
+test("RTK evidence distinguishes shell-output estimates from whole-task economics", () => {
+  const evidence = read("skills/efficiency/references/rtk-evidence.md");
+  const efficiency = read("skills/efficiency/SKILL.md");
+  const setup = read("skills/rtk-setup/SKILL.md");
+  const filter = read("skills/rtk-filter-design/SKILL.md");
+  assert.match(efficiency, /references\/rtk-evidence\.md/);
+  assert.match(setup, /efficiency\/references\/rtk-evidence\.md/);
+  assert.match(filter, /efficiency\/references\/rtk-evidence\.md/);
+  for (const required of [
+    /raw versus filtered shell-output volume/i,
+    /not provider-billed tokens, whole-session input, or task cost/i,
+    /Execution coverage.*rtk gain --history/is,
+    /Shell-output reduction/i,
+    /Contributor concentration.*absolute estimated reduction.*scoped total/is,
+    /Do not rank usefulness from average percentage alone/i,
+    /Whole-task net effect.*provider tokens or cost.*agent turns.*result quality.*unverified/is,
+    /same task, host, model, effort, and relevant environment/i,
+    /global, project, session, or task scoped.*cumulative or same-session/is,
+    /Cursor, Codex, another host, mixed hosts, or an unknown host/i,
+    /host truncation, context-cache pricing, commands that bypass RTK, retries, and re-reads/i,
+    /Do not persist machine-specific history totals.*Do not add telemetry or a background benchmark/is,
+  ]) assert.match(evidence, required);
+  assert.match(setup, /installation, host configuration, observed execution, estimated shell-output reduction, contributor concentration.*whole-task net effect as separate states/is);
+  assert.match(setup, /confirm only that RTK executed the rewritten command/i);
+  assert.doesNotMatch(`${evidence}\n${efficiency}\n${setup}\n${filter}`, /128\.7M|80\.2M|39334/);
+});
+
 test("RTK filter design preserves trust, diagnostics, and host-specific evidence", () => {
   const filter = `${read("skills/rtk-filter-design/SKILL.md")}\n${read("skills/rtk-filter-design/references/filter-format.md")}`;
   for (const required of [
@@ -366,10 +389,14 @@ test("RTK filter design preserves trust, diagnostics, and host-specific evidence
   assert.match(filter, /another Agent Plugins client/i);
   assert.match(filter, /mark host integration as unverified/i);
   assert.match(filter, /delegate.*only after the explicit request/i);
+  assert.match(filter, /complete and exact paths.*ordering when material.*explicit truncation.*exit status.*warnings.*machine-consumed or piped output/is);
+  assert.match(filter, /cannot establish those properties, do not recommend the filter/is);
+  assert.match(filter, /leave that command unfiltered.*documented raw bypass/is);
+  assert.match(filter, /material absolute contributors.*percentages on rare commands/is);
 });
 
 test("context optimization recognizes native Cursor and Codex context surfaces", () => {
-  const context = `${read("commands/optimize-context.md")}\n${read("skills/context-optimization/SKILL.md")}`;
+  const context = `${read("commands/context-optimization.md")}\n${read("skills/context-optimization/SKILL.md")}`;
   assert.match(context, /user's intent/);
   assert.match(context, /active host mode/);
   assert.match(context, /project `AGENTS\.md`/);
@@ -412,14 +439,14 @@ test("Codex response setup uses the same compact guidance and requires explicit 
   assert.match(setup, /equivalent unmarked guidance already exists, stop/i);
 });
 
-test("all manifests and package metadata define version 2.2.0 without hooks, MCP, apps, or extensions", () => {
+test("all manifests and package metadata define version 3.0.0 without hooks, MCP, apps, or extensions", () => {
   const portable = JSON.parse(read("plugin.json"));
   const cursor = JSON.parse(read(".cursor-plugin/plugin.json"));
   const codex = JSON.parse(read(".codex-plugin/plugin.json"));
   const packageJson = JSON.parse(read("package.json"));
   const packageLock = JSON.parse(read("package-lock.json"));
   for (const value of [portable.version, cursor.version, codex.version, packageJson.version, packageLock.version, packageLock.packages[""].version]) {
-    assert.equal(value, "2.2.0");
+    assert.equal(value, "3.0.0");
   }
   assert.equal(portable.name, cursor.name);
   assert.equal(cursor.name, codex.name);
@@ -470,13 +497,22 @@ test("vendored Agent Plugins schema is byte-identical to its pinned Working Draf
   assert.ok(provenance.includes(hash));
 });
 
-test("README and changelog document the three-target 2.2 surface and the 1.x migration", () => {
+test("README and changelog document the three-target 3.0 surface and both migrations", () => {
   const readme = read("README.md");
   const changelog = read("CHANGELOG.md");
   for (const currentName of [
-    "setup-rtk", "create-rtk-filter", "efficiency", "optimize-context",
+    "context-optimization", "efficiency", "rtk-filter-design", "rtk-setup",
     "rtk-filter-auditor", "efficiency-auditor", "response-simplicity", "response-simplicity-setup",
   ]) assert.ok(readme.includes(currentName), `README.md does not document ${currentName}`);
+  for (const [oldName, replacement] of [
+    ["/optimize-context", "/context-optimization"],
+    ["/create-rtk-filter", "/rtk-filter-design"],
+    ["/setup-rtk", "/rtk-setup"],
+  ]) {
+    assert.match(readme, new RegExp(`${oldName.replace("/", "\\/")}.*${replacement.replace("/", "\\/")}`));
+    assert.ok(changelog.includes(oldName));
+    assert.ok(changelog.includes(replacement));
+  }
   for (const removedName of ["budget-efficiency", "review-efficiency", "efficiency-budget", "efficiency-review", "context-change-auditor"]) {
     assert.ok(readme.includes(removedName));
     assert.ok(changelog.includes(removedName));
@@ -494,6 +530,13 @@ test("README and changelog document the three-target 2.2 surface and the 1.x mig
   assert.match(readme, /does not add a `bro` or technical-writing skill.*READMEs or RFCs/is);
   assert.match(readme, /Agent Plugins.*four portable skills/is);
   assert.match(readme, /Codex.*five skills/is);
+  assert.match(readme, /estimated shell-output reduction.*not as proof of fewer provider-billed tokens, lower cost, or fewer agent turns/is);
+  assert.match(readme, /four evidence classes.*whole-task net effect.*unverified.*comparable paired run/is);
+  assert.match(readme, /without compatibility aliases/i);
+  assert.match(changelog, /### Breaking/);
+  assert.match(changelog, /version 3\.0\.0/i);
+  assert.match(changelog, /shared RTK evidence contract.*execution coverage.*estimated shell-output reduction.*contributor concentration.*unverified whole-task net effect/is);
+  assert.match(changelog, /semantic equivalence.*complete exact paths.*material ordering.*explicit truncation.*exit status.*warnings.*machine-consumed or piped output/is);
   assert.match(changelog, /## 2\.2\.0 - 2026-08-11/);
   assert.match(changelog, /Agent Plugins 1\.0\.0/i);
   assert.match(changelog, /## 2\.1\.0 - 2026-08-03/);
@@ -504,7 +547,7 @@ test("README and changelog document the three-target 2.2 surface and the 1.x mig
   assert.match(changelog, /rewrites only the last response without new analysis or claims/i);
   assert.match(changelog, /Cursor checks a supplied baseline.*Codex combines a preceding-response restatement with setup status.*neither proves exclusive restatement-only behavior/is);
   assert.match(changelog, /without a `bro` skill/i);
-  assert.match(changelog, /manifests, versions, dependencies, or component counts/i);
+  assert.match(changelog, /without changing dependencies or component counts/i);
 });
 
 test("release guidance separates conformance, bundles, native runtimes, and publication evidence", () => {
@@ -513,6 +556,11 @@ test("release guidance separates conformance, bundles, native runtimes, and publ
   const cursorSmoke = read("docs/runtime-smoke.md");
   const codexSmoke = read("docs/codex-runtime-smoke.md");
   assert.match(checklist, /four portable skills.*four Cursor skills.*one Codex-only adapter source/is);
+  assert.match(checklist, /versions agree at 3\.0\.0/i);
+  assert.match(checklist, /command filenames, frontmatter names, and delegated portable skill names match exactly/i);
+  assert.match(checklist, /each of the four shared skill directories is byte-identical/i);
+  assert.match(checklist, /RTK evidence reporting separates execution coverage.*shell-output reduction.*contributor concentration.*whole-task net effect/is);
+  assert.match(checklist, /complete exact paths.*material ordering.*explicit truncation.*exit status.*warnings.*machine-consumed or piped output/is);
   assert.match(checklist, /generated Codex target has exactly five immediate root skills/i);
   assert.match(checklist, /Format conformance.*Built bundle.*Cursor runtime.*Codex runtime.*publication/is);
   assert.match(checklist, /explicit model-call and cost limit/i);
@@ -537,6 +585,9 @@ test("release guidance separates conformance, bundles, native runtimes, and publ
   assert.match(codexSmoke, /exclusive restatement-only behavior as `unverified`.*additional model invocation/is);
   assert.doesNotMatch(codexSmoke, /restatement of only the immediately preceding/i);
   assert.match(codexSmoke, /does not prove.*Marketplace publication/i);
+  assert.match(cursorSmoke, /\/context-optimization.*\/rtk-filter-design.*\/rtk-setup/is);
+  assert.match(cursorSmoke, /provider tokens, cost, agent turns, or result quality.*comparable paired run/is);
+  assert.match(codexSmoke, /execution evidence.*shell-output reduction.*whole-task net effect unverified/is);
 });
 
 test("CI and local development use the same release gate", () => {

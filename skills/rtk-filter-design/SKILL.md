@@ -13,6 +13,10 @@ Inspect the project's documented and observed command surface. Prefer recurring 
 
 Use precise matchers, conservative output limits, command-appropriate empty output, and fixtures that preserve failures, warnings, paths, summaries, and non-zero diagnostics. Keep protected data out of fixtures.
 
+Require semantic equivalence for every behavior the downstream consumer needs. Preserve complete and exact paths, ordering when material, explicit truncation, exit status, warnings, and machine-consumed or piped output. If representative evidence cannot establish those properties, do not recommend the filter for that command surface; keep the native output or use the installed RTK version's documented raw bypass.
+
+When RTK history or `rtk gain` is used to prioritize a filter, read [RTK evidence interpretation](../efficiency/references/rtk-evidence.md). Prefer material absolute contributors over impressive percentages on rare commands, and never claim whole-task savings from filtered output alone.
+
 Use RTK verification and representative finite smoke checks when available. Treat trust warnings and unavailable verification as open evidence, explain the next safe action, and keep approvals inside RTK and the active host's native flow. Because trust is bound to the filter content, require the user to re-trust a changed filter before claiming host coverage.
 
 In Cursor, RTK 0.44.0 or newer is required when the result depends on custom TOML filters inside the hook rewrite path. Use `rtk hook check --agent cursor '<finite-command>'`, then inspect `updated_input` and `permission`; keep an `ask` result approval-gated. In Codex, first inspect `rtk init --codex --show`, then run only an approved finite command through `rtk <command>` and confirm it with `rtk gain --history`. Codex has no Cursor `updated_input` receipt, so do not describe direct RTK execution as a hook rewrite.

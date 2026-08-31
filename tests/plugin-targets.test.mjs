@@ -17,6 +17,17 @@ import { defaultRoot } from "../scripts/validate-plugin.mjs";
 
 const portableSkills = ["context-optimization", "efficiency", "rtk-filter-design", "rtk-setup"];
 
+function directorySnapshot(directory, prefix = "") {
+  const snapshot = {};
+  for (const entry of readdirSync(directory, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name))) {
+    const relativePath = prefix ? join(prefix, entry.name) : entry.name;
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) Object.assign(snapshot, directorySnapshot(path, relativePath));
+    else snapshot[relativePath] = readFileSync(path);
+  }
+  return snapshot;
+}
+
 test("deterministic allowlists isolate Agent Plugins, Cursor, and Codex bundles", () => {
   const output = mkdtempSync(join(tmpdir(), "efficiency-target-test-"));
   try {
@@ -39,7 +50,18 @@ test("deterministic allowlists isolate Agent Plugins, Cursor, and Codex bundles"
       assert.equal(existsSync(join(first["agent-plugins"].path, "skills", name, "SKILL.md")), true);
       assert.equal(existsSync(join(first.cursor.path, "skills", name, "SKILL.md")), true);
       assert.equal(existsSync(join(first.codex.path, "skills", name, "SKILL.md")), true);
+      const portableSnapshot = directorySnapshot(join(first["agent-plugins"].path, "skills", name));
+      assert.deepEqual(directorySnapshot(join(first.cursor.path, "skills", name)), portableSnapshot,
+        `${name} differs between Agent Plugins and Cursor`);
+      assert.deepEqual(directorySnapshot(join(first.codex.path, "skills", name)), portableSnapshot,
+        `${name} differs between Agent Plugins and Codex`);
     }
+    assert.deepEqual(readdirSync(join(first.cursor.path, "commands")).sort(), [
+      "context-optimization.md",
+      "efficiency.md",
+      "rtk-filter-design.md",
+      "rtk-setup.md",
+    ]);
     for (const reference of ["human-communication.md", "change-communication.md"]) {
       for (const target of [first["agent-plugins"].path, first.cursor.path, first.codex.path]) {
         assert.equal(
@@ -144,6 +166,21 @@ test("built-target validation rejects host leaks and missing portable components
     rmSync(join(portable, "commands"), { recursive: true });
     rmSync(join(portable, "skills", "rtk-setup"), { recursive: true });
     assert.throws(() => validateBuiltTarget(portable, "agent-plugins", built.version), /skills drifted/);
+  } finally {
+    rmSync(output, { recursive: true, force: true });
+  }
+});
+
+test("built Cursor validation fails closed on command-to-skill name drift", () => {
+  const output = mkdtempSync(join(tmpdir(), "efficiency-target-command-parity-"));
+  try {
+    const built = buildPluginTargets(output);
+    const commandPath = join(built.cursor.path, "commands", "rtk-setup.md");
+    writeFileSync(commandPath, readFileSync(commandPath, "utf8").replace("name: rtk-setup", "name: rtk-setup-drift"));
+    assert.throws(
+      () => validateBuiltTarget(built.cursor.path, "cursor", built.version),
+      /Cursor command names must exactly match portable skill names/,
+    );
   } finally {
     rmSync(output, { recursive: true, force: true });
   }

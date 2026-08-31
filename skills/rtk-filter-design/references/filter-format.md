@@ -16,7 +16,9 @@ input = "ERROR tests/ExampleTest failed"
 expected = "ERROR tests/ExampleTest failed"
 ```
 
-Preserve failures, warnings, exceptions, assertions, stack traces, paths, summaries, request IDs, and non-zero diagnostics. Strip only proven noise. Keep enough head and tail context to diagnose failure. Every new output shape needs an inline diagnostic fixture.
+Preserve failures, warnings, exceptions, assertions, stack traces, paths, summaries, request IDs, exit status, and non-zero diagnostics. Strip only proven noise. Keep enough head and tail context to diagnose failure. Every new output shape needs an inline diagnostic fixture.
+
+Add representative fixtures for every required semantic property, including complete and exact paths, ordering when material, explicit truncation, and machine-consumed or piped output. A shorter output is insufficient evidence. If the filter cannot preserve the command's required native semantics, leave that command unfiltered or use the installed RTK version's documented raw bypass.
 
 Run `rtk verify --require-all`. Trust is a separate user-approved step after edits: run the native `rtk trust` flow from the intended project root, and re-trust whenever the filter content changes. Do not bypass that boundary with non-interactive trust unless the user explicitly requests it.
 
