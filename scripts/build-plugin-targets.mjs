@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 import { checkLinks } from "./check-links.mjs";
 import { validateAgentPlugin, validateCodexPlugin, validatePlugin } from "./validate-plugin.mjs";
 
-const root = dirname(dirname(fileURLToPath(import.meta.url)));
+const defaultRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const plugin = "geldmacher-efficiency";
 const portableSkills = [
   "context-optimization",
@@ -27,7 +27,7 @@ const portableSkills = [
   "rtk-setup",
 ];
 const codexAdapterSkill = "adapters/codex/skills/response-simplicity-setup";
-const persistentOutput = join(root, ".build", "plugins");
+const persistentOutput = join(defaultRoot, ".build", "plugins");
 const allowed = {
   "agent-plugins": [
     "plugin.json",
@@ -113,11 +113,11 @@ function assertNoSymlinkComponents(base, path, label) {
 function validateOutputRoot(outputRoot) {
   const output = resolve(outputRoot);
   if (output === persistentOutput) {
-    const expected = resolve(realpathSync(root), ".build", "plugins");
+    const expected = resolve(realpathSync(defaultRoot), ".build", "plugins");
     if (canonicalCandidate(output) !== expected) {
       throw new Error("persistent target output must resolve to the repository .build/plugins directory");
     }
-    assertNoSymlinkComponents(root, output, "persistent target output");
+    assertNoSymlinkComponents(defaultRoot, output, "persistent target output");
     return output;
   }
 
@@ -136,36 +136,36 @@ function validateOutputRoot(outputRoot) {
   return output;
 }
 
-function copyRegular(source, destination) {
+function copyRegular(source, destination, projectRoot) {
   const stat = lstatSync(source);
-  if (stat.isSymbolicLink()) throw new Error(`target source may not be a symlink: ${relative(root, source)}`);
+  if (stat.isSymbolicLink()) throw new Error(`target source may not be a symlink: ${relative(projectRoot, source)}`);
   if (stat.isDirectory()) {
     mkdirSync(destination, { recursive: true, mode: stat.mode & 0o777 });
-    for (const entry of readdirSync(source).sort()) copyRegular(join(source, entry), join(destination, entry));
+    for (const entry of readdirSync(source).sort()) copyRegular(join(source, entry), join(destination, entry), projectRoot);
     return;
   }
-  if (!stat.isFile()) throw new Error(`target source must be a regular file: ${relative(root, source)}`);
+  if (!stat.isFile()) throw new Error(`target source must be a regular file: ${relative(projectRoot, source)}`);
   mkdirSync(dirname(destination), { recursive: true });
   writeFileSync(destination, readFileSync(source), { mode: stat.mode & 0o777 });
   chmodSync(destination, stat.mode & 0o777);
 }
 
-function copyAllowed(destination, item) {
-  const source = resolve(root, item);
+function copyAllowed(projectRoot, destination, item) {
+  const source = resolve(projectRoot, item);
   const output = resolve(destination, item);
-  if (!inside(root, source) || !inside(destination, output)) throw new Error(`target path escapes its root: ${item}`);
+  if (!inside(projectRoot, source) || !inside(destination, output)) throw new Error(`target path escapes its root: ${item}`);
   if (!existsSync(source)) throw new Error(`target source is missing: ${item}`);
-  copyRegular(source, output);
+  copyRegular(source, output, projectRoot);
 }
 
-function copyMapped(destination, sourceItem, destinationItem) {
-  const source = resolve(root, sourceItem);
+function copyMapped(projectRoot, destination, sourceItem, destinationItem) {
+  const source = resolve(projectRoot, sourceItem);
   const output = resolve(destination, destinationItem);
-  if (!inside(root, source) || !inside(destination, output)) {
+  if (!inside(projectRoot, source) || !inside(destination, output)) {
     throw new Error(`mapped target path escapes its root: ${sourceItem} -> ${destinationItem}`);
   }
   if (!existsSync(source)) throw new Error(`mapped target source is missing: ${sourceItem}`);
-  copyRegular(source, output);
+  copyRegular(source, output, projectRoot);
 }
 
 function files(directory) {
@@ -249,7 +249,8 @@ export function validateBuiltTarget(destination, target, version) {
   files(destination);
 }
 
-export function buildPluginTargets(outputRoot) {
+export function buildPluginTargets(outputRoot, sourceRoot = defaultRoot) {
+  const projectRoot = resolve(sourceRoot);
   const output = validateOutputRoot(outputRoot);
   const targets = ["agent-plugins", "cursor", "codex"];
   const destinations = Object.fromEntries(targets.map((target) => [target, join(output, target, plugin)]));
@@ -258,13 +259,13 @@ export function buildPluginTargets(outputRoot) {
     assertNoSymlinkComponents(output, destination, `${target} target destination`);
   }
   for (const destination of Object.values(destinations)) rmSync(destination, { recursive: true, force: true });
-  const version = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).version;
+  const version = JSON.parse(readFileSync(join(projectRoot, "package.json"), "utf8")).version;
   const result = { version };
   for (const target of targets) {
     const destination = destinations[target];
-    for (const item of allowed[target]) copyAllowed(destination, item);
+    for (const item of allowed[target]) copyAllowed(projectRoot, destination, item);
     if (target === "codex") {
-      copyMapped(destination, codexAdapterSkill, "skills/response-simplicity-setup");
+      copyMapped(projectRoot, destination, codexAdapterSkill, "skills/response-simplicity-setup");
     }
     validateBuiltTarget(destination, target, version);
     result[target] = { path: destination, hash: digest(destination), files: files(destination).length };

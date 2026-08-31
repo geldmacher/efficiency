@@ -28,6 +28,7 @@
     "deploy:prepare": "npm run build:targets && npm run check:targets && npm run validate && node --test tests/plugin-targets.test.mjs tests/local-plugin-deploy.test.mjs",
     "deploy:status": "node scripts/local-plugin-deploy.mjs status",
     "deploy:local": "node scripts/local-plugin-deploy.mjs deploy",
+    "release:plugin": "node scripts/plugin-github-release.mjs",
     "validate": "node scripts/validate-plugin.mjs",
     "check:links": "node scripts/check-links.mjs",
     "test": "node --test",

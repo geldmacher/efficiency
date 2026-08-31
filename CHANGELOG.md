@@ -10,6 +10,8 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Added one explicit repository-local `$release-plugin`, `/release-plugin`, and `release:plugin` journey for deterministic, checksum- and provenance-backed Cursor and Codex GitHub Release assets without publishing during implementation.
+- Added a verified GitHub Release installation guide for Cursor and Codex with update, rollback, Marketplace, reload, and fresh-task activation boundaries.
 - Added one shared RTK evidence contract that separates execution coverage, estimated shell-output reduction, contributor concentration, and unverified whole-task net effect without persisting machine-specific gain totals.
 - Added one shared human communication contract for all four portable workflows, with outcome-first explanations, practical meaning, evidence status, and useful next actions for mixed technical knowledge.
 - Added conditional, project-convention-first guidance for verifiable commit messages, pull request descriptions, release notes, and change summaries.

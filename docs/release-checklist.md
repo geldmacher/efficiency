@@ -10,6 +10,17 @@ Complete this checklist before tagging a plugin release. Use a clean checkout or
 - [ ] `git diff --check`
 - [ ] The working tree contains no unexpected generated changes after the gates.
 
+## GitHub Release mechanism
+
+- [ ] `$release-plugin`, `/release-plugin`, metadata, and `release:plugin` expose exactly one explicit no-argument journey outside every generated target.
+- [ ] Preflight proves GitHub availability and authentication, commit identity, expected repository, synchronized `main`, NUL-safe complete candidate paths, consistent versions, and release-ready notes before tracked mutation.
+- [ ] At most one exact `Release v{version}` commit is created; the final staged tree is compared with `HEAD`, and retry state is bound before the commit boundary.
+- [ ] Cursor and Codex preparations are byte-identical across repeated builds and produce one-root archives, checksums, notes, and closed provenance without Agent Plugins or development leakage.
+- [ ] Only a lightweight tag is accepted; `main` and the tag update atomically, while mixed remote state stops without repair, overwrite, deletion, reset, force-push, or clobbering.
+- [ ] GitHub metadata and all downloaded asset bytes pass read-back verification before success is reported.
+- [ ] The [GitHub installation guide](installation.md) covers checksums, host layouts, Codex Marketplace handling, updates, rollback, reload, and fresh-task activation.
+- [ ] Building this mechanism performs no live commit, tag, push, publication, deployment, installation, or host restart.
+
 ## Format and repository integrity
 
 - [ ] Root `plugin.json`, Cursor manifest, Codex manifest, package, lockfile, and changelog versions agree at 3.0.0.

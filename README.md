@@ -1,5 +1,7 @@
 # Efficiency
 
+> [Install Efficiency for Cursor or Codex](docs/installation.md) · [Latest GitHub Release](https://github.com/geldmacher/efficiency/releases/latest)
+
 **Less noise. Less over-engineering. The right rigor where it matters.**
 
 Efficiency is a lightweight plugin for Agent Plugins v1 clients, Cursor, and Codex that makes agent work leaner without making it careless:
@@ -46,7 +48,11 @@ The Codex manifest uses the documented `./skills/` root and `.codex-plugin` cont
 
 On Agent Plugins clients other than Cursor or Codex, the portable skills use conservative host-neutral behavior. They inspect only documented context or RTK integration surfaces, report unknown host integration as unverified, and do not assume Cursor hooks or Codex guidance paths.
 
-## Install locally
+## Install from a GitHub Release
+
+Versioned GitHub Releases provide separate Cursor and Codex archives plus `SHA256SUMS`, `RELEASE_NOTES.md`, and `provenance.json`. Follow the [verified release installation guide](docs/installation.md) for checksum validation, correct host layouts, Codex Marketplace setup, updates, rollback, reload, and fresh-task activation. The portable Agent Plugins target remains a build and conformance output rather than a third release archive.
+
+## Develop or deploy from a Git checkout
 
 Efficiency is not yet available in a public plugin store. Keep the Git checkout as the canonical source and deploy generated host copies from it. Do not clone into `~/.cursor/plugins/local` or `~/.codex/plugins`; those directories contain managed deployment copies and are atomically replaced.
 
@@ -82,7 +88,7 @@ The deploy command builds and validates all three deterministic bundles, then at
 
 Every installed copy contains a `.local-deploy.json` receipt with its content-derived local version, Git revision, dirty status, source path, and deployment time. Dirty checkouts are allowed and explicitly recorded. For Codex, the command also creates or updates only this plugin's entry in the `personal` Marketplace and refreshes the verified Codex cache with `codex plugin add geldmacher-efficiency@personal --json`. Do not delete Codex caches manually.
 
-After installation or an update, reload Cursor before testing its plugin surface and start a new Codex task before testing Codex discovery. Review changed hooks manually before granting trust. The deploy command does not restart either host or grant hook trust. See the [Cursor plugin documentation](https://cursor.com/docs/plugins) and OpenAI's [local plugin documentation](https://developers.openai.com/plugins/build/plugins).
+After installation or an update, reload Cursor before testing its plugin surface and start a new Codex task before testing Codex discovery. The deploy command does not restart either host. See the [Cursor plugin documentation](https://cursor.com/docs/plugins) and OpenAI's [local plugin documentation](https://developers.openai.com/plugins/build/plugins).
 
 ### Update from the origin repository
 
@@ -190,6 +196,8 @@ git diff --check
 The release check validates all three manifests and target bundles, Agent Skills discovery and frontmatter, path containment, version alignment, links, and policy contracts. Source links exclude ignored `.build` output, while every newly generated target is checked directly for bundle-local links. It proves repository format and bundle state—not installation, live host behavior, broad client compatibility, Marketplace state, or publication. The bounded Cursor smoke can check a supplied baseline restatement without an extra model call, but it leaves binding to the immediately preceding assistant response unverified unless that call is separately approved. The two-invocation Codex smoke combines a preceding-response restatement with setup status, so it can check response selection and segment fidelity but leaves exclusive restatement-only behavior unverified unless an additional call is separately approved.
 
 Before a release, complete the [release checklist](docs/release-checklist.md). Runtime checks remain separate: [Agent Plugins runtime smoke](docs/agent-plugins-runtime-smoke.md), [Cursor runtime smoke](docs/runtime-smoke.md), and [Codex runtime smoke](docs/codex-runtime-smoke.md).
+
+Repository maintainers may explicitly invoke `$release-plugin` in Codex or `/release-plugin` in Cursor. That single no-argument journey runs the complete gate, may create one bounded release commit, creates a lightweight version tag, atomically pushes `main` and the tag, publishes only the Cursor and Codex archives, and verifies downloaded bytes. It never chooses or bumps a version, deploys or installs the plugin, restarts a host, overwrites an existing release, or repairs mixed remote state.
 
 ## Troubleshooting
 
