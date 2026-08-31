@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 3.0.0
+
 ### Breaking
 
 - Renamed the Cursor commands `/optimize-context`, `/create-rtk-filter`, and `/setup-rtk` to `/context-optimization`, `/rtk-filter-design`, and `/rtk-setup` so each portable workflow has one canonical name; no compatibility aliases remain.
