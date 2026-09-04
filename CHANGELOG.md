@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Added Evidence-Guided Simplicity to the existing `efficiency` skill: a quiet, early-exit ladder that prefers omission, project reuse, standard or native capabilities, suitable installed dependencies, and only then the smallest local implementation.
+- Added operational YAGNI, KISS, and DRY guidance that targets speculative scope, independent concepts, trace and state burden, and duplicated authority without equating shorter code or repeated syntax with better design.
+
+### Changed
+
+- Front-loaded coding, refactoring, and technical-design discovery so relevant work can select the existing skill implicitly while keeping the full bounded challenge explicit or risk-triggered and non-recursive.
+- Made Evidence-Guided Simplicity the primary qualitative benefit in the README and all three plugin manifests without adding components, dependencies, modes, hooks, MCP servers, or quantitative claims.
+- Credited the MIT-licensed Ponytail v4.9.0 guidance and review skill at commit `0a4dd63` as a pinned influence while documenting the deliberately excluded line-count, one-liner, intensity-mode, and fixed-test policies.
+
 ## 3.0.0
 
 ### Breaking

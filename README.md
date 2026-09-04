@@ -2,9 +2,9 @@
 
 > [Install Efficiency for Cursor or Codex](docs/installation.md) · [Latest GitHub Release](https://github.com/geldmacher/efficiency/releases/latest)
 
-**Less noise. Less over-engineering. The right rigor where it matters.**
+**Evidence-Guided Simplicity: the smallest solution justified by real requirements and repository evidence, with the right rigor where it matters.**
 
-Efficiency is a lightweight plugin for Agent Plugins v1 clients, Cursor, and Codex that makes agent work leaner without making it careless:
+Efficiency is a lightweight plugin for Agent Plugins v1 clients, Cursor, and Codex. Its essential advantage is that ordinary coding, refactoring, and technical-design work can naturally select a shared simplicity workflow before complexity is added:
 
 - match effort and validation to the actual risk,
 - select direct evidence and proportionate automation for the work,
@@ -16,6 +16,18 @@ Efficiency is a lightweight plugin for Agent Plugins v1 clients, Cursor, and Cod
 RTK (Rust Token Killer) is optional; it trims noisy terminal output before it reaches the model. Efficiency treats RTK gain figures as estimated shell-output reduction, not as proof of fewer provider-billed tokens, lower cost, or fewer agent turns. Efficiency adds no custom MCP server, telemetry, or background automation.
 
 Across its four portable workflows, Efficiency starts with the outcome, translates non-obvious technical consequences into practical meaning, and names the next useful action when one exists. The guidance is written for mixed technical knowledge, preserves exact technical text, and does not force every answer into one template.
+
+## Evidence-Guided Simplicity
+
+For relevant coding, refactoring, and technical-design tasks, the existing `efficiency` skill applies a short ladder and stops at the first option supported by the requirements and repository: omit unnecessary work, reuse a project capability, use the standard library or native platform, use an installed dependency only when it lowers total burden, and otherwise add the smallest local implementation.
+
+- **YAGNI** removes speculative requirements and unproved flexibility.
+- **KISS** reduces independent concepts, trace depth, hidden state, and interface burden rather than chasing fewer lines or files.
+- **DRY** keeps knowledge, rules, decisions, and validation in one authoritative place; similar syntax alone does not justify an abstraction.
+
+The quick decision stays silent unless it changes the solution, scope, or material risk, or you ask for the reasoning. A full simplicity challenge runs only when requested or when the quick pass finds a material complexity risk, and then runs once. User requirements, public interfaces, persisted formats, correctness, security, accessibility, data-loss protection, performance, lifecycle semantics, domain distinctions, project conventions, and proportionate verification remain protected.
+
+This approach adapts the ordered solution ladder from the MIT-licensed [Ponytail v4.9.0 guidance](https://github.com/DietrichGebert/ponytail/blob/v4.9.0/AGENTS.md) and its pinned [review skill](https://github.com/DietrichGebert/ponytail/blob/v4.9.0/skills/ponytail-review/SKILL.md) at commit `0a4dd63`. Efficiency intentionally does not adopt one-liner priority, line-count metrics, intensity modes, or a fixed one-test rule, and makes no quantitative Ponytail-derived claims.
 
 ## What you get
 
@@ -136,7 +148,7 @@ For responses, Efficiency first considers whether the reader must act, decide, o
 
 ## Designed to stay useful—not reckless
 
-- Skills are opt-in. Only Cursor loads the short response rule automatically.
+- Portable skills remain explicitly invokable and are also available for normal relevance-based implicit selection. Only Cursor loads the short response rule on every task.
 - Review requests never edit code. Simplification requires an explicit scoped change request.
 - RTK setup, filter trust, and global guidance changes are previewed before approval.
 - Auditors are read-only; independent model work happens only when requested.
@@ -193,7 +205,7 @@ npm run release-check
 git diff --check
 ```
 
-The release check validates all three manifests and target bundles, Agent Skills discovery and frontmatter, path containment, version alignment, links, and policy contracts. Source links exclude ignored `.build` output, while every newly generated target is checked directly for bundle-local links. It proves repository format and bundle state—not installation, live host behavior, broad client compatibility, Marketplace state, or publication. The bounded Cursor smoke can check a supplied baseline restatement without an extra model call, but it leaves binding to the immediately preceding assistant response unverified unless that call is separately approved. The two-invocation Codex smoke combines a preceding-response restatement with setup status, so it can check response selection and segment fidelity but leaves exclusive restatement-only behavior unverified unless an additional call is separately approved.
+The release check validates all three manifests and target bundles, Agent Skills discovery and frontmatter, path containment, version alignment, links, and policy contracts. Source links exclude ignored `.build` output, while every newly generated target is checked directly for bundle-local links. It proves repository format and bundle state—not installation, live host behavior, broad client compatibility, Marketplace state, or publication. The bounded Cursor smoke can check a supplied baseline restatement without an extra model call, but it leaves binding to the immediately preceding assistant response unverified unless that call is separately approved. The three-invocation Codex smoke separates implicit simplicity selection, RTK setup, and optional response-guidance evidence; exclusive restatement-only behavior still requires a separately approved additional call.
 
 Before a release, complete the [release checklist](docs/release-checklist.md). Runtime checks remain separate: [Agent Plugins runtime smoke](docs/agent-plugins-runtime-smoke.md), [Cursor runtime smoke](docs/runtime-smoke.md), and [Codex runtime smoke](docs/codex-runtime-smoke.md).
 
@@ -210,6 +222,10 @@ Repository maintainers may explicitly invoke `$release-plugin` in Codex or `/rel
 
 ## References
 
+- [OpenAI Skills documentation](https://learn.chatgpt.com/docs/build-skills)
+- [Cursor Skills documentation](https://prod.cursor.com/docs/skills)
+- [Ponytail v4.9.0 guidance](https://github.com/DietrichGebert/ponytail/blob/v4.9.0/AGENTS.md)
+- [Ponytail v4.9.0 review skill](https://github.com/DietrichGebert/ponytail/blob/v4.9.0/skills/ponytail-review/SKILL.md)
 - [Codex plugin structure](https://developers.openai.com/codex/build-plugins)
 - [Codex AGENTS.md precedence](https://developers.openai.com/codex/guides/agents-md)
 - [Cursor plugin specification](https://github.com/cursor/plugins)

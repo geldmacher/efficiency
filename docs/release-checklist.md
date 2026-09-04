@@ -37,8 +37,12 @@ Complete this checklist before tagging a plugin release. Use a clean checkout or
 - [ ] Cursor agents are read-only adapters and their authoritative policies live under shared skill references.
 - [ ] Cursor response-rule content matches the canonical Codex response guidance.
 - [ ] All four portable skills link to the shared human communication contract; only the `efficiency` workflow conditionally loads the focused change communication contract.
+- [ ] The `efficiency` description front-loads coding, refactoring, and technical design so normal implicit selection can apply Evidence-Guided Simplicity without a new command, skill, hook, or always-on rule.
 - [ ] `context-optimization` loads agent-document design only for agent-consumed context and retains read-only analysis unless an edit is explicitly authorized.
 - [ ] `efficiency` and its auditor use one shared design-and-code simplicity reference and perform at most one bounded challenge without manufacturing a finding.
+- [ ] The quick ladder stops at the first evidence-supported sufficient choice in this order: omit unnecessary work, reuse project capability, use standard or native capability, use a suitable installed dependency, then add the smallest local implementation.
+- [ ] YAGNI rejects speculative scope, KISS targets concepts and reader burden rather than lines, and DRY consolidates authority rather than merely similar syntax; all preserve the documented correctness and quality boundaries.
+- [ ] README and all three manifests present Evidence-Guided Simplicity as the primary qualitative benefit, include the five search keywords, and credit pinned Ponytail v4.9.0 without importing numerical claims.
 - [ ] Verification-economy guidance names at most two risk-bearing facts, selects the cheapest adequate direct evidence, distinguishes proxy and live evidence, and remains non-authorizing.
 - [ ] Repeatable-work guidance compares direct work with the complete tool cost, prefers a deterministic rerunnable tool over identical delegated transformations only when justified, and does not authorize tests, checks, scripts, tools, file changes, artifacts, delegation, servers, deployment, live access, or scope expansion.
 - [ ] The bounded simplicity challenge assesses trace depth and hidden or mutable state, checks removable complexity before additions, and preserves comments when code cannot express their rationale or external constraint.
@@ -70,6 +74,7 @@ Complete this checklist before tagging a plugin release. Use a clean checkout or
 - [ ] `/rtk-setup` identifies RTK, previews setup, and preserves the existing `allow`/`ask` path.
 - [ ] A finite supported command retains its RTK `updated_input`; `ask` does not execute before approval.
 - [ ] `/rtk-filter-design` preserves native command semantics, failures, and warnings, passes `rtk verify --require-all`, and requires renewed trust after edits.
+- [ ] A natural coding, refactoring, or design request without `/efficiency` can select the existing skill, stop at the first sufficient safe approach, and avoid unnecessary principle narration; `/efficiency` remains available explicitly.
 - [ ] `/efficiency` handles task economy, proportionate verification, repeated-work decisions, one scoped design/code-simplicity challenge, and advisory debugging-feedback review without modifying files on a review request.
 - [ ] `/context-optimization` can review agent-consumed documents without editing context on an analysis-only request.
 - [ ] Under the bounded two-conversation Cursor smoke, distinguish supplied-baseline restatement evidence from immediate last-response binding; keep the latter `unverified` without separate approval for an additional model invocation.
@@ -84,9 +89,10 @@ Complete this checklist before tagging a plugin release. Use a clean checkout or
 - [ ] `$rtk-setup` selects `rtk init --codex --show`, previews `rtk init --global --codex --dry-run`, and does not promise Cursor hook evidence.
 - [ ] Direct RTK execution of one approved finite command appears in `rtk gain --history`; record this only as execution evidence and keep whole-task token, turn, quality, and cost effects unverified without a comparable paired run.
 - [ ] `$efficiency` and `$context-optimization` expose the same conditional verification, repeatable-work, design, debugging-feedback, and agent-document behavior as the portable source without adding a skill.
+- [ ] A natural coding, refactoring, or design request without explicitly invoking `$efficiency` can select it implicitly, stop at the first sufficient safe approach, and avoid unnecessary principle narration.
 - [ ] Independent review delegation occurs only after an explicit request, stays bounded and read-only, and inherits the parent model.
 - [ ] `$response-simplicity-setup` status and diff preview are read-only by default.
-- [ ] Under the bounded two-invocation Codex smoke, distinguish immediately preceding-response selection and restatement-segment fidelity from exclusive restatement-only behavior; keep the latter `unverified` without separate approval for an additional model invocation.
+- [ ] Under the bounded three-invocation Codex smoke, keep implicit simplicity selection, RTK setup, and response-guidance evidence distinct; keep exclusive restatement-only behavior `unverified` without separate approval for an additional model invocation.
 
 ## Global AGENTS safety fixtures
 

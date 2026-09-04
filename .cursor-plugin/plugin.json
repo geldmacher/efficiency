@@ -1,7 +1,7 @@
 {
   "name": "geldmacher-efficiency",
   "displayName": "Efficiency",
-  "description": "Lightweight Cursor and Codex helpers for concise responses, RTK, context economy, and proportional validation.",
+  "description": "Evidence-Guided Simplicity for coding, refactoring, context, communication, RTK, and proportional validation.",
   "version": "3.0.0",
   "author": {
     "name": "Dennis Geldmacher",
@@ -17,7 +17,12 @@
     "tokens",
     "context",
     "optimization",
-    "review"
+    "review",
+    "simplicity",
+    "over-engineering",
+    "yagni",
+    "kiss",
+    "dry"
   ],
   "tags": [
     "tokens",

@@ -206,13 +206,38 @@ test("efficiency uses host-native controls and delegates only on explicit reques
 
 test("efficiency performs one bounded design and code simplicity challenge without making it always-on", () => {
   const efficiency = `${read("commands/efficiency.md")}\n${read("skills/efficiency/SKILL.md")}`;
+  const skillFields = parseFrontmatter(join(defaultRoot, "skills", "efficiency", "SKILL.md"));
   const auditor = read("skills/efficiency/references/auditor.md");
   const design = read("skills/efficiency/references/design-and-code-simplicity.md");
   const responseRule = read("rules/response-simplicity.mdc");
 
+  assert.match(skillFields.description, /^Guide coding, refactoring, and technical design toward evidence-guided simplicity/i);
   assert.match(efficiency, /read \[design and code simplicity\]\(references\/design-and-code-simplicity\.md\)/i);
+  assert.match(efficiency, /coding, refactoring, or technical design work.*quick Evidence-Guided Simplicity ladder/is);
+  assert.match(efficiency, /full bounded challenge only.*explicitly requests.*material complexity risk/is);
+  assert.match(efficiency, /quick ladder silently.*changes the chosen solution, scope, or risk.*asks for the reasoning/is);
   assert.match(auditor, /read and apply \[design and code simplicity\]\(design-and-code-simplicity\.md\) once/i);
+  const ladderSteps = [
+    "Omit or delete work",
+    "Reuse a capability already present in the project",
+    "Use the standard library or a native platform capability",
+    "Use an already installed dependency only when it lowers total reader, maintenance, and validation burden",
+    "Add the smallest local implementation",
+  ];
+  let previousStep = -1;
+  for (const step of ladderSteps) {
+    const currentStep = design.indexOf(step);
+    assert.ok(currentStep > previousStep, `quick ladder step is missing or out of order: ${step}`);
+    previousStep = currentStep;
+  }
   for (const required of [
+    /stop at the first evidence-supported sufficient option/i,
+    /YAGNI:.*speculative requirements.*unproved flexibility/is,
+    /KISS:.*independent concepts.*trace depth.*hidden or mutable state.*interface burden/is,
+    /DRY:.*knowledge, rule, decision, and validation.*one authoritative place/is,
+    /Similar syntax alone does not justify an abstraction/i,
+    /Do not optimize for one-liners, line-count or file-count targets, named intensity modes, or a fixed one-test rule/i,
+    /public interfaces.*persisted formats.*correctness.*security.*accessibility.*data-loss protection.*performance.*lifecycle semantics.*domain distinctions.*project conventions.*proportionate verification/is,
     /exactly one bounded simplicity challenge/i,
     /required behavior.*fixed constraints.*available evidence/is,
     /root decision.*variants.*branches.*states.*sources of truth.*interface burden.*compatibility handling/is,
@@ -227,13 +252,18 @@ test("efficiency performs one bounded design and code simplicity challenge witho
     /current design is already proportionate/i,
     /comment claims an invariant.*type.*test.*lint rule.*boundary check/is,
     /Keep comments.*rationale, external constraints.*code cannot express/is,
+    /comment is flagged.*redundant comment.*symptom of unclear code/is,
+    /authorized change.*remove only the former directly/is,
+    /smallest in-scope root-cause clarification.*retain any rationale.*code still cannot express/is,
     /Do not repeat the challenge recursively/i,
     /project-specific wording/i,
   ]) assert.match(design, required);
 
   assert.match(design, /codebase-design.*8b78b531ab965735c5dc74f6f7a219e1e37326df/is);
   assert.match(design, /minimize-reader-load.*subtract-before-you-add.*no-comments.*bdf7aa355337897f167153e05069aca505dae17c/is);
-  assert.doesNotMatch(responseRule, /bounded simplicity challenge|root decision|smallest viable alternative/i);
+  assert.match(design, /Ponytail v4\.9\.0 guidance.*Ponytail review skill.*0a4dd63/is);
+  assert.match(design, /MIT-licensed.*does not adopt Ponytail's one-liner priority, line-count metric, intensity modes, or fixed one-test rule/is);
+  assert.doesNotMatch(responseRule, /Evidence-Guided Simplicity|YAGNI|KISS|DRY|Ponytail|bounded simplicity challenge|root decision|smallest viable alternative/i);
 });
 
 test("verification economy selects bounded direct evidence without granting execution authority", () => {
@@ -478,6 +508,43 @@ test("all manifests and package metadata define version 3.0.0 without hooks, MCP
   assert.equal(existsSync(join(defaultRoot, "mcp.json")), false);
 });
 
+test("public metadata and documentation present Evidence-Guided Simplicity consistently", () => {
+  const portable = JSON.parse(read("plugin.json"));
+  const cursor = JSON.parse(read(".cursor-plugin/plugin.json"));
+  const codex = JSON.parse(read(".codex-plugin/plugin.json"));
+  const readme = read("README.md");
+  const changelog = read("CHANGELOG.md");
+  const checklist = read("docs/release-checklist.md");
+
+  for (const manifest of [portable, cursor, codex]) {
+    assert.match(manifest.description, /^Evidence-Guided Simplicity/i);
+    for (const keyword of ["simplicity", "over-engineering", "yagni", "kiss", "dry"]) {
+      assert.ok(manifest.keywords.includes(keyword), `${manifest.name} is missing keyword ${keyword}`);
+    }
+  }
+  assert.match(codex.interface.shortDescription, /smallest evidence-supported solution/i);
+  assert.match(codex.interface.longDescription, /Evidence-Guided Simplicity.*coding, refactoring, and technical design/is);
+  assert.match(codex.interface.defaultPrompt.join("\n"), /YAGNI, KISS, DRY.*proportionate validation/is);
+
+  for (const document of [readme, changelog, checklist]) {
+    assert.match(document, /Evidence-Guided Simplicity/);
+  }
+  assert.match(readme, /essential advantage.*ordinary coding, refactoring, and technical-design work.*naturally select/is);
+  assert.match(readme, /YAGNI.*KISS.*DRY/is);
+  assert.match(readme, /Ponytail v4\.9\.0 guidance.*review skill.*0a4dd63/is);
+  assert.match(changelog, /qualitative benefit.*without adding components, dependencies, modes, hooks, MCP servers, or quantitative claims/is);
+
+  for (const smoke of [
+    read("docs/runtime-smoke.md"),
+    read("docs/codex-runtime-smoke.md"),
+    read("docs/agent-plugins-runtime-smoke.md"),
+  ]) {
+    assert.match(smoke, /without (?:a slash command|manually invoking|explicitly invoking).*efficiency/is);
+    assert.match(smoke, /first.*sufficient/is);
+    assert.match(smoke, /unnecessary principle narration/i);
+  }
+});
+
 test("vendored Cursor schema is byte-identical to its recorded source hash", () => {
   const schema = read("schemas/plugin.schema.json");
   const hash = createHash("sha256").update(schema).digest("hex");
@@ -526,7 +593,7 @@ test("README and changelog document the three-target 3.0 surface and both migrat
   assert.match(readme, /recommend an approach.*do not authorize tests or checks.*scripts or tools.*file changes.*persisted artifacts.*delegation.*servers.*deployment.*live access.*scope expansion/is);
   assert.match(readme, /rewrites only that response.*without adding new analysis or claims/is);
   assert.match(readme, /bounded Cursor smoke.*supplied baseline restatement.*immediately preceding assistant response unverified/is);
-  assert.match(readme, /two-invocation Codex smoke.*preceding-response restatement.*setup status.*exclusive restatement-only behavior unverified/is);
+  assert.match(readme, /three-invocation Codex smoke.*implicit simplicity selection.*RTK setup.*optional response-guidance evidence.*exclusive restatement-only behavior.*separately approved/is);
   assert.match(readme, /does not add a `bro` or technical-writing skill.*READMEs or RFCs/is);
   assert.match(readme, /Agent Plugins.*four portable skills/is);
   assert.match(readme, /Codex.*five skills/is);
@@ -571,17 +638,18 @@ test("release guidance separates conformance, bundles, native runtimes, and publ
   assert.match(checklist, /does not authorize tests, checks, scripts, tools, file changes, artifacts, delegation, servers, deployment, live access, or scope expansion/is);
   assert.match(checklist, /restate only the last response.*without new analysis or claims.*below 1,200 characters/is);
   assert.match(checklist, /supplied-baseline restatement evidence.*immediate last-response binding.*unverified.*additional model invocation/is);
-  assert.match(checklist, /two-invocation Codex smoke.*preceding-response selection.*restatement-segment fidelity.*exclusive restatement-only behavior.*unverified.*additional model invocation/is);
+  assert.match(checklist, /three-invocation Codex smoke.*implicit simplicity selection.*RTK setup.*response-guidance evidence.*exclusive restatement-only behavior.*unverified.*additional model invocation/is);
   assert.match(checklist, /Do not infer actual human comprehension/i);
   assert.match(agentPluginsSmoke, /only the immediately preceding answer.*without adding analysis or claims/is);
   assert.match(cursorSmoke, /at most two short fresh conversations/i);
   assert.match(cursorSmoke, /does not prove last-response binding/i);
   assert.match(cursorSmoke, /immediately preceding assistant response as `unverified`.*additional model invocation/is);
   assert.match(codexSmoke, /fresh Codex task/i);
-  assert.match(codexSmoke, /at most two model invocations/i);
+  assert.match(codexSmoke, /at most three model invocations/i);
   assert.match(codexSmoke, /maximum approved cost/i);
+  assert.match(codexSmoke, /Use the third invocation only if needed/i);
   assert.match(codexSmoke, /tests selection and fidelity of the restatement segment, not exclusive restatement-only behavior/is);
-  assert.match(codexSmoke, /restatement of the immediately preceding Smoke 1 response.*restatement segment preserves.*without adding analysis or claims within that segment/is);
+  assert.match(codexSmoke, /restatement of the immediately preceding Smoke 2 response.*restatement segment preserves.*without adding analysis or claims within that segment/is);
   assert.match(codexSmoke, /exclusive restatement-only behavior as `unverified`.*additional model invocation/is);
   assert.doesNotMatch(codexSmoke, /restatement of only the immediately preceding/i);
   assert.match(codexSmoke, /does not prove.*Marketplace publication/i);

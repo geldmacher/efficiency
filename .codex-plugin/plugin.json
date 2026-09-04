@@ -1,7 +1,7 @@
 {
   "name": "geldmacher-efficiency",
   "version": "3.0.0",
-  "description": "Lightweight Cursor and Codex helpers for concise responses, RTK, context economy, and proportional validation.",
+  "description": "Evidence-Guided Simplicity for coding, refactoring, context, communication, RTK, and proportional validation.",
   "author": {
     "name": "Dennis Geldmacher",
     "email": "geldmacher.dennis@outlook.de",
@@ -16,13 +16,18 @@
     "tokens",
     "context",
     "optimization",
-    "review"
+    "review",
+    "simplicity",
+    "over-engineering",
+    "yagni",
+    "kiss",
+    "dry"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Efficiency",
-    "shortDescription": "Use RTK, context, and validation effort deliberately.",
-    "longDescription": "Efficiency adds lightweight workflows for proportional task effort, scoped code simplicity, RTK setup and filters, context economy, and an optional Codex response-simplicity instruction.",
+    "shortDescription": "Choose the smallest evidence-supported solution.",
+    "longDescription": "Efficiency applies Evidence-Guided Simplicity to coding, refactoring, and technical design, complemented by proportional validation, context economy, RTK workflows, and optional concise-response guidance.",
     "developerName": "Dennis Geldmacher",
     "category": "Developer Tools",
     "capabilities": [
@@ -32,8 +37,8 @@
     ],
     "websiteURL": "https://github.com/geldmacher/efficiency",
     "defaultPrompt": [
-      "Review this task for proportional effort.",
-      "Review the current changes for code simplicity.",
+      "Find the smallest evidence-supported solution for this coding task.",
+      "Review this refactor for YAGNI, KISS, DRY, and proportionate validation.",
       "Inspect my RTK setup for Codex."
     ],
     "logo": "./assets/logo.svg",
