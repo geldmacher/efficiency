@@ -2,7 +2,7 @@
   "name": "geldmacher-efficiency",
   "displayName": "Efficiency",
   "description": "Evidence-Guided Simplicity for coding, refactoring, context, communication, RTK, and proportional validation.",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "author": {
     "name": "Dennis Geldmacher",
     "email": "geldmacher.dennis@outlook.de"

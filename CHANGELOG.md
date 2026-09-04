@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 3.1.0
+
 ### Added
 
 - Added Evidence-Guided Simplicity to the existing `efficiency` skill: a quiet, early-exit ladder that prefers omission, project reuse, standard or native capabilities, suitable installed dependencies, and only then the smallest local implementation.

@@ -23,7 +23,7 @@ Complete this checklist before tagging a plugin release. Use a clean checkout or
 
 ## Format and repository integrity
 
-- [ ] Root `plugin.json`, Cursor manifest, Codex manifest, package, lockfile, and changelog versions agree at 3.0.0.
+- [ ] Root `plugin.json`, Cursor manifest, Codex manifest, package, lockfile, and changelog versions agree at 3.1.0.
 - [ ] Agent Plugins 1.0.0 remains visibly marked as a Working Draft and pinned to commit `bd383552095128f6effe895b9257cfd580a6d179`.
 - [ ] `schemas/agent-plugins/1.0.0/plugin.schema.json` and `schemas/plugin.schema.json` match their recorded SHA-256 values byte-for-byte.
 - [ ] Root `plugin.json` validates through the vendored Draft 2020-12 schema and has no `extensions` field.
