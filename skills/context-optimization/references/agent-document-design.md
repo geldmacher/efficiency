@@ -6,6 +6,7 @@ Use this reference only when the scoped context includes instructions or documen
 
 - Distinguish persistent pointers from material loaded only for a matching task. Count the pointer itself as recurring context cost.
 - Require every pointer to identify what it leads to and the distinct task branches that should load it. Collapse synonyms that describe the same branch.
+- If necessary guidance is missed, first sharpen the pointer's loading condition and check representative matching and non-matching requests. Inline the guidance only if that placement solves the observed problem better.
 - Keep instructions needed by every branch in the main workflow. Put branch-specific policy or detail behind a direct conditional link.
 - Keep references one level from the skill that selects them. Do not make an agent traverse an undocumented reference chain.
 
@@ -20,9 +21,7 @@ Use this reference only when the scoped context includes instructions or documen
 
 - Identify duplicated, obsolete, overly broad, or behavior-neutral instructions with concrete evidence. Do not remove text merely because it is long.
 - Prefer stating the required behavior directly. Retain necessary prohibitions as hard guardrails and pair them with the safe target behavior.
-- Make completion conditions observable and proportional. Replace vague outcomes with evidence an agent can actually inspect, but do not invent ceremony or artifacts solely to prove completion.
+- Make completion conditions observable and proportional. Account for every relevant task case, including omissions that a plausible summary could hide. Replace vague outcomes with evidence an agent can actually inspect, but do not invent ceremony or artifacts solely to prove completion. If later steps pull attention away from unfinished work, clarify the current completion condition first. Recommend an additional document or handoff only when observed behavior shows that the separation earns its context and coordination cost.
 - Preserve security, deployment, environment, domain, package, language, approval, and validation requirements through every reduction.
 
 For an analysis request, report the affected pointer or document, its recurring or conditional load, the concrete problem, the proposed placement, and what must remain. Edit only after explicit authorization and compare the relevant before-and-after context when practical.
-
-Source influence: [writing-for-agents at `8b78b531ab965735c5dc74f6f7a219e1e37326df`](https://github.com/mattpocock/skills/blob/8b78b531ab965735c5dc74f6f7a219e1e37326df/skills/productivity/writing-for-agents/SKILL.md). This reference uses original project-specific wording.

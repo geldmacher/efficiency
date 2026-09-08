@@ -28,12 +28,22 @@ const portableSkills = [
 ];
 const codexAdapterSkill = "adapters/codex/skills/response-simplicity-setup";
 const persistentOutput = join(defaultRoot, ".build", "plugins");
+const packageDocs = [
+  "docs/agent-plugins-runtime-smoke.md",
+  "docs/codex-runtime-smoke.md",
+  "docs/installation.md",
+  "docs/receipts/2.0.0-code-simplicity.md",
+  "docs/receipts/2.0.0.md",
+  "docs/release-checklist.md",
+  "docs/release-validation.md",
+  "docs/runtime-smoke.md"
+];
 const allowed = {
   "agent-plugins": [
     "plugin.json",
     "assets",
     "CHANGELOG.md",
-    "docs",
+    ...packageDocs,
     "LICENSE",
     "README.md",
     "schemas/agent-plugins",
@@ -45,7 +55,7 @@ const allowed = {
     "assets",
     "CHANGELOG.md",
     "commands",
-    "docs",
+    ...packageDocs,
     "LICENSE",
     "README.md",
     "rules",
@@ -59,7 +69,7 @@ const allowed = {
     ".codex-plugin",
     "assets",
     "CHANGELOG.md",
-    "docs",
+    ...packageDocs,
     "LICENSE",
     "README.md",
     "schemas/agent-plugins",

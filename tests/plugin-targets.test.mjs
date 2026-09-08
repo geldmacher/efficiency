@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import {
+  cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -13,9 +15,42 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { buildPluginTargets, validateBuiltTarget } from "../scripts/build-plugin-targets.mjs";
+import { checkLinks } from "../scripts/check-links.mjs";
 import { defaultRoot } from "../scripts/validate-plugin.mjs";
 
 const portableSkills = ["context-optimization", "efficiency", "rtk-filter-design", "rtk-setup"];
+
+test("only explicitly selected documentation enters plugin and npm packages", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "efficiency-doc-boundary-"));
+  try {
+    const source = join(temporary, "source");
+    cpSync(defaultRoot, source, {
+      recursive: true,
+      filter: (path) => ![".git", ".build", "node_modules"].includes(path.split(/[\\/]/).at(-1)),
+    });
+    writeFileSync(join(source, "docs", "future-guide.md"), "Additional documentation sentinel\n");
+    const expectedDocs = JSON.parse(readFileSync(join(source, "package.json"), "utf8"))
+      .files.filter((path) => path.startsWith("docs/"));
+    const inspect = (snapshot) => {
+      assert.deepEqual(Object.keys(snapshot).filter((path) => path.startsWith("docs/")).sort(), [...expectedDocs].sort());
+      assert.equal(Object.hasOwn(snapshot, "docs/future-guide.md"), false);
+      assert.ok(Object.hasOwn(snapshot, "docs/installation.md"));
+    };
+    const built = buildPluginTargets(join(temporary, "targets"), source);
+    for (const target of ["agent-plugins", "cursor", "codex"]) inspect(directorySnapshot(built[target].path));
+    const report = JSON.parse(execFileSync("npm", [
+      "pack", "--dry-run", "--json", "--ignore-scripts", "--cache", join(temporary, "npm-cache"),
+    ], { cwd: source, encoding: "utf8" }))[0];
+    inspect(Object.fromEntries(report.files.map(({ path }) => [path, readFileSync(join(source, path))])));
+    const npmRoot = join(temporary, "npm-package");
+    for (const { path } of report.files) {
+      cpSync(join(source, path), join(npmRoot, path), { recursive: true });
+    }
+    assert.deepEqual(checkLinks(npmRoot), []);
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+});
 
 function directorySnapshot(directory, prefix = "") {
   const snapshot = {};

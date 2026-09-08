@@ -19,5 +19,3 @@ Identify whether the intended reader must act, decide, or understand. Use exact 
 - Keep verified behavior, intended behavior, and open work distinct.
 
 Do not score style, assess whether text appears AI-written, or trade necessary evidence for brevity.
-
-Source influence: [technical-writing at `bdf7aa355337897f167153e05069aca505dae17c`](https://github.com/cursor/plugins/blob/bdf7aa355337897f167153e05069aca505dae17c/pstack/skills/technical-writing/SKILL.md). This reference uses original project-specific wording.

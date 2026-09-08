@@ -114,7 +114,6 @@ test("all portable workflows share one human communication contract", () => {
     /material facts, evidence, risks, and open gaps.*no new analysis or claims/is,
   ]) assert.match(contract, required);
 
-  assert.match(contract, /pstack.*bro.*technical-writing.*bdf7aa355337897f167153e05069aca505dae17c/is);
 
   assert.match(read("skills/rtk-setup/SKILL.md"), /current RTK state.*next safe action/is);
   assert.match(read("skills/rtk-filter-design/SKILL.md"), /filter coverage.*diagnostics.*trust action/is);
@@ -149,7 +148,6 @@ test("change communication is evidence-based and loaded only for relevant effici
     /exact project terms and symbols.*conditions before requested actions.*common path before exceptions/is,
     /does not extend.*tutorials, READMEs, RFCs, or general documentation/is,
   ]) assert.match(contract, required);
-  assert.match(contract, /technical-writing.*bdf7aa355337897f167153e05069aca505dae17c/is);
 });
 
 test("Cursor auditors are thin read-only adapters over shared policies", () => {
@@ -256,14 +254,9 @@ test("efficiency performs one bounded design and code simplicity challenge witho
     /authorized change.*remove only the former directly/is,
     /smallest in-scope root-cause clarification.*retain any rationale.*code still cannot express/is,
     /Do not repeat the challenge recursively/i,
-    /project-specific wording/i,
   ]) assert.match(design, required);
 
-  assert.match(design, /codebase-design.*8b78b531ab965735c5dc74f6f7a219e1e37326df/is);
-  assert.match(design, /minimize-reader-load.*subtract-before-you-add.*no-comments.*bdf7aa355337897f167153e05069aca505dae17c/is);
-  assert.match(design, /Ponytail v4\.9\.0 guidance.*Ponytail review skill.*0a4dd63/is);
-  assert.match(design, /MIT-licensed.*does not adopt Ponytail's one-liner priority, line-count metric, intensity modes, or fixed one-test rule/is);
-  assert.doesNotMatch(responseRule, /Evidence-Guided Simplicity|YAGNI|KISS|DRY|Ponytail|bounded simplicity challenge|root decision|smallest viable alternative/i);
+  assert.doesNotMatch(responseRule, /Evidence-Guided Simplicity|YAGNI|KISS|DRY|bounded simplicity challenge|root decision|smallest viable alternative/i);
 });
 
 test("verification economy selects bounded direct evidence without granting execution authority", () => {
@@ -284,8 +277,7 @@ test("verification economy selects bounded direct evidence without granting exec
     /intended behavior, source-supported behavior, executed checks, and live observation/i,
     /does not authorize creating or running tests or scripts.*starting servers.*deploying.*live system.*dispatching agents/is,
   ]) assert.match(verification, required);
-  assert.match(verification, /prove-it-works.*blast-radius.*sequence-verifiable-units.*bdf7aa355337897f167153e05069aca505dae17c/is);
-  assert.doesNotMatch(responseRule, /risk-bearing facts|verification economy|sequence-verifiable-units/i);
+  assert.doesNotMatch(responseRule, /risk-bearing facts|verification economy/i);
 });
 
 test("repeatable-work economy chooses tools only when their full cost is repaid", () => {
@@ -307,8 +299,7 @@ test("repeatable-work economy chooses tools only when their full cost is repaid"
     /identical mechanical transformations.*deterministic tool over delegating/is,
     authorityBoundary,
   ]) assert.match(repeatable, required);
-  assert.match(repeatable, /build-the-lever.*bdf7aa355337897f167153e05069aca505dae17c/is);
-  assert.doesNotMatch(responseRule, /repeatable-work economy|build-the-lever|rerunnable tool/i);
+  assert.doesNotMatch(responseRule, /repeatable-work economy|rerunnable tool/i);
 });
 
 test("context optimization conditionally audits agent documents without weakening authority", () => {
@@ -328,7 +319,6 @@ test("context optimization conditionally audits agent documents without weakenin
     /completion conditions observable and proportional/i,
     /Edit only after explicit authorization/i,
   ]) assert.match(reference, required);
-  assert.match(reference, /writing-for-agents.*8b78b531ab965735c5dc74f6f7a219e1e37326df/is);
 });
 
 test("debugging feedback guidance stays conditional, advisory, and non-authorizing", () => {
@@ -349,7 +339,6 @@ test("debugging feedback guidance stays conditional, advisory, and non-authorizi
     /precise access, redacted artifact, or separate permission/is,
     /does not authorize creating tests, starting servers, instrumenting production, changing code, dispatching agents, or persisting debugging artifacts/i,
   ]) assert.match(debugging, required);
-  assert.match(debugging, /diagnosing-bugs.*8b78b531ab965735c5dc74f6f7a219e1e37326df/is);
   assert.doesNotMatch(responseRule, /debugging feedback|reproducer|instrumenting production/i);
 });
 
@@ -494,7 +483,14 @@ test("all manifests and package metadata define version 3.1.0 without hooks, MCP
     "assets",
     "CHANGELOG.md",
     "commands",
-    "docs",
+    "docs/agent-plugins-runtime-smoke.md",
+    "docs/codex-runtime-smoke.md",
+    "docs/installation.md",
+    "docs/receipts/2.0.0-code-simplicity.md",
+    "docs/receipts/2.0.0.md",
+    "docs/release-checklist.md",
+    "docs/release-validation.md",
+    "docs/runtime-smoke.md",
     "LICENSE",
     "README.md",
     "rules",
@@ -531,7 +527,6 @@ test("public metadata and documentation present Evidence-Guided Simplicity consi
   }
   assert.match(readme, /essential advantage.*ordinary coding, refactoring, and technical-design work.*naturally select/is);
   assert.match(readme, /YAGNI.*KISS.*DRY/is);
-  assert.match(readme, /Ponytail v4\.9\.0 guidance.*review skill.*0a4dd63/is);
   assert.match(changelog, /qualitative benefit.*without adding components, dependencies, modes, hooks, MCP servers, or quantitative claims/is);
 
   for (const smoke of [
@@ -594,7 +589,7 @@ test("README and changelog document the three-target 3.0 surface and both migrat
   assert.match(readme, /rewrites only that response.*without adding new analysis or claims/is);
   assert.match(readme, /bounded Cursor smoke.*supplied baseline restatement.*immediately preceding assistant response unverified/is);
   assert.match(readme, /three-invocation Codex smoke.*implicit simplicity selection.*RTK setup.*optional response-guidance evidence.*exclusive restatement-only behavior.*separately approved/is);
-  assert.match(readme, /does not add a `bro` or technical-writing skill.*READMEs or RFCs/is);
+  assert.match(readme, /stays within the existing communication workflows.*READMEs or RFCs/is);
   assert.match(readme, /Agent Plugins.*four portable skills/is);
   assert.match(readme, /Codex.*five skills/is);
   assert.match(readme, /estimated shell-output reduction.*not as proof of fewer provider-billed tokens, lower cost, or fewer agent turns/is);
@@ -613,7 +608,7 @@ test("README and changelog document the three-target 3.0 surface and both migrat
   assert.match(changelog, /test, check, script, tool, file, artifact, delegation, server, deployment, live-access, or scope-expansion authority/i);
   assert.match(changelog, /rewrites only the last response without new analysis or claims/i);
   assert.match(changelog, /Cursor checks a supplied baseline.*Codex combines a preceding-response restatement with setup status.*neither proves exclusive restatement-only behavior/is);
-  assert.match(changelog, /without a `bro` skill/i);
+  assert.match(changelog, /without a separate restatement skill/i);
   assert.match(changelog, /without changing dependencies or component counts/i);
 });
 

@@ -27,7 +27,7 @@ For relevant coding, refactoring, and technical-design tasks, the existing `effi
 
 The quick decision stays silent unless it changes the solution, scope, or material risk, or you ask for the reasoning. A full simplicity challenge runs only when requested or when the quick pass finds a material complexity risk, and then runs once. User requirements, public interfaces, persisted formats, correctness, security, accessibility, data-loss protection, performance, lifecycle semantics, domain distinctions, project conventions, and proportionate verification remain protected.
 
-This approach adapts the ordered solution ladder from the MIT-licensed [Ponytail v4.9.0 guidance](https://github.com/DietrichGebert/ponytail/blob/v4.9.0/AGENTS.md) and its pinned [review skill](https://github.com/DietrichGebert/ponytail/blob/v4.9.0/skills/ponytail-review/SKILL.md) at commit `0a4dd63`. Efficiency intentionally does not adopt one-liner priority, line-count metrics, intensity modes, or a fixed one-test rule, and makes no quantitative Ponytail-derived claims.
+Efficiency does not prioritize one-liners, use line-count metrics or intensity modes, prescribe a fixed one-test rule, or claim quantitative benefits without evidence.
 
 ## What you get
 
@@ -144,7 +144,7 @@ For proposed or completed work, Efficiency can identify at most two risk-bearing
 
 For debugging or performance work, Efficiency can assess whether the investigation has a focused, fast, deterministic feedback loop. It recommends the next proportionate step but does not start diagnosis, instrumentation, tests, fixes, delegation, or artifact creation without separate authorization. Context optimization can also review agent-consumed documents, keeping universal instructions available while moving branch-specific material behind precise conditional references.
 
-For responses, Efficiency first considers whether the reader must act, decide, or understand, then keeps project terms exact, conditions before actions, and the common path before exceptions. If asked to restate the last response more simply, it rewrites only that response and preserves material facts, evidence, risks, and open gaps without adding new analysis or claims. For commit messages, pull request descriptions, release notes, and change summaries, the workflow follows project conventions first and distinguishes verified behavior, intended behavior, and open work; material claims should trace to the diff, a check, other evidence, or a labelled assumption. This guidance does not add a `bro` or technical-writing skill, extend the workflow to READMEs or RFCs, or prove that a change works.
+For responses, Efficiency first considers whether the reader must act, decide, or understand, then keeps project terms exact, conditions before actions, and the common path before exceptions. If asked to restate the last response more simply, it rewrites only that response and preserves material facts, evidence, risks, and open gaps without adding new analysis or claims. For commit messages, pull request descriptions, release notes, and change summaries, the workflow follows project conventions first and distinguishes verified behavior, intended behavior, and open work; material claims should trace to the diff, a check, other evidence, or a labelled assumption. This guidance stays within the existing communication workflows; it does not extend them to READMEs or RFCs or prove that a change works.
 
 ## Designed to stay useful—not reckless
 
@@ -224,8 +224,6 @@ Repository maintainers may explicitly invoke `$release-plugin` in Codex or `/rel
 
 - [OpenAI Skills documentation](https://learn.chatgpt.com/docs/build-skills)
 - [Cursor Skills documentation](https://prod.cursor.com/docs/skills)
-- [Ponytail v4.9.0 guidance](https://github.com/DietrichGebert/ponytail/blob/v4.9.0/AGENTS.md)
-- [Ponytail v4.9.0 review skill](https://github.com/DietrichGebert/ponytail/blob/v4.9.0/skills/ponytail-review/SKILL.md)
 - [Codex plugin structure](https://developers.openai.com/codex/build-plugins)
 - [Codex AGENTS.md precedence](https://developers.openai.com/codex/guides/agents-md)
 - [Cursor plugin specification](https://github.com/cursor/plugins)

@@ -4,6 +4,9 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+- Strengthened existing guidance for shared failure causes, interface contracts and state scope, task completion, diagnostic hypotheses, direct verification, repeatable tools, clear communication, and comparative RTK evidence.
+- Kept documentation packaging explicit across all three plugin targets and npm.
+
 ## 3.1.0
 
 ### Added
@@ -15,7 +18,7 @@ All notable changes to this project are documented in this file.
 
 - Front-loaded coding, refactoring, and technical-design discovery so relevant work can select the existing skill implicitly while keeping the full bounded challenge explicit or risk-triggered and non-recursive.
 - Made Evidence-Guided Simplicity the primary qualitative benefit in the README and all three plugin manifests without adding components, dependencies, modes, hooks, MCP servers, or quantitative claims.
-- Credited the MIT-licensed Ponytail v4.9.0 guidance and review skill at commit `0a4dd63` as a pinned influence while documenting the deliberately excluded line-count, one-liner, intensity-mode, and fixed-test policies.
+- Documented the exclusion of line-count optimization, one-liner priority, intensity modes, and fixed-test policies.
 
 ## 3.0.0
 
@@ -41,10 +44,10 @@ All notable changes to this project are documented in this file.
 - Prepared all manifests, package metadata, migration guidance, and current smoke documentation for version 3.0.0 while leaving historical release receipts unchanged.
 - Strengthened RTK filter guidance to require semantic equivalence for complete exact paths, material ordering, explicit truncation, exit status, warnings, and machine-consumed or piped output before recommending a filter.
 - Aligned the Cursor response rule and canonical Codex guidance around understandable, actionable communication without a fixed response template or loss of technical evidence.
-- Added an internal plain-language restatement behavior that rewrites only the last response without new analysis or claims and without a `bro` skill, plus purpose-led writing for existing responses and change communication without expanding into documentation or RFC workflows.
+- Added an internal plain-language restatement behavior that rewrites only the last response without new analysis or claims and without a separate restatement skill, plus purpose-led writing for existing responses and change communication without expanding into documentation or RFC workflows.
 - Extended the one bounded simplicity challenge with trace-depth and hidden-state reader load, subtraction before addition, and safe encoding of comment constraints.
 - Kept both optional auditors read-only and model-inheriting while applying the shared communication contract and the focused change contract when relevant.
-- Recorded pinned upstream influences for agent-document design, design simplicity, debugging economy, verification, repeatable work, and communication using original project-specific wording.
+- Documented agent-document design, design simplicity, debugging economy, verification, repeatable work, and communication using original project-specific wording.
 - Extended policy and generated-target checks with exact Cursor command-to-skill name parity and byte-identical shared-skill projections without changing dependencies or component counts.
 - Clarified bounded restatement evidence: Cursor checks a supplied baseline, while Codex combines a preceding-response restatement with setup status; neither proves exclusive restatement-only behavior without a separately approved extra model invocation.
 

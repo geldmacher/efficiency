@@ -10,6 +10,25 @@ Complete this checklist before tagging a plugin release. Use a clean checkout or
 - [ ] `git diff --check`
 - [ ] The working tree contains no unexpected generated changes after the gates.
 
+## Instruction coverage
+
+Use these cases to inspect the selected reference and its entrypoint before reporting instruction coverage. This is a content review, not evidence that a host or model executed the guidance. An authorized live evaluation may use a selected case and its raw inputs within the existing host smoke budget; keep the expected decision separate from the evaluating agent's prompt. Do not run all cases automatically.
+
+| Case and input | Required decision | Reference |
+| --- | --- | --- |
+| Two import callers use the same parser, but a proposed fix changes only the UI caller. The second caller is a batch job. | Trace the common cause and affected callers; prefer the shared correction within scope and report an out-of-scope caller. | [Design](../skills/efficiency/references/design-and-code-simplicity.md) |
+| One adapter has one implementation but hides transaction ordering and recovery from several callers. | Preserve the useful boundary if deletion spreads that complexity; assess ordering, errors, configuration, and performance as part of the interface. | [Design](../skills/efficiency/references/design-and-code-simplicity.md) |
+| A calculation stores intermediate results in module state and constructs a service internally, making independent runs interfere. | Consider local state, returned results, and controllable dependencies; preserve required side effects and test the actual caller-visible behavior. | [Design](../skills/efficiency/references/design-and-code-simplicity.md) |
+| A comment explains an external protocol constraint; another records a deliberate scan limit and when it becomes too expensive. | Retain necessary rationale and explain the concrete limit and change trigger; remove only redundant commentary. | [Design](../skills/efficiency/references/design-and-code-simplicity.md) |
+| A race fails in 3 of 20 observations; one post-change run passes and a new unit test omits the multi-caller interaction. | A single pass is insufficient. Compare controlled observations against falsifiable hypotheses; require the original scenario, a suitable regression seam, and cleanup evidence. | [Debugging](../skills/efficiency/references/debugging-feedback-economy.md) |
+| A serializer changes a field used by a worker in another language; a current timestamp is the only success evidence. | Follow the serialized contract and indirect consumer, check relevant versions and lifecycle timing, and inspect actual output rather than freshness. Resolve conflicting observation methods before dependent work continues. | [Verification](../skills/efficiency/references/verification-economy.md) |
+| A context pointer says only "extra guidance" and completion says "write a summary" although three distinct task cases matter. | Sharpen matching and non-matching load conditions; make completion account for all three cases before adding files or a handoff. | [Agent documents](../skills/context-optimization/references/agent-document-design.md) |
+| A one-off migration has many records and a checked representative transformation; a script could verify the rest reliably. | Compare total tool cost against verification benefit, compare its result with the checked example, and assess safe reruns. A few obvious edits can still be cheaper directly. | [Repeatable work](../skills/efficiency/references/repeatable-work-economy.md) |
+| A report says "It only updates them after it finishes" for a client, worker, and shared records. | Name the actors and records, attach conditions to the right action, and split the sentence if needed without removing meaning. | [Communication](../skills/efficiency/references/human-communication.md) |
+| RTK reports 90% shell-output reduction; one paired run is cheaper but another fails during setup. | Keep compression separate from task cost; report variation and failed or excluded runs. Do not claim a repeatable saving or start another benchmark automatically. | [RTK evidence](../skills/efficiency/references/rtk-evidence.md) |
+
+For every case, an assessment request remains read-only. Recommendations do not grant execution permissions. Structural tests verify routing, package contents, and instruction contracts; live outcomes require separately recorded observations.
+
 ## GitHub Release mechanism
 
 - [ ] `$release-plugin`, `/release-plugin`, metadata, and `release:plugin` expose exactly one explicit no-argument journey outside every generated target.
@@ -42,14 +61,14 @@ Complete this checklist before tagging a plugin release. Use a clean checkout or
 - [ ] `efficiency` and its auditor use one shared design-and-code simplicity reference and perform at most one bounded challenge without manufacturing a finding.
 - [ ] The quick ladder stops at the first evidence-supported sufficient choice in this order: omit unnecessary work, reuse project capability, use standard or native capability, use a suitable installed dependency, then add the smallest local implementation.
 - [ ] YAGNI rejects speculative scope, KISS targets concepts and reader burden rather than lines, and DRY consolidates authority rather than merely similar syntax; all preserve the documented correctness and quality boundaries.
-- [ ] README and all three manifests present Evidence-Guided Simplicity as the primary qualitative benefit, include the five search keywords, and credit pinned Ponytail v4.9.0 without importing numerical claims.
+- [ ] README and all three manifests present Evidence-Guided Simplicity as the primary qualitative benefit, include the five search keywords, and avoid unsupported numerical claims.
 - [ ] Verification-economy guidance names at most two risk-bearing facts, selects the cheapest adequate direct evidence, distinguishes proxy and live evidence, and remains non-authorizing.
 - [ ] Repeatable-work guidance compares direct work with the complete tool cost, prefers a deterministic rerunnable tool over identical delegated transformations only when justified, and does not authorize tests, checks, scripts, tools, file changes, artifacts, delegation, servers, deployment, live access, or scope expansion.
 - [ ] The bounded simplicity challenge assesses trace depth and hidden or mutable state, checks removable complexity before additions, and preserves comments when code cannot express their rationale or external constraint.
 - [ ] Debugging-feedback guidance remains advisory and does not authorize diagnosis, instrumentation, tests, fixes, delegation, servers, or persisted artifacts.
 - [ ] RTK evidence reporting separates execution coverage, scoped estimated shell-output reduction, absolute contributor concentration, and unverified whole-task net effect; it states host and scope and persists no machine-specific gain totals.
 - [ ] RTK filter guidance recommends no filter unless complete exact paths, material ordering, explicit truncation, exit status, warnings, and machine-consumed or piped output remain semantically equivalent to native output.
-- [ ] Communication contracts preserve evidence and exact technical text, distinguish verified, intended, and open status, and add no style detector, score, fixed response template, `bro` skill, technical-writing skill, README trigger, or RFC trigger.
+- [ ] Communication contracts preserve evidence and exact technical text, distinguish verified, intended, and open status, and add no style detector, score, fixed response template, separate communication skill, README trigger, or RFC trigger.
 - [ ] Cursor and Codex response guidance restate only the last response more plainly and briefly without new analysis or claims, remain byte-identical after frontmatter removal, and keep the Cursor rule below 1,200 characters.
 - [ ] Source documentation links resolve independently of `.build`; the 3.0 migration table covers all renamed Cursor commands, the 1.x table covers every older removed entry point, and historical receipt files remain byte-identical.
 
