@@ -23,6 +23,7 @@ const plugin = "geldmacher-efficiency";
 const portableSkills = [
   "context-optimization",
   "efficiency",
+  "install-new-release-from-repo",
   "rtk-filter-design",
   "rtk-setup",
 ];
@@ -62,6 +63,7 @@ const allowed = {
     "schemas/agent-plugins",
     "skills/context-optimization",
     "skills/efficiency",
+    "skills/install-new-release-from-repo",
     "skills/rtk-filter-design",
     "skills/rtk-setup",
   ],
@@ -75,6 +77,7 @@ const allowed = {
     "schemas/agent-plugins",
     "skills/context-optimization",
     "skills/efficiency",
+    "skills/install-new-release-from-repo",
     "skills/rtk-filter-design",
     "skills/rtk-setup",
   ],

@@ -40,7 +40,7 @@ const codexInterfaceKeys = new Set([
 const httpsPattern = /^https:\/\/[^\s/$.?#].[^\s]*$/i;
 const hexColorPattern = /^#[0-9a-f]{6}$/i;
 const agentSkillKeys = new Set(["name", "description", "license", "compatibility", "metadata", "allowed-tools"]);
-const portableSkillNames = ["context-optimization", "efficiency", "rtk-filter-design", "rtk-setup"];
+const portableSkillNames = ["context-optimization", "efficiency", "install-new-release-from-repo", "rtk-filter-design", "rtk-setup"];
 const codexAdapterSkillsRelative = "adapters/codex/skills";
 
 function readText(path) {
@@ -671,11 +671,12 @@ export function validateRepositoryPolicy(root = defaultRoot) {
     const expectedCursorSkills = [
       "./skills/context-optimization/SKILL.md",
       "./skills/efficiency/SKILL.md",
+      "./skills/install-new-release-from-repo/SKILL.md",
       "./skills/rtk-filter-design/SKILL.md",
       "./skills/rtk-setup/SKILL.md",
     ];
     if (JSON.stringify(manifest.skills) !== JSON.stringify(expectedCursorSkills)) {
-      failures.push("Cursor plugin must declare exactly the four shared skills explicitly");
+      failures.push("Cursor plugin must declare exactly the five shared skills explicitly");
     }
     const sourceSkills = readdirSync(join(rootPath, "skills"), { withFileTypes: true })
       .filter((entry) => entry.isDirectory())

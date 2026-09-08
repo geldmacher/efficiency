@@ -15,8 +15,8 @@ This procedure verifies Codex discovery and behavior that repository tests canno
 
 In the fresh task:
 
-1. Confirm that `efficiency`, `context-optimization`, `rtk-filter-design`, `rtk-setup`, and `response-simplicity-setup` are discoverable.
-2. Confirm that `.codex-plugin` contains only `plugin.json`, all five discovered skills come from the generated root `skills/`, and Cursor commands, Cursor agents, and Cursor rules are not presented as Codex plugin components.
+1. Confirm that `efficiency`, `context-optimization`, `install-new-release-from-repo`, `rtk-filter-design`, `rtk-setup`, and `response-simplicity-setup` are discoverable.
+2. Confirm that `.codex-plugin` contains only `plugin.json`, all six discovered skills come from the generated root `skills/`, and Cursor commands, Cursor agents, and Cursor rules are not presented as Codex plugin components.
 3. Submit this natural request without explicitly invoking `$efficiency`: "Review this proposed refactor: add a generic strategy registry so one existing formatter can support possible future formats. Recommend the first sufficient safe approach justified by current requirements and repository evidence. Preserve public behavior, security, accessibility, and necessary validation. Explain the simplicity choice only if it changes the solution or risk."
 4. Confirm implicit selection when Codex exposes it, the first evidence-supported sufficient choice, preserved constraints, and no unnecessary principle narration.
 

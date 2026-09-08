@@ -24,16 +24,18 @@ function bodyWithoutFrontmatter(contents) {
   return contents.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "").trim();
 }
 
-test("the three-target surface keeps four portable skills and one Codex-only adapter skill", () => {
+test("the three-target surface keeps five portable skills and one Codex-only adapter skill", () => {
   assert.deepEqual(componentFiles("commands", ".md"), [
     "context-optimization.md",
     "efficiency.md",
+    "install-new-release-from-repo.md",
     "rtk-filter-design.md",
     "rtk-setup.md",
   ]);
   assert.deepEqual(skillDirectories(), [
     "context-optimization",
     "efficiency",
+    "install-new-release-from-repo",
     "rtk-filter-design",
     "rtk-setup",
   ]);
@@ -47,6 +49,7 @@ test("the three-target surface keeps four portable skills and one Codex-only ada
   assert.deepEqual(cursorManifest.skills, [
     "./skills/context-optimization/SKILL.md",
     "./skills/efficiency/SKILL.md",
+    "./skills/install-new-release-from-repo/SKILL.md",
     "./skills/rtk-filter-design/SKILL.md",
     "./skills/rtk-setup/SKILL.md",
   ]);
@@ -86,6 +89,7 @@ test("all portable workflows share one human communication contract", () => {
   const skills = [
     "skills/context-optimization/SKILL.md",
     "skills/efficiency/SKILL.md",
+    "skills/install-new-release-from-repo/SKILL.md",
     "skills/rtk-filter-design/SKILL.md",
     "skills/rtk-setup/SKILL.md",
   ];
@@ -128,6 +132,7 @@ test("change communication is evidence-based and loaded only for relevant effici
   assert.match(auditor, /Only when reviewing a commit message.*change communication contract/is);
   for (const unrelatedSkill of [
     "skills/context-optimization/SKILL.md",
+    "skills/install-new-release-from-repo/SKILL.md",
     "skills/rtk-filter-design/SKILL.md",
     "skills/rtk-setup/SKILL.md",
   ]) assert.doesNotMatch(read(unrelatedSkill), /change-communication\.md/);
@@ -563,7 +568,7 @@ test("README and changelog document the three-target 3.0 surface and both migrat
   const readme = read("README.md");
   const changelog = read("CHANGELOG.md");
   for (const currentName of [
-    "context-optimization", "efficiency", "rtk-filter-design", "rtk-setup",
+    "context-optimization", "efficiency", "install-new-release-from-repo", "rtk-filter-design", "rtk-setup",
     "rtk-filter-auditor", "efficiency-auditor", "response-simplicity", "response-simplicity-setup",
   ]) assert.ok(readme.includes(currentName), `README.md does not document ${currentName}`);
   for (const [oldName, replacement] of [
@@ -590,8 +595,8 @@ test("README and changelog document the three-target 3.0 surface and both migrat
   assert.match(readme, /bounded Cursor smoke.*supplied baseline restatement.*immediately preceding assistant response unverified/is);
   assert.match(readme, /three-invocation Codex smoke.*implicit simplicity selection.*RTK setup.*optional response-guidance evidence.*exclusive restatement-only behavior.*separately approved/is);
   assert.match(readme, /stays within the existing communication workflows.*READMEs or RFCs/is);
-  assert.match(readme, /Agent Plugins.*four portable skills/is);
-  assert.match(readme, /Codex.*five skills/is);
+  assert.match(readme, /Agent Plugins.*five portable skills/is);
+  assert.match(readme, /Codex.*six skills/is);
   assert.match(readme, /estimated shell-output reduction.*not as proof of fewer provider-billed tokens, lower cost, or fewer agent turns/is);
   assert.match(readme, /four evidence classes.*whole-task net effect.*unverified.*comparable paired run/is);
   assert.match(readme, /without compatibility aliases/i);
@@ -617,17 +622,17 @@ test("release guidance separates conformance, bundles, native runtimes, and publ
   const agentPluginsSmoke = read("docs/agent-plugins-runtime-smoke.md");
   const cursorSmoke = read("docs/runtime-smoke.md");
   const codexSmoke = read("docs/codex-runtime-smoke.md");
-  assert.match(checklist, /four portable skills.*four Cursor skills.*one Codex-only adapter source/is);
+  assert.match(checklist, /five portable skills.*five Cursor skills.*one Codex-only adapter source/is);
   assert.match(checklist, /versions agree at the declared release version/i);
   assert.match(checklist, /command filenames, frontmatter names, and delegated portable skill names match exactly/i);
-  assert.match(checklist, /each of the four shared skill directories is byte-identical/i);
+  assert.match(checklist, /each of the five shared skill directories is byte-identical/i);
   assert.match(checklist, /RTK evidence reporting separates execution coverage.*shell-output reduction.*contributor concentration.*whole-task net effect/is);
   assert.match(checklist, /complete exact paths.*material ordering.*explicit truncation.*exit status.*warnings.*machine-consumed or piped output/is);
-  assert.match(checklist, /generated Codex target has exactly five immediate root skills/i);
+  assert.match(checklist, /generated Codex target has exactly six immediate root skills/i);
   assert.match(checklist, /Format conformance.*Built bundle.*Cursor runtime.*Codex runtime.*publication/is);
   assert.match(checklist, /explicit model-call and cost limit/i);
   assert.match(checklist, /Agent Plugins.*Working Draft/i);
-  assert.match(checklist, /All four portable skills link to the shared human communication contract/i);
+  assert.match(checklist, /All five portable skills link to the shared human communication contract/i);
   assert.match(checklist, /at most two risk-bearing facts.*cheapest adequate direct evidence/is);
   assert.match(checklist, /deterministic rerunnable tool.*identical delegated transformations/is);
   assert.match(checklist, /does not authorize tests, checks, scripts, tools, file changes, artifacts, delegation, servers, deployment, live access, or scope expansion/is);

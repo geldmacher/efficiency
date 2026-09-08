@@ -36,6 +36,7 @@
   "skills": [
     "./skills/context-optimization/SKILL.md",
     "./skills/efficiency/SKILL.md",
+    "./skills/install-new-release-from-repo/SKILL.md",
     "./skills/rtk-filter-design/SKILL.md",
     "./skills/rtk-setup/SKILL.md"
   ],

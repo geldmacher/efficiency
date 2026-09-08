@@ -1,0 +1,17 @@
+---
+name: install-new-release-from-repo
+description: Install or update Efficiency from its latest stable GitHub Release for the invoking Cursor or Codex harness, including verified downloads, retained backups, and installation status. Use for an Efficiency release installation request, not publishing a release or deploying a development checkout.
+---
+
+# Install new Release from repo
+
+Install the latest stable release from `geldmacher/efficiency` for colleagues using Cursor or Codex. Read [the installation procedure](../../docs/installation.md) for prerequisites, first installation, conflicts, and recovery. Use [human communication](../efficiency/references/human-communication.md) for the result.
+
+1. Resolve the invoking harness from explicit session context or the user's requested target. If uncertain, ask which harness to install into. The presence of both apps is not host selection. Other Agent Plugins clients have no supported release archive; explain this limit without writing host files.
+2. Locate [the bundled installer](scripts/install-release.mjs) relative to this skill, even when it runs from an installed cache or an unrelated working directory. Check Node.js 22 or newer. No Git checkout, GitHub CLI, npm installation, other skill, or external plugin is needed.
+3. Download and verify once with `node <absolute-skill-directory>/scripts/install-release.mjs --host cursor --download-dir <new-temporary-directory>`, substituting `codex` for Codex. The helper creates that new directory and refuses an existing one. Preview with the same helper and `--host cursor --release-dir <downloaded-directory> --dry-run`. Both preview and installation use these exact retained release bytes. Follow the active harness's shell/RTK conventions; RTK is optional for colleagues.
+4. A request to install or update authorizes this plugin's normal installation. After a successful preview, run the same installer with `--release-dir` and without `--dry-run`; do not ask again for ordinary installation permission. An inspection or preview request authorizes only the download and preview. Native sandbox approvals remain applicable. Clean up only the temporary download directory created for this invocation after the result and recovery evidence are retained.
+5. If the preview reports `replacement_requires_approval`, show the installed and selected versions and the reason. Only an explicit decision to replace that identified installation permits `--replace-existing`. Never use that flag merely to bypass a failed run. Stop on identity, checksum, archive, path, marketplace, cache, or rollback errors; report the concrete recovery state before retrying.
+6. Report the selected release, harness, whether files changed, native installation status, retained backup, and the one next activation action. `prepared` means Codex still needs its native install step; `installed` verifies the recorded on-disk/native boundary, not live skill discovery. A no-op does not require reloading unchanged source, but never upgrades unknown activation to verified.
+
+Use the helper's normal host installation path. Do not rebuild releases, publish, modify other plugins, alter global guidance, delete caches, trust prompts, or restart apps as part of this skill. Explain host-required reload, trust, enablement, or Plugins Directory actions to the user. Complete discovery verification only after observing it in the changed host or a fresh task.

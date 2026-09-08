@@ -4,6 +4,9 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+- Added `install-new-release-from-repo` for verified stable-release installation and updates in the invoking Cursor or Codex harness, with retained backups and separate activation reporting.
+- Added a self-contained release installer, first-installation instructions, and an isolated repository verifier for first install, update, and recovery.
+
 ## 3.2.1
 
 - Clarified YAGNI removal evidence, KISS evaluation across affected call chains, and DRY consolidation criteria while preserving necessary checks at trust boundaries.

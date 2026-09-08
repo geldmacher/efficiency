@@ -15,7 +15,7 @@ Efficiency is a lightweight plugin for Agent Plugins v1 clients, Cursor, and Cod
 
 RTK (Rust Token Killer) is optional; it trims noisy terminal output before it reaches the model. Efficiency treats RTK gain figures as estimated shell-output reduction, not as proof of fewer provider-billed tokens, lower cost, or fewer agent turns. Efficiency adds no custom MCP server, telemetry, or background automation.
 
-Across its four portable workflows, Efficiency starts with the outcome, translates non-obvious technical consequences into practical meaning, and names the next useful action when one exists. The guidance is written for mixed technical knowledge, preserves exact technical text, and does not force every answer into one template.
+Across its five portable workflows, Efficiency starts with the outcome, translates non-obvious technical consequences into practical meaning, and names the next useful action when one exists. The guidance is written for mixed technical knowledge, preserves exact technical text, and does not force every answer into one template.
 
 ## Evidence-Guided Simplicity
 
@@ -38,11 +38,12 @@ Efficiency does not prioritize one-liners, use line-count metrics or intensity m
 | Reduce recurring context | `context-optimization` skill | `/context-optimization` | `$context-optimization` |
 | Inspect or prepare RTK | `rtk-setup` skill | `/rtk-setup` | `$rtk-setup` |
 | Design a safe RTK filter | `rtk-filter-design` skill | `/rtk-filter-design` | `$rtk-filter-design` |
+| Install the latest stable Efficiency release | Skill available; installer supports Cursor/Codex | `/install-new-release-from-repo` | `$geldmacher-efficiency:install-new-release-from-repo` |
 | Keep responses concise | Not in the portable core | Automatic `response-simplicity` rule | Optional `$response-simplicity-setup` |
 
 Cursor also includes the optional read-only `efficiency-auditor` and `rtk-filter-auditor`. Codex can run the same checks through an inherited subagent when you explicitly request a second pass.
 
-The Agent Plugins target contains four portable skills: `efficiency`, `context-optimization`, `rtk-filter-design`, and `rtk-setup`. Cursor exposes those four workflows as skills and slash commands. Codex discovers five skills: the same four portable skills plus its native `response-simplicity-setup` adapter.
+The Agent Plugins target contains five portable skills: `efficiency`, `context-optimization`, `install-new-release-from-repo`, `rtk-filter-design`, and `rtk-setup`. Cursor exposes those five workflows as skills and slash commands. Codex discovers six skills: the same five portable skills plus its native `response-simplicity-setup` adapter.
 
 ## Three deterministic targets
 
@@ -50,9 +51,9 @@ The Agent Plugins target contains four portable skills: `efficiency`, `context-o
 
 | Target | Output | Surface |
 | --- | --- | --- |
-| Agent Plugins v1 | `.build/plugins/agent-plugins/geldmacher-efficiency` | Root `plugin.json` and exactly four portable skills |
-| Cursor | `.build/plugins/cursor/geldmacher-efficiency` | Cursor manifest, four skills, commands, agents, and rule |
-| Codex | `.build/plugins/codex/geldmacher-efficiency` | Codex manifest, four portable skills, and the private setup skill |
+| Agent Plugins v1 | `.build/plugins/agent-plugins/geldmacher-efficiency` | Root `plugin.json` and exactly five portable skills |
+| Cursor | `.build/plugins/cursor/geldmacher-efficiency` | Cursor manifest, five skills, commands, agents, and rule |
+| Codex | `.build/plugins/codex/geldmacher-efficiency` | Codex manifest, five portable skills, and the private setup skill |
 
 The portable manifest targets the Agent Plugins 1.0.0 Working Draft pinned in the [vendored schema](schemas/agent-plugins/1.0.0/plugin.schema.json). It has no MCP server, extensions, commands, agents, rules, or hooks. Native bundles intentionally omit root `plugin.json` so manifest selection stays unambiguous.
 
@@ -61,6 +62,14 @@ The Codex manifest uses the documented `./skills/` root and `.codex-plugin` cont
 On Agent Plugins clients other than Cursor or Codex, the portable skills use conservative host-neutral behavior. They inspect only documented context or RTK integration surfaces, report unknown host integration as unverified, and do not assume Cursor hooks or Codex guidance paths.
 
 ## Install from a GitHub Release
+
+Ask Cursor with `/install-new-release-from-repo` or Codex with `$geldmacher-efficiency:install-new-release-from-repo` to install the latest stable release for that harness. Add "preview only" for an inspection. The skill downloads once, verifies the selected package, retains update backups, and reports any remaining host activation step.
+
+For colleagues without the skill, copy this request into their harness:
+
+> Installiere das neueste stabile Efficiency-Release aus https://github.com/geldmacher/efficiency für meinen aktuellen Harness. Nutze https://github.com/geldmacher/efficiency/blob/main/docs/installation.md, Abschnitt „First installation without the skill“, und prüfe das Release vor der Installation.
+
+The helper requires Node.js 22 or newer, without Git or npm dependencies. Its first-installation route works from a verified release archive. The command becomes available when a release containing this new skill is published; older releases retain the manual installation route.
 
 Versioned GitHub Releases provide separate Cursor and Codex archives plus `SHA256SUMS`, `RELEASE_NOTES.md`, and `provenance.json`. Follow the [verified release installation guide](docs/installation.md) for checksum validation, correct host layouts, Codex Marketplace setup, updates, rollback, reload, and fresh-task activation. The portable Agent Plugins target remains a build and conformance output rather than a third release archive.
 
@@ -183,7 +192,7 @@ Efficiency 3.0 gives each portable workflow one name across its skill and Cursor
 | `/create-rtk-filter` | `/rtk-filter-design` |
 | `/setup-rtk` | `/rtk-setup` |
 
-Agent Plugins and Codex remain skill-only surfaces. The Codex-only `$response-simplicity-setup` adapter is outside this four-workflow name parity.
+Agent Plugins and Codex remain skill-only surfaces. The Codex-only `$response-simplicity-setup` adapter is outside this five-workflow name parity.
 
 ## Migrating from 1.x
 

@@ -18,7 +18,7 @@ import { buildPluginTargets, validateBuiltTarget } from "../scripts/build-plugin
 import { checkLinks } from "../scripts/check-links.mjs";
 import { defaultRoot } from "../scripts/validate-plugin.mjs";
 
-const portableSkills = ["context-optimization", "efficiency", "rtk-filter-design", "rtk-setup"];
+const portableSkills = ["context-optimization", "efficiency", "install-new-release-from-repo", "rtk-filter-design", "rtk-setup"];
 
 test("only explicitly selected documentation enters plugin and npm packages", () => {
   const temporary = mkdtempSync(join(tmpdir(), "efficiency-doc-boundary-"));
@@ -94,6 +94,7 @@ test("deterministic allowlists isolate Agent Plugins, Cursor, and Codex bundles"
     assert.deepEqual(readdirSync(join(first.cursor.path, "commands")).sort(), [
       "context-optimization.md",
       "efficiency.md",
+      "install-new-release-from-repo.md",
       "rtk-filter-design.md",
       "rtk-setup.md",
     ]);

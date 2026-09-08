@@ -27,7 +27,7 @@ Use the same core request in both conversations. It is deliberately phrased as a
 ## Active conversation
 
 1. Enable Efficiency again and reload Cursor.
-2. Confirm exactly `/efficiency`, `/context-optimization`, `/rtk-filter-design`, and `/rtk-setup`, the four matching skills, two read-only agents, and one always-applied rule are discoverable; confirm the three pre-3.0 command names are absent.
+2. Confirm exactly `/efficiency`, `/context-optimization`, `/install-new-release-from-repo`, `/rtk-filter-design`, and `/rtk-setup`, the five matching skills, two read-only agents, and one always-applied rule are discoverable; confirm the three pre-3.0 command names are absent.
 3. Start a fresh conversation. Submit the same neutral request without a slash command or explicit `efficiency` invocation, include the recorded baseline response, and explicitly ask for only its shorter plain-language restatement before the assessment.
 4. Exercise one safe RTK rewrite that Cursor allows and one safe finite rewrite that Cursor approval-gates. Do not change policy to manufacture either result. Record `rtk gain` only as execution and scoped shell-output-reduction evidence; do not infer provider tokens, cost, agent turns, or result quality without a comparable paired run.
 5. Record whether the existing skill was selected when Cursor exposes that state, whether the response chooses the first evidence-supported sufficient approach, preserves the stated boundaries, and avoids unnecessary principle narration. Also confirm that it leads with the result, avoids unrequested tools or artifacts, distinguishes direct from proxy evidence, and preserves material uncertainty, risks, approvals, validation status, and exact technical strings.
