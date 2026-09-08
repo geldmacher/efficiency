@@ -458,14 +458,14 @@ test("Codex response setup uses the same compact guidance and requires explicit 
   assert.match(setup, /equivalent unmarked guidance already exists, stop/i);
 });
 
-test("all manifests and package metadata define version 3.1.0 without hooks, MCP, apps, or extensions", () => {
+test("all manifests and package metadata share the declared version without hooks, MCP, apps, or extensions", () => {
   const portable = JSON.parse(read("plugin.json"));
   const cursor = JSON.parse(read(".cursor-plugin/plugin.json"));
   const codex = JSON.parse(read(".codex-plugin/plugin.json"));
   const packageJson = JSON.parse(read("package.json"));
   const packageLock = JSON.parse(read("package-lock.json"));
   for (const value of [portable.version, cursor.version, codex.version, packageJson.version, packageLock.version, packageLock.packages[""].version]) {
-    assert.equal(value, "3.1.0");
+    assert.equal(value, packageJson.version);
   }
   assert.equal(portable.name, cursor.name);
   assert.equal(cursor.name, codex.name);
@@ -618,7 +618,7 @@ test("release guidance separates conformance, bundles, native runtimes, and publ
   const cursorSmoke = read("docs/runtime-smoke.md");
   const codexSmoke = read("docs/codex-runtime-smoke.md");
   assert.match(checklist, /four portable skills.*four Cursor skills.*one Codex-only adapter source/is);
-  assert.match(checklist, /versions agree at 3\.1\.0/i);
+  assert.match(checklist, /versions agree at the declared release version/i);
   assert.match(checklist, /command filenames, frontmatter names, and delegated portable skill names match exactly/i);
   assert.match(checklist, /each of the four shared skill directories is byte-identical/i);
   assert.match(checklist, /RTK evidence reporting separates execution coverage.*shell-output reduction.*contributor concentration.*whole-task net effect/is);

@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 3.2.0
+
+- Added automatic semantic-version selection and consistent version preparation to the explicit release skill and Cursor command, preserving exact retries and verifying completed historical releases before selecting a new version.
+
 - Strengthened existing guidance for shared failure causes, interface contracts and state scope, task completion, diagnostic hypotheses, direct verification, repeatable tools, clear communication, and comparative RTK evidence.
 - Kept documentation packaging explicit across all three plugin targets and npm.
 

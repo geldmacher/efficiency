@@ -330,6 +330,11 @@ test("release Skill is explicit-only and stays in parity with the Cursor command
   assert.match(skill, /^name: release-plugin$/m);
   assert.match(skill, /only when the user explicitly invokes \$release-plugin/i);
   assert.match(metadata, /allow_implicit_invocation:\s*false/);
+  assert.equal(command.trim(), skill.slice(frontmatter[0].length).trim(), "Cursor release instructions must match the release skill body");
+  assert.match(skill, /major for incompatible behavior.*minor for compatible additions.*patch for compatible fixes/is);
+  assert.match(skill, /Reuse an already prepared, appropriate, unused version/);
+  assert.match(skill, /older completed release.*downloaded assets.*local and remote lightweight tags.*ancestor/is);
+  assert.match(skill, /incomplete release must resume.*never bump to evade a conflict/is);
   for (const source of [skill, command]) assert.match(source, /npm run release:plugin/);
   assert.equal(packageJson.scripts["release:plugin"], "node scripts/plugin-github-release.mjs");
   for (const legacy of ["release:ensure", "release:status", "release:prepare", "release:publish"]) {
