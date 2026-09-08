@@ -14,9 +14,9 @@ First establish the required behavior, fixed constraints, and available reposito
 
 Apply three operational principles while choosing:
 
-- **YAGNI:** remove speculative requirements, unproved flexibility, and protection for cases the current scope does not require.
-- **KISS:** minimize independent concepts, trace depth, hidden or mutable state, and interface burden. Do not use line or file count as a proxy for simplicity.
-- **DRY:** keep each piece of knowledge, rule, decision, and validation in one authoritative place. Similar syntax alone does not justify an abstraction when the underlying behavior or lifecycle differs.
+- **YAGNI:** remove speculative requirements, unproved flexibility, and protection for cases the current scope does not require. Missing usage evidence alone does not prove existing behavior is unnecessary; require evidence that removal is safe, including for rarely used error handling and compatibility paths.
+- **KISS:** minimize independent concepts, trace depth, hidden or mutable state, and interface burden. Assess the whole affected call chain: shortening one function does not simplify the design if it shifts complexity into callers. Do not use line or file count as a proxy for simplicity.
+- **DRY:** keep each piece of knowledge, rule, decision, and validation in one authoritative place. Consolidate when the same domain rule must change together for the same reason; keep rules separate when they can evolve independently. Similar syntax alone does not justify an abstraction when the underlying behavior or lifecycle differs. Distinguish a rule's authoritative definition from its enforcement: preserve necessary checks at each trust boundary even when their logic is similar.
 
 Use the ladder silently unless it changes the selected solution, scope, or material risk, or the user asks for the reasoning. Do not optimize for one-liners, line-count or file-count targets, named intensity modes, or a fixed one-test rule. Preserve user requirements, public interfaces, persisted formats, correctness, security, accessibility, data-loss protection, performance, lifecycle semantics, domain distinctions, project conventions, and proportionate verification.
 
