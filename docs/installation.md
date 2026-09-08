@@ -12,7 +12,7 @@ For a first installation, or an older version that does not contain this skill, 
 
 ### First installation without the skill
 
-The new command becomes available in releases that include `skills/install-new-release-from-repo/SKILL.md`. Until such a release is published, use the manual installation sections below and report that the new command is not part of the selected release.
+The command is included from release 3.3.0 onward, with `skills/install-new-release-from-repo/SKILL.md`. For older releases, use the manual installation sections below and report that the command is not part of the selected release.
 
 The receiving harness performs these steps without requiring a development checkout:
 
@@ -58,7 +58,7 @@ Each Efficiency GitHub Release contains separate packages for Cursor and Codex. 
 On macOS or Linux, replace the example version and host when necessary, then verify exactly the two downloaded files that are covered by `SHA256SUMS`:
 
 ```sh
-archive="geldmacher-efficiency-cursor-v3.0.0.zip"
+archive="geldmacher-efficiency-cursor-v3.3.0.zip"
 
 verify_release_file() {
   file="$1"
@@ -80,7 +80,7 @@ verify_release_file "provenance.json"
 On Windows PowerShell, the equivalent check selects the exact two entries before comparing their hashes:
 
 ```powershell
-$archive = "geldmacher-efficiency-cursor-v3.0.0.zip"
+$archive = "geldmacher-efficiency-cursor-v3.3.0.zip"
 $files = @($archive, "provenance.json")
 $checksumLines = Get-Content -LiteralPath .\SHA256SUMS
 

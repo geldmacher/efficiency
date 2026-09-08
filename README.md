@@ -69,7 +69,7 @@ For colleagues without the skill, copy this request into their harness:
 
 > Installiere das neueste stabile Efficiency-Release aus https://github.com/geldmacher/efficiency für meinen aktuellen Harness. Nutze https://github.com/geldmacher/efficiency/blob/main/docs/installation.md, Abschnitt „First installation without the skill“, und prüfe das Release vor der Installation.
 
-The helper requires Node.js 22 or newer, without Git or npm dependencies. Its first-installation route works from a verified release archive. The command becomes available when a release containing this new skill is published; older releases retain the manual installation route.
+The helper requires Node.js 22 or newer, without Git or npm dependencies. Its first-installation route works from a verified release archive. The command is included from release 3.3.0 onward; older releases retain the manual installation route.
 
 Versioned GitHub Releases provide separate Cursor and Codex archives plus `SHA256SUMS`, `RELEASE_NOTES.md`, and `provenance.json`. Follow the [verified release installation guide](docs/installation.md) for checksum validation, correct host layouts, Codex Marketplace setup, updates, rollback, reload, and fresh-task activation. The portable Agent Plugins target remains a build and conformance output rather than a third release archive.
 

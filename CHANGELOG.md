@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 3.3.0
+
 - Added `install-new-release-from-repo` for verified stable-release installation and updates in the invoking Cursor or Codex harness, with retained backups and separate activation reporting.
 - Added a self-contained release installer, first-installation instructions, and an isolated repository verifier for first install, update, and recovery.
 

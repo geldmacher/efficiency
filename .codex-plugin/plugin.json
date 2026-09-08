@@ -1,6 +1,6 @@
 {
   "name": "geldmacher-efficiency",
-  "version": "3.2.1",
+  "version": "3.3.0",
   "description": "Evidence-Guided Simplicity for coding, refactoring, context, communication, RTK, and proportional validation.",
   "author": {
     "name": "Dennis Geldmacher",
