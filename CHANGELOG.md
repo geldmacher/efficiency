@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 3.2.1
+
+- Clarified YAGNI removal evidence, KISS evaluation across affected call chains, and DRY consolidation criteria while preserving necessary checks at trust boundaries.
+
 ## 3.2.0
 
 - Added automatic semantic-version selection and consistent version preparation to the explicit release skill and Cursor command, preserving exact retries and verifying completed historical releases before selecting a new version.
