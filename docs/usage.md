@@ -107,4 +107,3 @@ Broad compatibility ranges are not certified yet; release receipts record exact 
 - [Agent Plugins 1.0.0 specification](https://agent-plugins.org/specification)
 - [Agent Skills specification](https://agentskills.io/specification)
 - [RTK documentation](https://www.rtk-ai.app/docs/)
-
