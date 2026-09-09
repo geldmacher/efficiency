@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 3.3.1
+
 ### Changed
 
 - Extended conditional debugging guidance to question shared premises after repeated failed fixes, including during authorized coding tasks, while preserving assessment-only and scope boundaries.
@@ -12,7 +14,7 @@ All notable changes to this project are documented in this file.
 
 - Made the README easier to get started with: a concrete example, a copyable first-installation request, and three starter prompts. Detailed usage, development, and migration guidance now has dedicated linked pages.
 - Aligned plugin descriptions around simpler solutions, useful context, and clear communication, with task-based starter prompts and updated discovery keywords. Names, namespaces, and skill selection rules are unchanged.
-- Added a consistent visual introduction and share artwork using the existing logo and colors.
+- Refreshed the Efficiency icon and added light, monochrome, and share artwork variants for a consistent visual introduction.
 
 ## 3.3.0
 
