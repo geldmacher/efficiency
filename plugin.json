@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "geldmacher-efficiency",
   "version": "3.3.0",
-  "description": "Evidence-Guided Simplicity for coding, refactoring, context, communication, RTK, and proportional validation.",
+  "description": "Helps coding agents choose simpler solutions, keep context lean, and communicate clearly. For Cursor and Codex.",
   "author": {
     "name": "Dennis Geldmacher",
     "email": "geldmacher.dennis@outlook.de",
@@ -12,16 +12,17 @@
   "repository": "https://github.com/geldmacher/efficiency",
   "license": "MIT",
   "keywords": [
-    "rtk",
-    "efficiency",
-    "tokens",
-    "context",
-    "optimization",
-    "review",
     "simplicity",
+    "coding-agents",
+    "cursor",
+    "codex",
+    "context",
+    "refactoring",
+    "review",
     "over-engineering",
     "yagni",
     "kiss",
-    "dry"
+    "dry",
+    "rtk"
   ]
 }

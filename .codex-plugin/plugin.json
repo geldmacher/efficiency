@@ -1,7 +1,7 @@
 {
   "name": "geldmacher-efficiency",
   "version": "3.3.0",
-  "description": "Evidence-Guided Simplicity for coding, refactoring, context, communication, RTK, and proportional validation.",
+  "description": "Helps coding agents choose simpler solutions, keep context lean, and communicate clearly. For Cursor and Codex.",
   "author": {
     "name": "Dennis Geldmacher",
     "email": "geldmacher.dennis@outlook.de",
@@ -11,23 +11,24 @@
   "repository": "https://github.com/geldmacher/efficiency",
   "license": "MIT",
   "keywords": [
-    "rtk",
-    "efficiency",
-    "tokens",
-    "context",
-    "optimization",
-    "review",
     "simplicity",
+    "coding-agents",
+    "cursor",
+    "codex",
+    "context",
+    "refactoring",
+    "review",
     "over-engineering",
     "yagni",
     "kiss",
-    "dry"
+    "dry",
+    "rtk"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Efficiency",
-    "shortDescription": "Choose the smallest evidence-supported solution.",
-    "longDescription": "Efficiency applies Evidence-Guided Simplicity to coding, refactoring, and technical design, complemented by proportional validation, context economy, RTK workflows, and optional concise-response guidance.",
+    "shortDescription": "Simpler code. Leaner context. Clearer answers.",
+    "longDescription": "Efficiency helps coding agents choose simpler solutions, keep context lean, and communicate clearly. Its Evidence-Guided Simplicity approach supports coding, refactoring, and technical design, with verification matched to the task. Includes optional RTK setup and concise-response guidance.",
     "developerName": "Dennis Geldmacher",
     "category": "Developer Tools",
     "capabilities": [
@@ -37,9 +38,9 @@
     ],
     "websiteURL": "https://github.com/geldmacher/efficiency",
     "defaultPrompt": [
-      "Find the smallest evidence-supported solution for this coding task.",
-      "Review this refactor for YAGNI, KISS, DRY, and proportionate validation.",
-      "Inspect my RTK setup for Codex."
+      "Review my current changes for unnecessary complexity.",
+      "Find repeated instructions in this project's agent context.",
+      "Suggest the smallest sufficient verification for this change."
     ],
     "logo": "./assets/logo.svg",
     "screenshots": []

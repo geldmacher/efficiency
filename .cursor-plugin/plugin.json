@@ -1,7 +1,7 @@
 {
   "name": "geldmacher-efficiency",
   "displayName": "Efficiency",
-  "description": "Evidence-Guided Simplicity for coding, refactoring, context, communication, RTK, and proportional validation.",
+  "description": "Helps coding agents choose simpler solutions, keep context lean, and communicate clearly. For Cursor and Codex.",
   "version": "3.3.0",
   "author": {
     "name": "Dennis Geldmacher",
@@ -12,23 +12,25 @@
   "repository": "https://github.com/geldmacher/efficiency",
   "category": "developer-tools",
   "keywords": [
-    "rtk",
-    "efficiency",
-    "tokens",
-    "context",
-    "optimization",
-    "review",
     "simplicity",
+    "coding-agents",
+    "cursor",
+    "codex",
+    "context",
+    "refactoring",
+    "review",
     "over-engineering",
     "yagni",
     "kiss",
-    "dry"
+    "dry",
+    "rtk"
   ],
   "tags": [
-    "tokens",
+    "simplicity",
+    "coding-agents",
     "context",
-    "rtk",
-    "optimization"
+    "refactoring",
+    "rtk"
   ],
   "logo": "assets/logo.svg",
   "commands": "./commands/",

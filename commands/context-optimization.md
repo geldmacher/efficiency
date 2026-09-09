@@ -1,6 +1,6 @@
 ---
 name: context-optimization
-description: Analyze or improve recurring Cursor context.
+description: Find and reduce repeated project instructions while preserving necessary context.
 ---
 
 # Context Optimization

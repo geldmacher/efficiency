@@ -264,6 +264,20 @@ test("efficiency performs one bounded design and code simplicity challenge witho
   assert.doesNotMatch(responseRule, /Evidence-Guided Simplicity|YAGNI|KISS|DRY|bounded simplicity challenge|root decision|smallest viable alternative/i);
 });
 
+test("test guidance requires independent expectations and preserves meaningful contract checks", () => {
+  const design = read("skills/efficiency/references/design-and-code-simplicity.md");
+
+  assert.match(design, /interface used by callers/i);
+  assert.match(design, /internal test seams only when they isolate a real concern/i);
+  assert.match(design, /expectations from requirements, independent examples, or domain invariants/i);
+  assert.match(design, /not from the implementation under test/i);
+  assert.match(design, /concrete, relevant defect.*test fail/i);
+  for (const contract of ["Return values", "side effects", "errors", "justified absence", "Property tests", "type checks", "configuration contracts", "content contracts"]) {
+    assert.ok(design.includes(contract), `missing test contract: ${contract}`);
+  }
+  assert.match(design, /removal only with evidence of redundancy or no contract value/i);
+});
+
 test("verification economy selects bounded direct evidence without granting execution authority", () => {
   const efficiency = read("skills/efficiency/SKILL.md");
   const auditor = read("skills/efficiency/references/auditor.md");
@@ -326,6 +340,16 @@ test("context optimization conditionally audits agent documents without weakenin
   ]) assert.match(reference, required);
 });
 
+test("context pruning preserves affected loading paths and distinguishes inventory from task context", () => {
+  const reference = read("skills/context-optimization/references/agent-document-design.md");
+
+  assert.match(reference, /Before deleting guidance, trace the entrypoints and references/i);
+  assert.match(reference, /remaining rule.*every affected loading path.*references read independently/is);
+  assert.match(reference, /full text inventory separately from the context loaded/i);
+  assert.match(reference, /Moving or repeating a rule elsewhere does not by itself establish a saving/i);
+  assert.match(reference, /Retain rationale.*exceptions or boundaries/i);
+});
+
 test("debugging feedback guidance stays conditional, advisory, and non-authorizing", () => {
   const efficiency = read("skills/efficiency/SKILL.md");
   const auditor = read("skills/efficiency/references/auditor.md");
@@ -345,6 +369,21 @@ test("debugging feedback guidance stays conditional, advisory, and non-authorizi
     /does not authorize creating tests, starting servers, instrumenting production, changing code, dispatching agents, or persisting debugging artifacts/i,
   ]) assert.match(debugging, required);
   assert.doesNotMatch(responseRule, /debugging feedback|reproducer|instrumenting production/i);
+});
+
+test("repeated-fix routing questions shared premises without granting repair authority", () => {
+  const efficiency = read("skills/efficiency/SKILL.md");
+  const debugging = read("skills/efficiency/references/debugging-feedback-economy.md");
+
+  assert.match(efficiency, /authorized coding task.*repeated failed fixes.*same symptom or acceptance criterion.*read \[debugging feedback economy\]\(references\/debugging-feedback-economy\.md\)/i);
+  assert.match(debugging, /different fixes sharing one premise.*same symptom.*same acceptance criterion/i);
+  assert.match(debugging, /naming that premise before another correction/i);
+  assert.match(debugging, /observation that distinguishes a false premise from an implementation defect/i);
+  assert.match(debugging, /not proof that the premise is false/i);
+  assert.match(debugging, /callers, states, or roles only when the hypothesis depends on them/i);
+  assert.match(debugging, /within an existing debugging or fix assignment/i);
+  assert.match(debugging, /scope expansion as a proposal/i);
+  assert.match(debugging, /assessment-only task.*without performing diagnosis or repair/i);
 });
 
 test("RTK setup keeps Cursor receipts separate from Codex direct execution", () => {
@@ -491,6 +530,9 @@ test("all manifests and package metadata share the declared version without hook
     "docs/agent-plugins-runtime-smoke.md",
     "docs/codex-runtime-smoke.md",
     "docs/installation.md",
+    "docs/development.md",
+    "docs/migrations.md",
+    "docs/usage.md",
     "docs/receipts/2.0.0-code-simplicity.md",
     "docs/receipts/2.0.0.md",
     "docs/release-checklist.md",
@@ -509,7 +551,7 @@ test("all manifests and package metadata share the declared version without hook
   assert.equal(existsSync(join(defaultRoot, "mcp.json")), false);
 });
 
-test("public metadata and documentation present Evidence-Guided Simplicity consistently", () => {
+test("public metadata shares user-facing positioning and retains simplicity guidance", () => {
   const portable = JSON.parse(read("plugin.json"));
   const cursor = JSON.parse(read(".cursor-plugin/plugin.json"));
   const codex = JSON.parse(read(".codex-plugin/plugin.json"));
@@ -518,19 +560,22 @@ test("public metadata and documentation present Evidence-Guided Simplicity consi
   const checklist = read("docs/release-checklist.md");
 
   for (const manifest of [portable, cursor, codex]) {
-    assert.match(manifest.description, /^Evidence-Guided Simplicity/i);
+    assert.equal(manifest.description, portable.description);
+    assert.match(manifest.description, /simpler solutions.*context.*communicate clearly/i);
+    assert.match(manifest.description, /Cursor and Codex/);
     for (const keyword of ["simplicity", "over-engineering", "yagni", "kiss", "dry"]) {
       assert.ok(manifest.keywords.includes(keyword), `${manifest.name} is missing keyword ${keyword}`);
     }
   }
-  assert.match(codex.interface.shortDescription, /smallest evidence-supported solution/i);
+  assert.match(codex.interface.shortDescription, /code.*context.*answers/i);
   assert.match(codex.interface.longDescription, /Evidence-Guided Simplicity.*coding, refactoring, and technical design/is);
-  assert.match(codex.interface.defaultPrompt.join("\n"), /YAGNI, KISS, DRY.*proportionate validation/is);
+  assert.equal(codex.interface.defaultPrompt.length, 3);
+  assert.match(codex.interface.defaultPrompt.join("\n"), /current changes.*instructions.*verification/is);
 
   for (const document of [readme, changelog, checklist]) {
     assert.match(document, /Evidence-Guided Simplicity/);
   }
-  assert.match(readme, /essential advantage.*ordinary coding, refactoring, and technical-design work.*naturally select/is);
+  assert.match(readme, /Relevant skills can also be selected naturally/i);
   assert.match(readme, /YAGNI.*KISS.*DRY/is);
   assert.match(changelog, /qualitative benefit.*without adding components, dependencies, modes, hooks, MCP servers, or quantitative claims/is);
 
@@ -564,8 +609,8 @@ test("vendored Agent Plugins schema is byte-identical to its pinned Working Draf
   assert.ok(provenance.includes(hash));
 });
 
-test("README and changelog document the three-target 3.0 surface and both migrations", () => {
-  const readme = read("README.md");
+test("linked user documentation and changelog preserve workflows, boundaries, and migrations", () => {
+  const readme = ["README.md", "docs/usage.md", "docs/development.md", "docs/migrations.md"].map(read).join("\n");
   const changelog = read("CHANGELOG.md");
   for (const currentName of [
     "context-optimization", "efficiency", "install-new-release-from-repo", "rtk-filter-design", "rtk-setup",

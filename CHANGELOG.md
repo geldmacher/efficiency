@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Extended conditional debugging guidance to question shared premises after repeated failed fixes, including during authorized coding tasks, while preserving assessment-only and scope boundaries.
+- Clarified independent test expectations and contract-based test retention, and made context pruning account for affected loading paths and separate inventory from task-context measurements.
+- Removed repeated task-selection and output guidance from the Efficiency entrypoint and Cursor wrapper while retaining shared contracts and native controls.
+
+- Made the README easier to get started with: a concrete example, a copyable first-installation request, and three starter prompts. Detailed usage, development, and migration guidance now has dedicated linked pages.
+- Aligned plugin descriptions around simpler solutions, useful context, and clear communication, with task-based starter prompts and updated discovery keywords. Names, namespaces, and skill selection rules are unchanged.
+- Added a consistent visual introduction and share artwork using the existing logo and colors.
+
 ## 3.3.0
 
 - Added `install-new-release-from-repo` for verified stable-release installation and updates in the invoking Cursor or Codex harness, with retained backups and separate activation reporting.

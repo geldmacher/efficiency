@@ -1,6 +1,6 @@
 ---
 name: rtk-setup
-description: Inspect and prepare optional RTK integration for Cursor.
+description: Inspect or prepare optional RTK integration to reduce noisy terminal output.
 ---
 
 # RTK Setup

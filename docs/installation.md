@@ -8,7 +8,7 @@ The installer needs Node.js 22 or newer and GitHub HTTPS access. It uses the Nod
 
 For a first installation, or an older version that does not contain this skill, paste this into your harness:
 
-> Installiere das neueste stabile Efficiency-Release aus https://github.com/geldmacher/efficiency für meinen aktuellen Harness. Lies https://github.com/geldmacher/efficiency/blob/main/docs/installation.md und folge dem Abschnitt „First installation without the skill“. Prüfe das passende Release vor der Installation und melde, ob noch eine Aktivierung im Harness nötig ist.
+> Install the latest stable Efficiency release from https://github.com/geldmacher/efficiency for my current app. Follow https://github.com/geldmacher/efficiency/blob/main/docs/installation.md, section "First installation without the skill". Verify the release before installing and tell me whether a reload or new task is needed.
 
 ### First installation without the skill
 
