@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 3.3.2
+
+- Removed trailing blank lines from development, migration, and usage documentation.
+
 ## 3.3.1
 
 ### Changed
