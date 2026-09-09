@@ -25,4 +25,3 @@ Efficiency 2.0 removed the old aliases; 3.0 keeps the smaller surface:
 | `efficiency-budget` | `efficiency` |
 | `efficiency-review` | `efficiency` |
 | `context-change-auditor` | `efficiency-auditor` with a context focus |
-
