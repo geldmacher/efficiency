@@ -1,9 +1,11 @@
 ---
 name: efficiency
-description: Guide coding, refactoring, and technical design toward evidence-guided simplicity, and set or review proportional resource, context, communication, and validation effort. Use for implementation or simplification requests, design or code reviews, before-, during-, or after-work efficiency, and human-readable change communication.
+description: Apply evidence-guided simplicity to coding, refactoring, and technical design, with proportionate validation. Also assess task efficiency and prepare commit messages, PR descriptions, release notes, or change summaries.
 ---
 
 # Efficiency
+
+Use this skill for implementation choices, scoped reviews, task effort, or change communication. For changes to recurring agent instructions, use `context-optimization`; for RTK integration or filters, use `rtk-setup` or `rtk-filter-design` respectively. Select those skills only when that work is part of the request. A communication-only request does not call for a code review, RTK inspection, or the design-and-code reference. Handle simple factual answers, translations, and one-off shorter restatements directly without starting an efficiency assessment.
 
 Before writing a user-facing result, read [the human communication contract](references/human-communication.md).
 

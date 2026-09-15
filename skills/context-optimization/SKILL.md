@@ -1,9 +1,11 @@
 ---
 name: context-optimization
-description: Analyze or improve recurring context for Cursor, Codex, or another Agent Plugins client.
+description: Optimize agent context in AGENTS.md, rules, skills, commands, and repeated tool output. Improve skill selection, remove duplication, and reduce unnecessary context loading while preserving required guidance.
 ---
 
 # Context Optimization
+
+Use this skill when the request concerns the context sources themselves, including skill descriptions and loading conditions. Use `efficiency` for overall task effort or code simplicity. A request to shorten one human-facing answer does not require a context audit.
 
 Before writing a user-facing result, read [the human communication contract](../efficiency/references/human-communication.md). Identify the affected context sources.
 

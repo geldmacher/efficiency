@@ -23,6 +23,7 @@ import { portableSkills, codexAdapterSkill } from "./plugin-components.mjs";
 const defaultRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const plugin = "geldmacher-efficiency";
 const codexAdapterSource = `adapters/codex/skills/${codexAdapterSkill}`;
+const responseGuidanceRelative = `skills/${codexAdapterSkill}/references/response-simplicity.md`;
 const persistentOutput = join(defaultRoot, ".build", "plugins");
 const commonFiles = [
   "assets/logo.svg", "CHANGELOG.md", "LICENSE", "README.md",
@@ -181,6 +182,18 @@ export function validateBuiltTarget(destination, target, version) {
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
   if (manifest.name !== plugin || manifest.version !== version) throw new Error(`${target} manifest identity or version drifted`);
 
+  const guidancePath = join(destination, "AGENTS.md");
+  if (target === "codex") {
+    if (!existsSync(guidancePath) || !lstatSync(guidancePath).isFile() || lstatSync(guidancePath).isSymbolicLink()) {
+      throw new Error("Codex target must contain a regular root AGENTS.md response guidance file");
+    }
+    if (!readFileSync(guidancePath).equals(readFileSync(join(destination, responseGuidanceRelative)))) {
+      throw new Error("Codex target AGENTS.md differs from canonical response guidance");
+    }
+  } else if (existsSync(guidancePath)) {
+    throw new Error(`${target} target contains Codex-only AGENTS.md guidance`);
+  }
+
   if (target === "agent-plugins") {
     for (const path of [".cursor-plugin", ".codex-plugin", "commands", "agents", "rules", "mcp.json"]) {
       if (existsSync(join(destination, path))) throw new Error(`agent-plugins target contains non-portable component: ${path}`);
@@ -240,6 +253,7 @@ export function buildPluginTargets(outputRoot, sourceRoot = defaultRoot) {
     for (const item of allowed[target]) copyAllowed(projectRoot, destination, item);
     if (target === "codex") {
       copyMapped(projectRoot, destination, codexAdapterSource, `skills/${codexAdapterSkill}`);
+      copyMapped(projectRoot, destination, `${codexAdapterSource}/references/response-simplicity.md`, "AGENTS.md");
     }
     validateBuiltTarget(destination, target, version);
     result[target] = { path: destination, hash: digest(destination), files: files(destination).length };

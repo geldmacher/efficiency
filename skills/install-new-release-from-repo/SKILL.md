@@ -1,6 +1,6 @@
 ---
 name: install-new-release-from-repo
-description: Install or update Efficiency from its latest stable GitHub Release for the invoking Cursor or Codex harness, including verified downloads, retained backups, and installation status. Use for an Efficiency release installation request, not publishing a release or deploying a development checkout.
+description: Install or update the Efficiency plugin from its latest stable GitHub Release for Cursor or Codex. Supports installation previews; excludes publishing releases and deploying development checkouts.
 ---
 
 # Install new Release from repo

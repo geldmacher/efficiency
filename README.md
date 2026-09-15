@@ -64,7 +64,7 @@ Relevant skills can also be selected naturally during ordinary work. Explicit in
 | Filter noisy terminal output while preserving diagnostics | `rtk-filter-design` |
 | Install or update a stable Efficiency release | `install-new-release-from-repo` |
 
-Cursor also includes concise-response guidance. Codex offers it through the optional `response-simplicity-setup` skill. See the [usage guide](docs/usage.md) for host differences, review behavior, and examples.
+The agent can also select these skills from a matching natural-language request, without a command. Cursor includes an always-applied concise-response rule. In Codex, the optional `response-simplicity-setup` skill links global guidance to the installed package once. See the [usage guide](docs/usage.md) for selection examples and the [setup instructions](docs/installation.md#optional-codex-response-guidance) for activation and removal.
 
 ## How it works
 

@@ -30,6 +30,12 @@ test("local CLI previews, deploys, repairs cache, updates and reports native rol
       execFileSync("git", args, { cwd: root, stdio: "pipe" });
     }
     const binary = writeCodexDriver(home);
+    const globalGuidance = {
+      "AGENTS.md": "# Existing global guidance\n@RTK.md\n",
+      "AGENTS.override.md": "# Existing override\nPreserve this text.\n",
+    };
+    mkdirSync(join(home, ".codex"), { recursive: true });
+    for (const [name, content] of Object.entries(globalGuidance)) writeFileSync(join(home, ".codex", name), content);
     mkdirSync(dirname(marketplacePath), { recursive: true });
     const original = '{ "name": "colleagues", "interface": {"displayName":"Team"}, "plugins": [{"name":"unrelated","source":{"source":"local","path":"./other"}}] }\n';
     writeFileSync(marketplacePath, original);
@@ -49,6 +55,10 @@ test("local CLI previews, deploys, repairs cache, updates and reports native rol
       });
       assert.ifError(result.error);
       assert.equal(result.status, expected, result.stderr || result.stdout);
+      for (const [name, content] of Object.entries(globalGuidance)) {
+        assert.equal(readFileSync(join(home, ".codex", name), "utf8"), content,
+          `${args.join(" ")} must preserve global ${name}`);
+      }
       const text = expected === 0 ? result.stdout : result.stderr;
       return JSON.parse(text.slice(text.lastIndexOf("\n{") + 1));
     };
@@ -76,6 +86,9 @@ test("local CLI previews, deploys, repairs cache, updates and reports native rol
 
     const first = drive(["deploy"]);
     assert.equal(first.no_op, false);
+    assert.deepEqual(readFileSync(join(source("codex"), "AGENTS.md")),
+      readFileSync(join(root, "adapters/codex/skills/response-simplicity-setup/references/response-simplicity.md")));
+    assert.equal(existsSync(join(source("cursor"), "AGENTS.md")), false);
     const document = JSON.parse(readFileSync(marketplacePath, "utf8"));
     assert.equal(document.name, "colleagues");
     assert.deepEqual(document.interface, { displayName: "Team" });

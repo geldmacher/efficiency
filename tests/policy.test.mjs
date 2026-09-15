@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, join } from "node:path";
 import test from "node:test";
+import { parseDocument } from "yaml";
 import { defaultRoot, parseFrontmatter } from "../scripts/validate-plugin.mjs";
 import { portableSkills } from "./helpers/plugin-surface.mjs";
 
@@ -30,6 +31,26 @@ test("Cursor commands resolve to the identically named shared skill", () => {
     assert.ok(link, `${file} must delegate to a skill`);
     assert.equal(fields.name, basename(file, ".md"));
     assert.equal(link[1], fields.name);
+  }
+});
+
+test("public skills remain available for implicit selection without file scoping", () => {
+  const directories = [
+    ...portableSkills.map((name) => `skills/${name}`),
+    "adapters/codex/skills/response-simplicity-setup",
+  ];
+  for (const directory of directories) {
+    const fields = parseFrontmatter(join(defaultRoot, directory, "SKILL.md"));
+    assert.notEqual(fields["disable-model-invocation"], true, directory);
+    assert.notEqual(fields.disable_model_invocation, true, directory);
+    assert.equal(fields.paths, undefined, directory);
+    assert.equal(fields.globs, undefined, directory);
+    const metadata = `${directory}/agents/openai.yaml`;
+    if (existsSync(join(defaultRoot, metadata))) {
+      const document = parseDocument(read(metadata));
+      assert.deepEqual(document.errors, [], metadata);
+      assert.notEqual(document.toJS()?.policy?.allow_implicit_invocation, false, metadata);
+    }
   }
 });
 

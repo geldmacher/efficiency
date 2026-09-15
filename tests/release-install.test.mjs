@@ -155,23 +155,43 @@ test("marketplace names and unrelated bytes survive; conflicting sources are ref
 
 test("Codex CLI verifies native cache and preserves a named marketplace through update and rollback", (t) => {
   const temp = workspace(t); const targetHome = home(temp); const binary = writeCodexDriver(targetHome);
-  const first = fixtureRelease(join(temp, "first"), "3.2.0"); const second = fixtureRelease(join(temp, "second"));
+  const first = fixtureRelease(join(temp, "first"), "3.2.0", { full: true });
+  const second = fixtureRelease(join(temp, "second"), "3.2.1", { full: true });
+  const globalGuidance = {
+    "AGENTS.md": "# Existing global guidance\n@RTK.md\n",
+    "AGENTS.override.md": "# Existing override\nPreserve this text.\n",
+  };
+  mkdirSync(join(targetHome, ".codex"), { recursive: true });
+  for (const [name, content] of Object.entries(globalGuidance)) writeFileSync(join(targetHome, ".codex", name), content);
+  const assertGlobalPreserved = () => {
+    for (const [name, content] of Object.entries(globalGuidance)) {
+      assert.equal(readFileSync(join(targetHome, ".codex", name), "utf8"), content);
+    }
+  };
   const marketplacePath = join(targetHome, ".agents", "plugins", "marketplace.json");
   mkdirSync(dirname(marketplacePath), { recursive: true });
   const original = '{"name":"colleagues","plugins":[{"name":"other","custom":true}]}';
   writeFileSync(marketplacePath, original);
   const args = ["--host", "codex", "--home", targetHome, "--codex-bin", binary, "--release-dir"];
+  const preview = cli([...args, first.directory, "--dry-run"]);
+  assert.equal(preview.status, 0, preview.stderr);
+  assertGlobalPreserved();
   const installed = cli([...args, first.directory]);
   assert.equal(installed.status, 0, installed.stderr);
+  assertGlobalPreserved();
+  assert.deepEqual(readFileSync(join(installed.report.destination, "AGENTS.md")),
+    readFileSync(join(installed.report.destination, "skills/response-simplicity-setup/references/response-simplicity.md")));
   assert.equal(installed.report.native_installation, "verified");
   assert.match(installed.report.cache, /colleagues/);
   const marketplace = readFileSync(marketplacePath);
   assert.equal(JSON.parse(marketplace).plugins[0].name, "other");
   assert.equal(cli([...args, first.directory]).report.no_op, true);
+  assertGlobalPreserved();
   writeFileSync(join(targetHome, "fail-add"), "after");
   const failed = cli([...args, second.directory]);
   assert.equal(failed.status, 1); assert.equal(failed.report.source_rollback, "completed_or_not_needed");
   assert.equal(failed.report.native_installation, "unverified_after_failure");
+  assertGlobalPreserved();
   assert.equal(manifest(installed.report.destination, "codex").version, "3.2.0");
   assert.deepEqual(readFileSync(marketplacePath), marketplace);
   assert.equal(verifyRelease(join(failed.report.backup, "attempted-release"), "codex").provenance.version, "3.2.1");

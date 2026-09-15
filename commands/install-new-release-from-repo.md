@@ -1,6 +1,6 @@
 ---
 name: install-new-release-from-repo
-description: Install or update Efficiency from the latest stable repository release for Cursor.
+description: Preview, install, or update the Efficiency plugin from its latest stable GitHub Release for Cursor.
 ---
 
 # Install new Release from repo

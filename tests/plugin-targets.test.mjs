@@ -109,6 +109,14 @@ test("deterministic allowlists isolate Agent Plugins, Cursor, and Codex bundles"
     assert.equal(existsSync(join(first.codex.path, "skills", "response-simplicity-setup", "SKILL.md")), true);
     assert.deepEqual(readdirSync(join(first.codex.path, ".codex-plugin")), ["plugin.json"]);
     assert.equal(existsSync(join(first.codex.path, "commands")), false);
+    assert.equal(existsSync(join(first.cursor.path, "AGENTS.md")), false);
+    assert.equal(existsSync(join(first["agent-plugins"].path, "AGENTS.md")), false);
+    const responseGuidance = readFileSync(join(first.codex.path, "AGENTS.md"), "utf8");
+    assert.equal(responseGuidance, readFileSync(join(first.codex.path,
+      "skills/response-simplicity-setup/references/response-simplicity.md"), "utf8"));
+    const cursorRuleBody = readFileSync(join(first.cursor.path, "rules/response-simplicity.mdc"), "utf8")
+      .replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "").trim();
+    assert.equal(responseGuidance.trim(), cursorRuleBody);
 
     for (const target of [first["agent-plugins"].path, first.cursor.path, first.codex.path]) {
       for (const developmentRoot of [".agents", ".build", ".cursor", ".git", "adapters", "node_modules", "tests"]) {
@@ -118,6 +126,28 @@ test("deterministic allowlists isolate Agent Plugins, Cursor, and Codex bundles"
   } finally {
     rmSync(output, { recursive: true, force: true });
   }
+});
+
+test("built target validation rejects missing, changed or leaked Codex response guidance", () => {
+  const output = mkdtempSync(join(tmpdir(), "efficiency-guidance-test-"));
+  try {
+    const built = buildPluginTargets(join(output, "targets"));
+    const guidance = join(built.codex.path, "AGENTS.md");
+    const original = readFileSync(guidance);
+    rmSync(guidance);
+    assert.throws(() => validateBuiltTarget(built.codex.path, "codex", built.version), /regular root AGENTS.md/);
+    mkdirSync(guidance);
+    assert.throws(() => validateBuiltTarget(built.codex.path, "codex", built.version), /regular root AGENTS.md/);
+    rmSync(guidance, { recursive: true });
+    writeFileSync(guidance, "Unrelated always-on workflow\n");
+    assert.throws(() => validateBuiltTarget(built.codex.path, "codex", built.version), /differs from canonical/);
+    writeFileSync(guidance, original);
+    assert.doesNotThrow(() => validateBuiltTarget(built.codex.path, "codex", built.version));
+    for (const target of ["cursor", "agent-plugins"]) {
+      writeFileSync(join(built[target].path, "AGENTS.md"), original);
+      assert.throws(() => validateBuiltTarget(built[target].path, target, built.version), /Codex-only AGENTS.md/);
+    }
+  } finally { rmSync(output, { recursive: true, force: true }); }
 });
 
 test("target builder rejects broad repository and temporary roots before mutation", () => {

@@ -1,6 +1,6 @@
 ---
 name: context-optimization
-description: Find and reduce repeated project instructions while preserving necessary context.
+description: Improve AGENTS.md, rules, skill selection, and recurring agent context without losing required guidance.
 ---
 
 # Context Optimization

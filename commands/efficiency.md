@@ -1,6 +1,6 @@
 ---
 name: efficiency
-description: Choose simpler solutions, review unnecessary complexity, and match effort and verification to the task.
+description: Choose simple implementations, review complexity and task effort, or prepare change summaries.
 ---
 
 # Efficiency

@@ -1,9 +1,11 @@
 ---
 name: rtk-setup
-description: Inspect and prepare optional RTK integration for Cursor, Codex, or another documented agent client.
+description: Inspect, configure, verify, or remove Rust Token Killer (RTK) integration for Cursor or Codex. For other agent clients, assess only their documented integration.
 ---
 
 # RTK Setup
+
+Use this skill for RTK installation state and host integration. Use `rtk-filter-design` when the requested work concerns a command's output filter. An ordinary task that happens to execute `rtk` does not require integration inspection.
 
 Before writing a user-facing result, read [the human communication contract](../efficiency/references/human-communication.md). Report the verified RTK state and open integration checks.
 

@@ -10,13 +10,15 @@
 | --- | --- | --- |
 | Agent Plugins v1 | `.build/plugins/agent-plugins/geldmacher-efficiency` | Root `plugin.json` and exactly five portable skills |
 | Cursor | `.build/plugins/cursor/geldmacher-efficiency` | Cursor manifest, five skills, commands, agents, and rule |
-| Codex | `.build/plugins/codex/geldmacher-efficiency` | Codex manifest, five portable skills, and the private setup skill |
+| Codex | `.build/plugins/codex/geldmacher-efficiency` | Codex manifest, five portable skills, the private setup skill, and generated response `AGENTS.md` |
 
 Installable bundles contain only user documentation, required components and `assets/logo.svg`; development guides, runtime procedures, historical receipts and other artwork remain in this repository. The vendored Agent Plugins schema is included only in the portable target. npm is development tooling, not a supported distribution package.
 
 The portable manifest targets the Agent Plugins 1.0.0 Working Draft pinned in the [vendored schema](../schemas/agent-plugins/1.0.0/plugin.schema.json). It has no MCP server, extensions, commands, agents, rules, or hooks. Native bundles intentionally omit root `plugin.json` so manifest selection stays unambiguous.
 
 The Codex manifest uses the documented `./skills/` root and `.codex-plugin` contains only `plugin.json`. The Codex-only setup skill is maintained under `adapters/codex/skills` in the repository and projected into the generated Codex bundle as `skills/response-simplicity-setup`; it never enters the Agent Plugins or Cursor targets.
+
+The builder copies the setup skill's canonical response reference to the Codex package's root `AGENTS.md`. Built-target validation rejects missing or changed guidance and leakage into the other targets; the policy contract keeps its text equal to Cursor's response rule. This generated file contains response guidance only, with no automatic skill loading. Its global reference is configured separately through the setup skill and targets the stable installed source, never `.build` or a versioned cache. See [optional response guidance](installation.md#optional-codex-response-guidance).
 
 On Agent Plugins clients other than Cursor or Codex, the portable skills use conservative host-neutral behavior. They inspect only documented context or RTK integration surfaces, report unknown host integration as unverified, and do not assume Cursor hooks or Codex guidance paths.
 

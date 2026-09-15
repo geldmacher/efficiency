@@ -1,6 +1,6 @@
 ---
 name: rtk-setup
-description: Inspect or prepare optional RTK integration to reduce noisy terminal output.
+description: Inspect, configure, verify, or remove Rust Token Killer integration for the active host.
 ---
 
 # RTK Setup

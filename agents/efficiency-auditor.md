@@ -1,6 +1,6 @@
 ---
 name: efficiency-auditor
-description: Independently assess task, context, or code efficiency.
+description: Assess task, context, or code efficiency only when an independent review is explicitly requested.
 model: inherit
 readonly: true
 ---

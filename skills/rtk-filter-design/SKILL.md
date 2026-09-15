@@ -1,9 +1,11 @@
 ---
 name: rtk-filter-design
-description: Design project-specific RTK filters that preserve useful diagnostics.
+description: Create, review, or refine project-specific RTK output filters for recurring commands while preserving errors, warnings, paths, exit status, and machine-consumed output.
 ---
 
 # RTK Filter Design
+
+Use this skill for filter behavior and diagnostic preservation. Use `rtk-setup` for installing, configuring, or removing host integration. Do not start filter work merely because a task produces terminal output. A filter review remains read-only; editing a filter requires a change request.
 
 Before writing a user-facing result, read [the human communication contract](../efficiency/references/human-communication.md). Report filter coverage and diagnostic risks.
 
@@ -19,7 +21,7 @@ When RTK history or `rtk gain` is used to prioritize a filter, read [RTK evidenc
 
 Use RTK verification and representative finite smoke checks when available. Treat trust warnings and unavailable verification as open evidence, explain the next safe action, and keep approvals inside RTK and the active host's native flow. Because trust is bound to the filter content, require the user to re-trust a changed filter before claiming host coverage.
 
-In Cursor, RTK 0.44.0 or newer is required when the result depends on custom TOML filters inside the hook rewrite path. Use `rtk hook check --agent cursor '<finite-command>'`, then inspect `updated_input` and `permission`; keep an `ask` result approval-gated. In Codex, first inspect `rtk init --codex --show`, then run only an approved finite command through `rtk <command>` and confirm it with `rtk gain --history`. Codex has no Cursor `updated_input` receipt, so do not describe direct RTK execution as a hook rewrite.
+Only when verifying installed host coverage, use the following host checks. In Cursor, RTK 0.44.0 or newer is required when the result depends on custom TOML filters inside the hook rewrite path. Use `rtk hook check --agent cursor '<finite-command>'`, then inspect `updated_input` and `permission`; keep an `ask` result approval-gated. In Codex, first inspect `rtk init --codex --show`, then run only an approved finite command through `rtk <command>` and confirm it with `rtk gain --history`. Codex has no Cursor `updated_input` receipt, so do not describe direct RTK execution as a hook rewrite. A review of a proposed filter without a host-coverage request does not require integration inspection.
 
 In another Agent Plugins client, use only generic RTK verification plus that client's documented integration. If no documented host path exists, validate the filter with representative finite fixtures, mark host integration as unverified, and do not assume Cursor hook receipts or Codex instruction behavior.
 

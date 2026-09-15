@@ -38,6 +38,10 @@ The Agent Plugins target contains five portable skills: `efficiency`, `context-o
 
 Ask for the outcome you want; Efficiency infers whether you are planning, adjusting, or reviewing work.
 
+Natural-language requests can select a skill without its name. For example, "Improve these duplicated AGENTS.md instructions" fits `context-optimization`, "Check whether RTK is integrated" fits `rtk-setup`, and "Preserve warnings in this RTK filter" fits `rtk-filter-design`. "Review this refactor for complexity" fits `efficiency`. Selection depends on the host and task; an explicit skill mention makes your intended workflow clear.
+
+A translation or one-off shorter answer needs no efficiency assessment or setup. Requests to make concise-response preferences permanent in Codex fit `response-simplicity-setup`. A request for a change summary loads communication guidance without starting a code review or RTK inspection.
+
 ```text
 /efficiency Keep this small refactor proportional and verify the risky paths.
 /efficiency Identify at most two risk-bearing facts and the cheapest adequate direct evidence.
@@ -63,7 +67,7 @@ For responses, Efficiency first considers whether the reader must act, decide, o
 
 ## Behavior and boundaries
 
-- Portable skills remain explicitly invokable and are also available for normal relevance-based implicit selection. Only Cursor loads the short response rule on every task.
+- Portable skills remain explicitly invokable and available for relevance-based implicit selection. Cursor loads only the short response rule on every task. Codex can read the same text through an explicitly configured global reference; the package's `AGENTS.md` alone is not an automatic global loading mechanism. See [optional Codex response guidance](installation.md#optional-codex-response-guidance).
 - Review requests never edit code. Simplification requires an explicit scoped change request.
 - RTK setup, filter trust, and global guidance changes are previewed before approval.
 - Auditors are read-only; independent model work happens only when requested.

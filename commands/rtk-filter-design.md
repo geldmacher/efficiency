@@ -1,6 +1,6 @@
 ---
 name: rtk-filter-design
-description: Create project-specific terminal output filters that preserve important diagnostics.
+description: Create, review, or refine project RTK output filters while preserving required diagnostics.
 ---
 
 # RTK Filter Design

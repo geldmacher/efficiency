@@ -117,6 +117,18 @@ For a first installation, extract the archive to a temporary directory and move 
 
 To roll back, move the current directory aside, restore the previously retained complete directory, and reload Cursor. Keep the matching old archive, `SHA256SUMS`, and `provenance.json` so the restored bytes remain verifiable.
 
+## Optional Codex response guidance
+
+The Codex package includes a root `AGENTS.md` containing the same short response guidance as Cursor's always-applied rule. Installing the package alone does not make that file global. The release installer and local deployment leave global instructions unchanged.
+
+After installing the plugin, use `$geldmacher-efficiency:response-simplicity-setup` to check status or preview setup. To configure it, request installation of the response guidance. The skill reads the active global `AGENTS.override.md` or `AGENTS.md`, verifies the stable source reported by `codex plugin list --json`, and shows the exact patch before applying an approved change.
+
+The managed block contains an explicit instruction to read an absolute Markdown link to the installed package's `AGENTS.md` before the first response in each task. It does not depend on `@path` expansion. Updates at the same stable installation path replace the guidance without changing the global reference. A new task is needed to observe updated guidance. A cache path, `.build` output, temporary directory, or development checkout is not a supported reference target.
+
+An unconfigured global file supports first installation. An unchanged legacy inline block migrates to the reference on a requested, approved update. An intact reference is a no-op. Modified blocks, duplicate or unpaired markers, equivalent unmarked rules, missing files, and conflicting installation sources are reported without overwriting them. Status distinguishes configured files from observed loading in a fresh task.
+
+Use the same skill to request removal. It removes only the recognized managed block and preserves other instructions, including RTK imports. A broken reference can be removed even if the plugin source has disappeared. Global guidance is independent of plugin enablement: disabling the plugin does not remove the block, and deleting the target can leave a broken link. Remove the global guidance separately when it is no longer wanted.
+
 ## Codex
 
 Install the contents at the personal Codex plugin path:

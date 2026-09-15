@@ -1,6 +1,6 @@
 ---
 name: rtk-filter-auditor
-description: Independently assess project RTK filter quality.
+description: Assess project RTK filter quality only when an independent filter review is explicitly requested.
 model: inherit
 readonly: true
 ---

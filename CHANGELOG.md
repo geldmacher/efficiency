@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+- Sharpen all six skill descriptions, Cursor command summaries, and explicit independent-audit triggers; separate context, RTK, code, and communication branches while retaining implicit skill selection.
+- Generate a Codex-only root `AGENTS.md` from the existing response guidance. The optional setup now manages an explicit global reference to the verified stable installation, with legacy inline migration, no-op updates, conflict handling, and removal. Installation and deployment still leave global instructions unchanged.
+- Extend native smoke procedures with German and English selection cases and Codex reference lifecycle checks. Repository checks do not establish native selection or activation.
+
 ## 3.3.3
 
 - Run local CLI subprocess tests with an isolated test context and protect repository and snapshot sources from overlapping build output, including temporary checkouts.
