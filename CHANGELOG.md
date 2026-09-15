@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 3.3.3
+
 - Run local CLI subprocess tests with an isolated test context and protect repository and snapshot sources from overlapping build output, including temporary checkouts.
 - Build and validate local deployment targets once; retain regression suites in the complete release check. Consolidate local deployment instructions and remove unused fields and duplicated release helpers.
 
