@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
 import {
   cpSync,
   existsSync,
@@ -7,6 +6,7 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -18,46 +18,39 @@ import { buildPluginTargets, validateBuiltTarget } from "../scripts/build-plugin
 import { checkLinks } from "../scripts/check-links.mjs";
 import { defaultRoot } from "../scripts/validate-plugin.mjs";
 
-const portableSkills = ["context-optimization", "efficiency", "install-new-release-from-repo", "rtk-filter-design", "rtk-setup"];
+import { portableSkills } from "./helpers/plugin-surface.mjs";
 
-test("only explicitly selected documentation enters plugin and npm packages", () => {
+test("packages contain only user documentation, required artwork and target schemas", () => {
   const temporary = mkdtempSync(join(tmpdir(), "efficiency-doc-boundary-"));
   try {
     const source = join(temporary, "source");
-    cpSync(defaultRoot, source, {
-      recursive: true,
+    cpSync(defaultRoot, source, { recursive: true,
       filter: (path) => ![".git", ".build", "node_modules"].includes(path.split(/[\\/]/).at(-1)),
     });
     writeFileSync(join(source, "docs", "future-guide.md"), "Additional documentation sentinel\n");
-    const expectedDocs = JSON.parse(readFileSync(join(source, "package.json"), "utf8"))
-      .files.filter((path) => path.startsWith("docs/"));
-    const inspect = (snapshot) => {
-      assert.deepEqual(Object.keys(snapshot).filter((path) => path.startsWith("docs/")).sort(), [...expectedDocs].sort());
-      assert.equal(Object.hasOwn(snapshot, "docs/future-guide.md"), false);
-      assert.ok(Object.hasOwn(snapshot, "docs/installation.md"));
-    };
     const built = buildPluginTargets(join(temporary, "targets"), source);
-    for (const target of ["agent-plugins", "cursor", "codex"]) inspect(directorySnapshot(built[target].path));
-    const report = JSON.parse(execFileSync("npm", [
-      "pack", "--dry-run", "--json", "--ignore-scripts", "--cache", join(temporary, "npm-cache"),
-    ], { cwd: source, encoding: "utf8" }))[0];
-    inspect(Object.fromEntries(report.files.map(({ path }) => [path, readFileSync(join(source, path))])));
-    const npmRoot = join(temporary, "npm-package");
-    for (const { path } of report.files) {
-      cpSync(join(source, path), join(npmRoot, path), { recursive: true });
+    for (const target of ["agent-plugins", "cursor", "codex"]) {
+      const snapshot = directorySnapshot(built[target].path);
+      assert.deepEqual(Object.keys(snapshot).filter((path) => path.startsWith("docs/")).sort(), [
+        "docs/installation.md", "docs/migrations.md", "docs/usage.md",
+      ]);
+      assert.deepEqual(Object.keys(snapshot).filter((path) => path.startsWith("assets/")), ["assets/logo.svg"]);
+      assert.equal(Object.keys(snapshot).some((path) => path.startsWith("schemas/")), target === "agent-plugins");
+      assert.ok(Object.hasOwn(snapshot, "skills/install-new-release-from-repo/scripts/codex-install.mjs"));
+      assert.deepEqual(checkLinks(built[target].path), []);
     }
-    assert.deepEqual(checkLinks(npmRoot), []);
-  } finally {
-    rmSync(temporary, { recursive: true, force: true });
-  }
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
 });
 
-function directorySnapshot(directory, prefix = "") {
+function directorySnapshot(directory, prefix = "", includeDirectories = false) {
   const snapshot = {};
   for (const entry of readdirSync(directory, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name))) {
     const relativePath = prefix ? join(prefix, entry.name) : entry.name;
     const path = join(directory, entry.name);
-    if (entry.isDirectory()) Object.assign(snapshot, directorySnapshot(path, relativePath));
+    if (entry.isDirectory()) {
+      if (includeDirectories) snapshot[`${relativePath}/`] = null;
+      Object.assign(snapshot, directorySnapshot(path, relativePath, includeDirectories));
+    }
     else snapshot[relativePath] = readFileSync(path);
   }
   return snapshot;
@@ -116,9 +109,6 @@ test("deterministic allowlists isolate Agent Plugins, Cursor, and Codex bundles"
     assert.equal(existsSync(join(first.codex.path, "skills", "response-simplicity-setup", "SKILL.md")), true);
     assert.deepEqual(readdirSync(join(first.codex.path, ".codex-plugin")), ["plugin.json"]);
     assert.equal(existsSync(join(first.codex.path, "commands")), false);
-    for (const target of [first["agent-plugins"].path, first.cursor.path, first.codex.path]) {
-      assert.equal(existsSync(join(target, "schemas", "agent-plugins", "1.0.0", "plugin.schema.json")), true);
-    }
 
     for (const target of [first["agent-plugins"].path, first.cursor.path, first.codex.path]) {
       for (const developmentRoot of [".agents", ".build", ".cursor", ".git", "adapters", "node_modules", "tests"]) {
@@ -140,6 +130,27 @@ test("target builder rejects broad repository and temporary roots before mutatio
   assert.deepEqual(readFileSync(packagePath), packageBefore);
   assert.equal(existsSync(join(defaultRoot, ".git")), true);
   assert.equal(existsSync(join(defaultRoot, "scripts", "build-plugin-targets.mjs")), true);
+});
+
+test("temporary source roots and their ancestors stay unchanged when rejected as output", () => {
+  const work = mkdtempSync(join(tmpdir(), "efficiency-source-boundary-"));
+  const source = join(work, "source");
+  try {
+    cpSync(defaultRoot, source, { recursive: true,
+      filter: (path) => ![".git", ".build", "node_modules"].includes(path.split(/[\\/]/).at(-1)),
+    });
+    mkdirSync(join(source, ".git"));
+    writeFileSync(join(source, ".git", "keep.txt"), "source sentinel\n");
+    const before = directorySnapshot(work, "", true);
+    for (const root of new Set([source, realpathSync(source)])) {
+      for (const output of [root, join(root, ".git"), join(root, "scripts"), join(root, ".build", "plugins"), work]) {
+        assert.throws(() => buildPluginTargets(output, root), /source|repository/);
+        assert.deepEqual(directorySnapshot(work, "", true), before, `rejected output changed files: ${output}`);
+      }
+    }
+    const built = buildPluginTargets(join(work, "targets"), source);
+    assert.equal(built.cursor.files > 0, true);
+  } finally { rmSync(work, { recursive: true, force: true }); }
 });
 
 test("target builder resets only owned plugin destinations", () => {
@@ -226,7 +237,7 @@ test("built-target validation rejects broken bundle-local documentation links", 
   const output = mkdtempSync(join(tmpdir(), "efficiency-target-links-"));
   try {
     const built = buildPluginTargets(output);
-    rmSync(join(built.cursor.path, "schemas"), { recursive: true, force: true });
+    rmSync(join(built.cursor.path, "docs", "installation.md"));
     assert.throws(
       () => validateBuiltTarget(built.cursor.path, "cursor", built.version),
       /Markdown links are invalid.*missing link target/s,

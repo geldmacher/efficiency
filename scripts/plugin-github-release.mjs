@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import {
   chmodSync,
@@ -77,12 +76,7 @@ export function defaultRunner(command, args, options = {}) {
 }
 
 function runChecked(runner, command, args, options = {}, label = `${command} ${args.join(" ")}`) {
-  const result = runner(command, args, options);
-  if (result.status !== 0) {
-    const detail = (result.stderr || result.stdout || `exit ${result.status}`).trim();
-    throw new Error(`${label} failed: ${detail}`);
-  }
-  return result.stdout.trim();
+  return runCheckedRaw(runner, command, args, options, label).trim();
 }
 
 function runCheckedRaw(runner, command, args, options = {}, label = `${command} ${args.join(" ")}`) {
@@ -122,7 +116,6 @@ function changelogSections(source) {
   const headings = [...source.matchAll(/^##[ \t]+(?:\[([^\]]+)\]|([^\s]+))(?:[ \t].*)?$/gm)];
   return headings.map((match, index) => ({
     name: match[1] ?? match[2],
-    start: match.index,
     headingEnd: match.index + match[0].length,
     end: headings[index + 1]?.index ?? source.length,
     body: source.slice(match.index + match[0].length, headings[index + 1]?.index ?? source.length).trim(),
@@ -495,16 +488,20 @@ function parseReleaseView(result, tag) {
   }
 }
 
-function remoteTagCommit(root, runner, tag) {
+function lookupRemoteTagCommit(root, runner, tag, label) {
   const output = runChecked(runner, "git", ["ls-remote", "--tags", "origin", `refs/tags/${tag}`, `refs/tags/${tag}^{}`], {
     cwd: root,
     env: { ...process.env, GIT_TERMINAL_PROMPT: "0" },
-  }, "remote tag lookup");
+  }, label);
   const lines = output.split(/\r?\n/).filter(Boolean).map((line) => line.split(/\s+/, 2));
   const peeled = lines.find(([, ref]) => ref === `refs/tags/${tag}^{}`);
   const direct = lines.find(([, ref]) => ref === `refs/tags/${tag}`);
   if (peeled) throw new Error(`remote tag ${tag} must be lightweight, not annotated`);
-  const commit = direct?.[0];
+  return direct?.[0] ?? null;
+}
+
+function remoteTagCommit(root, runner, tag) {
+  const commit = lookupRemoteTagCommit(root, runner, tag, "remote tag lookup");
   if (!commit) throw new Error(`remote tag ${tag} does not exist on origin`);
   return commit;
 }
@@ -643,17 +640,7 @@ function remoteBranchCommit(root, runner, branch = "main") {
 }
 
 function optionalRemoteTagCommit(root, runner, tag) {
-  const output = runChecked(runner, "git", [
-    "ls-remote", "--tags", "origin", `refs/tags/${tag}`, `refs/tags/${tag}^{}`,
-  ], {
-    cwd: root,
-    env: { ...process.env, GIT_TERMINAL_PROMPT: "0" },
-  }, `remote tag lookup for ${tag}`);
-  const lines = output.split(/\r?\n/).filter(Boolean).map((line) => line.split(/\s+/, 2));
-  if (lines.some(([, ref]) => ref === `refs/tags/${tag}^{}`)) {
-    throw new Error(`remote tag ${tag} must be lightweight, not annotated`);
-  }
-  const commit = lines.find(([, ref]) => ref === `refs/tags/${tag}`)?.[0] ?? null;
+  const commit = lookupRemoteTagCommit(root, runner, tag, `remote tag lookup for ${tag}`);
   if (commit) shaField(commit, `remote tag ${tag}`, [40, 64]);
   return commit;
 }

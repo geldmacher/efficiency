@@ -52,7 +52,7 @@ export function rewriteEvidence(directory, provenance) {
 export function writeCodexDriver(home) {
   mkdirSync(home, { recursive: true });
   const path = join(home, "codex-driver.mjs");
-  writeFileSync(path, `import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+  writeFileSync(path, `import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 const home = dirname(fileURLToPath(import.meta.url));
@@ -70,6 +70,7 @@ if (process.argv[3] === "list") {
   const manifest = JSON.parse(readFileSync(join(source, ".codex-plugin", "plugin.json"), "utf8"));
   const cache = join(home, ".codex", "plugins", "cache", document.name, manifest.name, manifest.version);
   mkdirSync(dirname(cache), { recursive: true });
+  rmSync(cache, { recursive: true, force: true });
   cpSync(source, cache, { recursive: true });
   if (fail === "corrupt-cache") writeFileSync(join(cache, "extra.txt"), "corrupt");
   writeFileSync(state, JSON.stringify({ installed: [{ name: manifest.name, pluginId: manifest.name + "@" + document.name, marketplaceName: document.name, version: manifest.version, enabled: true, source: { source: "local", path: source } }] }));

@@ -6,7 +6,7 @@ This procedure verifies Codex discovery and behavior that repository tests canno
 
 - Use the intended release checkout and record its commit plus working-tree status.
 - Record the Codex CLI/app version, RTK version, Node.js version, platform, selected model, and plugin manifest hash.
-- Confirm the personal symlink, marketplace entry, and installed plugin state separately.
+- Confirm the personal source directory, marketplace entry, and installed plugin state separately.
 - Obtain an explicit maximum approved cost and a limit of at most three model invocations before starting.
 - Restart Codex after installation or update and use a fresh Codex task.
 - Do not alter the real global `AGENTS.md` or `AGENTS.override.md` during discovery testing.

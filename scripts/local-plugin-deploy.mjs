@@ -10,7 +10,6 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
-  readlinkSync,
   realpathSync,
   renameSync,
   rmSync,
@@ -20,6 +19,7 @@ import {
 import { homedir, tmpdir } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { marketplaceDocument, codexList, codexSourceInstallation, cacheState, installCodex } from "../skills/install-new-release-from-repo/scripts/codex-install.mjs";
 
 export const RECEIPT_NAME = ".local-deploy.json";
 export const HOSTS = ["cursor", "codex"];
@@ -40,11 +40,6 @@ function manifestRelative(host) {
   if (host === "cursor") return ".cursor-plugin/plugin.json";
   if (host === "codex") return ".codex-plugin/plugin.json";
   throw new Error(`unsupported plugin host: ${host}`);
-}
-
-function repositoryCodexManifestPath(root) {
-  const direct = join(root, ".codex-plugin", "plugin.json");
-  return existsSync(direct) ? direct : join(root, "targets", "codex", ".codex-plugin", "plugin.json");
 }
 
 function walk(directory, base = directory) {
@@ -172,15 +167,6 @@ function run(command, args, options = {}) {
   return result.stdout || "";
 }
 
-function runJson(command, args, options = {}) {
-  const stdout = run(command, args, options);
-  try {
-    return JSON.parse(stdout);
-  } catch (error) {
-    throw new Error(`${command} ${args.join(" ")} did not return JSON: ${error.message}`);
-  }
-}
-
 export function repositoryState(root = repositoryRoot) {
   const gitHead = run("git", ["rev-parse", "HEAD"], { cwd: root }).trim();
   const gitDirty = run("git", ["status", "--porcelain", "--untracked-files=normal"], { cwd: root }).trim().length > 0;
@@ -222,7 +208,7 @@ function existingBundle(path, identity) {
     throw new Error(`existing plugin target is not a directory: ${path}`);
   }
   const manifest = validateExistingBundle(target, identity);
-  return { path, target, manifest, symbolicLink: stat.isSymbolicLink(), link: stat.isSymbolicLink() ? readlinkSync(path) : null };
+  return { target, manifest, symbolicLink: stat.isSymbolicLink() };
 }
 
 function lstatExists(path) {
@@ -241,34 +227,6 @@ function validateExistingBundle(directory, { plugin, host }) {
   const manifest = readJson(manifestPath);
   if (manifest.name !== plugin) throw new Error(`existing ${host} target belongs to ${manifest.name || "<unknown>"}`);
   return manifest;
-}
-
-export function updateMarketplaceDocument(document, plugin, sourcePath) {
-  if (document === null) {
-    document = {
-      name: "personal",
-      interface: { displayName: "Personal" },
-      plugins: [],
-    };
-  }
-  if (document?.name !== "personal" || !Array.isArray(document.plugins)) {
-    throw new Error("personal Marketplace must be named personal and expose a plugins array");
-  }
-  const matches = document.plugins.filter((entry) => entry?.name === plugin);
-  if (matches.length > 1) throw new Error(`personal Marketplace contains duplicate ${plugin} entries`);
-  if (matches.length === 0) {
-    document.plugins.push({
-      name: plugin,
-      source: { source: "local", path: sourcePath },
-      policy: { installation: "AVAILABLE", authentication: "ON_INSTALL" },
-      category: "Developer Tools",
-    });
-    return document;
-  }
-  const entry = matches[0];
-  if (entry.source?.source !== "local") throw new Error(`${plugin} Marketplace entry is not a local source`);
-  entry.source.path = sourcePath;
-  return document;
 }
 
 function atomicWrite(path, bytes) {
@@ -329,39 +287,39 @@ function backupPath(destination) {
   return join(dirname(destination), `.${basename(destination)}.backup-${process.pid}-${randomUUID()}`);
 }
 
-function cachePath(codexHome, plugin, version) {
-  return join(codexHome, "plugins", "cache", "personal", plugin, version);
+function cachePath(codexHome, marketplace, plugin, version) {
+  return join(codexHome, "plugins", "cache", marketplace, plugin, version);
 }
 
-export function codexInstallationState({ home, plugin, version, codexBinary = "codex", env = process.env }) {
-  let list;
+function installationReport(state) {
+  return { current: state.current, installed: state.installed ?? null, cachePath: state.cache ?? null, cacheManifest: state.cacheManifest ?? null };
+}
+
+export function codexInstallationState({ home, plugin, version, marketplace, codexBinary = "codex", env = process.env }) {
   try {
-    list = runJson(codexBinary, ["plugin", "list", "--json"], { env: { ...env, HOME: home } });
+    const paths = deploymentPaths(home, plugin);
+    if (!marketplace) {
+      const original = lstatExists(paths.marketplace) ? readFileSync(paths.marketplace) : null;
+      marketplace = marketplaceDocument(original, paths.marketplaceSource, plugin).name;
+    }
+    const installed = codexList(codexBinary, undefined, { ...env, HOME: home });
+    if (installed === null) throw new Error("Codex CLI is unavailable");
+    const source = existingBundle(paths.codex, { plugin, host: "codex" });
+    // A legacy checkout must be migrated; its development tree is not an installable bundle.
+    if (source?.symbolicLink) return installationReport({ current: false,
+      installed: codexSourceInstallation(installed, marketplace, paths.codex, plugin) });
+    return installationReport(cacheState(installed, marketplace, paths.codex,
+      resolve(env.CODEX_HOME || paths.codexHome), { plugin, version }));
   } catch (error) {
     return { current: false, error: error.message, installed: null, cachePath: null };
   }
-  const installed = list.installed?.find((entry) => entry.pluginId === `${plugin}@personal`) || null;
-  const codexHome = resolve(env.CODEX_HOME || join(home, ".codex"));
-  const expectedCache = cachePath(codexHome, plugin, version);
-  let cacheManifest = null;
-  try {
-    cacheManifest = readJson(join(expectedCache, ".codex-plugin", "plugin.json"));
-  } catch (error) {
-    if (error.code !== "ENOENT") throw error;
-  }
-  const expectedSource = join(resolve(home), ".codex", "plugins", plugin);
-  const current = installed?.version === version
-    && resolve(installed?.source?.path || "/") === expectedSource
-    && cacheManifest?.name === plugin
-    && cacheManifest?.version === version;
-  return { current, installed, cachePath: expectedCache, cacheManifest };
 }
 
-function installCodexDefault({ home, plugin, version, codexBinary, env }) {
-  run(codexBinary, ["plugin", "add", `${plugin}@personal`, "--json"], { env: { ...env, HOME: home } });
-  const state = codexInstallationState({ home, plugin, version, codexBinary, env });
-  if (!state.current) throw new Error(`Codex did not activate ${plugin} ${version} from its canonical source/cache`);
-  return state;
+function installCodexDefault({ home, plugin, version, marketplace, codexBinary, env }) {
+  const paths = deploymentPaths(home, plugin);
+  return installationReport(installCodex({ binary: codexBinary, marketplace, home,
+    source: paths.codex, codexHome: resolve(env.CODEX_HOME || paths.codexHome), plugin, version,
+    env: { ...env, HOME: home } }));
 }
 
 export function prepareMetadata({ root, plugin, baseVersion, gitHead, gitDirty, deployedAt = new Date().toISOString() }) {
@@ -420,13 +378,16 @@ export function deployPreparedTargets({
   let marketplaceOriginal = null;
   let marketplaceBytes = null;
   let marketplaceChanged = false;
+  let marketplaceName;
   let codexBefore = { current: true, skipped: true };
   if (selectedHosts.includes("codex")) {
     marketplaceOriginal = lstatExists(paths.marketplace) ? readFileSync(paths.marketplace) : null;
-    const marketplace = updateMarketplaceDocument(marketplaceOriginal ? JSON.parse(marketplaceOriginal) : null, plugin, paths.marketplaceSource);
-    marketplaceBytes = Buffer.from(`${JSON.stringify(marketplace, null, 2)}\n`);
+    const marketplace = marketplaceDocument(marketplaceOriginal, paths.marketplaceSource, plugin);
+    marketplaceName = marketplace.name;
+    marketplaceBytes = marketplace.bytes;
     marketplaceChanged = marketplaceOriginal === null || !marketplaceOriginal.equals(marketplaceBytes);
-    codexBefore = codexStateReader({ home, plugin, version: metadata.codex.localVersion, codexBinary, env });
+    codexBefore = codexStateReader({ home, plugin, version: metadata.codex.localVersion, marketplace: marketplaceName, codexBinary, env });
+    if (codexBefore.error) throw new Error(codexBefore.error);
   }
   const changedHosts = selectedHosts.filter((host) => !existing[host].current);
   const hooksChanged = Object.fromEntries(selectedHosts.map((host) => {
@@ -453,7 +414,7 @@ export function deployPreparedTargets({
       ? { path: paths.marketplace, source: paths.marketplaceSource, change: marketplaceChanged }
       : null,
     codex: selectedHosts.includes("codex")
-      ? { change: !codexBefore.current, cache_path: cachePath(resolve(env.CODEX_HOME || paths.codexHome), plugin, metadata.codex.localVersion) }
+      ? { change: !codexBefore.current, cache_path: cachePath(resolve(env.CODEX_HOME || paths.codexHome), marketplaceName, plugin, metadata.codex.localVersion) }
       : null,
   };
   if (dryRun) return plan;
@@ -463,6 +424,7 @@ export function deployPreparedTargets({
   const staged = {};
   const swapped = [];
   let marketplaceWritten = false;
+  let nativeAttempted = false;
   try {
     for (const host of changedHosts) staged[host] = stageTarget(metadata[host].path, paths[host], metadata[host]);
     if (simulateFailure === "after-stage") throw new Error("simulated failure after stage");
@@ -481,6 +443,10 @@ export function deployPreparedTargets({
       if (simulateFailure === `after-${host}-swap`) throw new Error(`simulated failure after ${host} swap`);
     }
     if (selectedHosts.includes("codex") && marketplaceChanged) {
+      const current = lstatExists(paths.marketplace) ? readFileSync(paths.marketplace) : null;
+      if (current === null ? marketplaceOriginal !== null : !current.equals(marketplaceOriginal ?? Buffer.alloc(0))) {
+        throw new Error("Marketplace changed concurrently");
+      }
       atomicWrite(paths.marketplace, marketplaceBytes);
       marketplaceWritten = true;
     }
@@ -489,13 +455,15 @@ export function deployPreparedTargets({
       ? codexInstaller({
         home,
         plugin,
+        marketplace: marketplaceName,
         version: metadata.codex.localVersion,
         codexBinary,
         env,
         source: paths.codex,
-        cache: cachePath(resolve(env.CODEX_HOME || paths.codexHome), plugin, metadata.codex.localVersion),
+        cache: cachePath(resolve(env.CODEX_HOME || paths.codexHome), marketplaceName, plugin, metadata.codex.localVersion),
       })
       : null;
+    nativeAttempted = selectedHosts.includes("codex");
     if (simulateFailure === "after-codex-add") throw new Error("simulated failure after Codex add");
     for (const item of swapped) {
       const state = currentTarget(item.destination, metadata[item.host]);
@@ -504,15 +472,31 @@ export function deployPreparedTargets({
     for (const item of swapped) if (item.backup) rmSync(item.backup, { recursive: true, force: true });
     return { ...plan, no_op: false, codex };
   } catch (error) {
-    for (const item of [...swapped].reverse()) {
+    nativeAttempted ||= error.nativeAttempted === true;
+    const recoveryErrors = [];
+    const attempt = (label, action) => {
+      try { action(); } catch (failure) { recoveryErrors.push(`${label}: ${failure.message}`); }
+    };
+    for (const item of [...swapped].reverse()) attempt(`restore ${item.host}`, () => {
       if (lstatExists(item.destination)) rmSync(item.destination, { recursive: true, force: true });
-      if (item.backup && lstatExists(item.backup)) renameSync(item.backup, item.destination);
-    }
-    if (marketplaceWritten) {
+      if (item.backup) renameSync(item.backup, item.destination);
+    });
+    if (marketplaceWritten) attempt("restore marketplace", () => {
+      if (!lstatExists(paths.marketplace) || !readFileSync(paths.marketplace).equals(marketplaceBytes)) {
+        throw new Error("Concurrent marketplace change preserved; restore manually");
+      }
       if (marketplaceOriginal === null) rmSync(paths.marketplace, { force: true });
       else atomicWrite(paths.marketplace, marketplaceOriginal);
-    }
-    throw new Error(`local plugin deployment rolled back: ${error.message}`, { cause: error });
+    });
+    const message = recoveryErrors.length ? "local plugin deployment recovery incomplete" : "local plugin deployment rolled back";
+    throw Object.assign(new Error(`${message}: ${error.message}`, { cause: error }), { result: {
+      status: "failed", error: error.message,
+      source_rollback: recoveryErrors.length ? "incomplete" : "completed_or_not_needed",
+      recovery_errors: recoveryErrors,
+      backups: swapped.filter((item) => item.backup && lstatExists(item.backup)).map((item) => item.backup),
+      native_installation: nativeAttempted ? "unverified_after_failure" : "not_changed",
+      next_step: nativeAttempted ? "Inspect recovery, then reinstall the restored source through Codex and verify its cache. Do not delete caches manually." : "Resolve the reported conflict before retrying.",
+    } });
   } finally {
     for (const stage of Object.values(staged)) if (lstatExists(stage.stageRoot)) rmSync(stage.stageRoot, { recursive: true, force: true });
   }
@@ -563,7 +547,7 @@ export async function deploymentStatus({ root = repositoryRoot, home = process.e
     const marketplace = lstatExists(paths.marketplace) ? readJson(paths.marketplace) : null;
     const entries = marketplace?.plugins?.filter((entry) => entry?.name === plugin) || [];
     marketplaceCurrent = entries.length === 1 && entries[0].source?.source === "local" && entries[0].source.path === paths.marketplaceSource;
-    codex = codexInstallationState({ home, plugin, version: expected.codex.localVersion, codexBinary, env });
+    codex = codexInstallationState({ home, plugin, version: expected.codex.localVersion, marketplace: marketplace?.name, codexBinary, env });
   }
   return {
     plugin,
@@ -619,7 +603,7 @@ async function main() {
   const { dryRun, full, hosts } = parseDeployArguments(args);
   const packageManifest = readJson(join(repositoryRoot, "package.json"));
   const cursorManifest = readJson(join(repositoryRoot, ".cursor-plugin", "plugin.json"));
-  const codexManifest = readJson(repositoryCodexManifestPath(repositoryRoot));
+  const codexManifest = readJson(join(repositoryRoot, ".codex-plugin", "plugin.json"));
   if (cursorManifest.name !== codexManifest.name) throw new Error("Cursor and Codex plugin names differ");
   if (cursorManifest.version !== packageManifest.version || codexManifest.version !== packageManifest.version) {
     throw new Error("repository manifests must keep the regular package product version");
@@ -649,9 +633,8 @@ async function main() {
   }
 }
 
-const direct = process.argv[1] && resolve(process.argv[1]) === scriptPath;
+const direct = process.argv[1] && realpathSync(process.argv[1]) === realpathSync(scriptPath);
 if (direct) main().catch((error) => {
-  process.stderr.write(`${error.stack || error.message}\n`);
+  process.stderr.write(`${error.result ? JSON.stringify(error.result, null, 2) : error.stack || error.message}\n`);
   process.exitCode = 1;
 });
-

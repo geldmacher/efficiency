@@ -18,72 +18,21 @@ import { fileURLToPath } from "node:url";
 import { checkLinks } from "./check-links.mjs";
 import { validateAgentPlugin, validateCodexPlugin, validatePlugin } from "./validate-plugin.mjs";
 
+import { portableSkills, codexAdapterSkill } from "./plugin-components.mjs";
+
 const defaultRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const plugin = "geldmacher-efficiency";
-const portableSkills = [
-  "context-optimization",
-  "efficiency",
-  "install-new-release-from-repo",
-  "rtk-filter-design",
-  "rtk-setup",
-];
-const codexAdapterSkill = "adapters/codex/skills/response-simplicity-setup";
+const codexAdapterSource = `adapters/codex/skills/${codexAdapterSkill}`;
 const persistentOutput = join(defaultRoot, ".build", "plugins");
-const packageDocs = [
-  "docs/agent-plugins-runtime-smoke.md",
-  "docs/codex-runtime-smoke.md",
-  "docs/installation.md",
-  "docs/development.md",
-  "docs/migrations.md",
-  "docs/usage.md",
-  "docs/receipts/2.0.0-code-simplicity.md",
-  "docs/receipts/2.0.0.md",
-  "docs/release-checklist.md",
-  "docs/release-validation.md",
-  "docs/runtime-smoke.md"
+const commonFiles = [
+  "assets/logo.svg", "CHANGELOG.md", "LICENSE", "README.md",
+  "docs/installation.md", "docs/migrations.md", "docs/usage.md",
+  ...portableSkills.map((name) => `skills/${name}`),
 ];
 const allowed = {
-  "agent-plugins": [
-    "plugin.json",
-    "assets",
-    "CHANGELOG.md",
-    ...packageDocs,
-    "LICENSE",
-    "README.md",
-    "schemas/agent-plugins",
-    ...portableSkills.map((name) => `skills/${name}`),
-  ],
-  cursor: [
-    ".cursor-plugin",
-    "agents",
-    "assets",
-    "CHANGELOG.md",
-    "commands",
-    ...packageDocs,
-    "LICENSE",
-    "README.md",
-    "rules",
-    "schemas/agent-plugins",
-    "skills/context-optimization",
-    "skills/efficiency",
-    "skills/install-new-release-from-repo",
-    "skills/rtk-filter-design",
-    "skills/rtk-setup",
-  ],
-  codex: [
-    ".codex-plugin",
-    "assets",
-    "CHANGELOG.md",
-    ...packageDocs,
-    "LICENSE",
-    "README.md",
-    "schemas/agent-plugins",
-    "skills/context-optimization",
-    "skills/efficiency",
-    "skills/install-new-release-from-repo",
-    "skills/rtk-filter-design",
-    "skills/rtk-setup",
-  ],
+  "agent-plugins": ["plugin.json", "schemas/agent-plugins", ...commonFiles],
+  cursor: [".cursor-plugin", "agents", "commands", "rules", ...commonFiles],
+  codex: [".codex-plugin", ...commonFiles],
 };
 const developmentRoots = [".agents", ".build", ".cursor", ".git", "adapters", "node_modules", "test", "tests"];
 
@@ -126,8 +75,17 @@ function assertNoSymlinkComponents(base, path, label) {
   }
 }
 
-function validateOutputRoot(outputRoot) {
+function validateOutputRoot(outputRoot, sourceRoot) {
   const output = resolve(outputRoot);
+  const canonicalOutput = canonicalCandidate(output);
+  const canonicalRepository = realpathSync(defaultRoot);
+  for (const source of new Set([canonicalRepository, realpathSync(sourceRoot)])) {
+    const managedOutput = source === canonicalRepository && output === persistentOutput
+      && canonicalOutput === join(canonicalRepository, ".build", "plugins");
+    if (!managedOutput && (inside(source, canonicalOutput) || inside(canonicalOutput, source))) {
+      throw new Error("target output must be the repository .build/plugins directory or a strict temporary-directory descendant; output overlaps plugin source");
+    }
+  }
   if (output === persistentOutput) {
     const expected = resolve(realpathSync(defaultRoot), ".build", "plugins");
     if (canonicalCandidate(output) !== expected) {
@@ -234,7 +192,7 @@ export function validateBuiltTarget(destination, target, version) {
     assertSkills(destination, "skills", portableSkills, "Cursor");
   } else {
     if (existsSync(join(destination, "plugin.json"))) throw new Error("codex target contains the portable root manifest");
-    assertSkills(destination, "skills", [...portableSkills, "response-simplicity-setup"], "Codex");
+    assertSkills(destination, "skills", [...portableSkills, codexAdapterSkill], "Codex");
   }
 
   if (target === "cursor") {
@@ -267,7 +225,7 @@ export function validateBuiltTarget(destination, target, version) {
 
 export function buildPluginTargets(outputRoot, sourceRoot = defaultRoot) {
   const projectRoot = resolve(sourceRoot);
-  const output = validateOutputRoot(outputRoot);
+  const output = validateOutputRoot(outputRoot, projectRoot);
   const targets = ["agent-plugins", "cursor", "codex"];
   const destinations = Object.fromEntries(targets.map((target) => [target, join(output, target, plugin)]));
   for (const [target, destination] of Object.entries(destinations)) {
@@ -281,7 +239,7 @@ export function buildPluginTargets(outputRoot, sourceRoot = defaultRoot) {
     const destination = destinations[target];
     for (const item of allowed[target]) copyAllowed(projectRoot, destination, item);
     if (target === "codex") {
-      copyMapped(projectRoot, destination, codexAdapterSkill, "skills/response-simplicity-setup");
+      copyMapped(projectRoot, destination, codexAdapterSource, `skills/${codexAdapterSkill}`);
     }
     validateBuiltTarget(destination, target, version);
     result[target] = { path: destination, hash: digest(destination), files: files(destination).length };

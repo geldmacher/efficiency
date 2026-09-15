@@ -15,6 +15,8 @@ import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 import { parseDocument } from "yaml";
 
+import { portableSkills, codexAdapterSkill } from "./plugin-components.mjs";
+
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 export const defaultRoot = dirname(scriptDirectory);
 const cursorSchemaPath = join(defaultRoot, "schemas", "plugin.schema.json");
@@ -40,7 +42,7 @@ const codexInterfaceKeys = new Set([
 const httpsPattern = /^https:\/\/[^\s/$.?#].[^\s]*$/i;
 const hexColorPattern = /^#[0-9a-f]{6}$/i;
 const agentSkillKeys = new Set(["name", "description", "license", "compatibility", "metadata", "allowed-tools"]);
-const portableSkillNames = ["context-optimization", "efficiency", "install-new-release-from-repo", "rtk-filter-design", "rtk-setup"];
+
 const codexAdapterSkillsRelative = "adapters/codex/skills";
 
 function readText(path) {
@@ -668,13 +670,7 @@ export function validateRepositoryPolicy(root = defaultRoot) {
   }
 
   if (portableManifest.name === "geldmacher-efficiency") {
-    const expectedCursorSkills = [
-      "./skills/context-optimization/SKILL.md",
-      "./skills/efficiency/SKILL.md",
-      "./skills/install-new-release-from-repo/SKILL.md",
-      "./skills/rtk-filter-design/SKILL.md",
-      "./skills/rtk-setup/SKILL.md",
-    ];
+    const expectedCursorSkills = portableSkills.map((name) => `./skills/${name}/SKILL.md`);
     if (JSON.stringify(manifest.skills) !== JSON.stringify(expectedCursorSkills)) {
       failures.push("Cursor plugin must declare exactly the five shared skills explicitly");
     }
@@ -682,14 +678,14 @@ export function validateRepositoryPolicy(root = defaultRoot) {
       .filter((entry) => entry.isDirectory())
       .map((entry) => entry.name)
       .sort();
-    if (JSON.stringify(sourceSkills) !== JSON.stringify(portableSkillNames)) {
-      failures.push(`portable skills must be exactly: ${portableSkillNames.join(", ")}`);
+    if (JSON.stringify(sourceSkills) !== JSON.stringify(portableSkills)) {
+      failures.push(`portable skills must be exactly: ${portableSkills.join(", ")}`);
     }
     const codexAdapterSkills = readdirSync(join(rootPath, codexAdapterSkillsRelative), { withFileTypes: true })
       .filter((entry) => entry.isDirectory())
       .map((entry) => entry.name)
       .sort();
-    if (JSON.stringify(codexAdapterSkills) !== JSON.stringify(["response-simplicity-setup"])) {
+    if (JSON.stringify(codexAdapterSkills) !== JSON.stringify([codexAdapterSkill])) {
       failures.push("Codex adapter must contain only response-simplicity-setup");
     }
   }

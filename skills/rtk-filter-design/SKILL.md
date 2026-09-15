@@ -5,7 +5,7 @@ description: Design project-specific RTK filters that preserve useful diagnostic
 
 # RTK Filter Design
 
-Before writing a user-facing result, read [the human communication contract](../efficiency/references/human-communication.md). State filter coverage, the risk of hidden diagnostics, and the next verification or trust action when useful.
+Before writing a user-facing result, read [the human communication contract](../efficiency/references/human-communication.md). Report filter coverage and diagnostic risks.
 
 Read [filter-format](references/filter-format.md). Also read [DDEV command surfaces](references/ddev-command-surface.md) when the project uses DDEV, databases, logs, package wrappers, or generic exec forms.
 

@@ -5,7 +5,7 @@ description: Analyze or improve recurring context for Cursor, Codex, or another 
 
 # Context Optimization
 
-Before writing a user-facing result, read [the human communication contract](../efficiency/references/human-communication.md). State the recommendation, the affected context sources, what the change would mean for the person, and the next approval or implementation action when useful.
+Before writing a user-facing result, read [the human communication contract](../efficiency/references/human-communication.md). Identify the affected context sources.
 
 Inspect only the context sources relevant to the user's goal. In Cursor, these can include project instructions, rules, commands, skills, and mode guidance. In Codex, these can include global and project `AGENTS.md`, project `.codex/config.toml`, plugins, skills, and repeated command output. In another Agent Plugins client, inspect only context and configuration surfaces documented by that host; do not infer Cursor or Codex paths. Include documentation only when it actually contributes recurring context. Identify duplicated, obsolete, overly broad, or always-loaded material and the constraints that must survive any reduction.
 

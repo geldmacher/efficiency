@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+- Run local CLI subprocess tests with an isolated test context and protect repository and snapshot sources from overlapping build output, including temporary checkouts.
+- Build and validate local deployment targets once; retain regression suites in the complete release check. Consolidate local deployment instructions and remove unused fields and duplicated release helpers.
+
+- Share Codex marketplace handling and complete cache verification between release installation and local deployment. Preserve existing marketplace names, reject conflicting sources, and report native recovery uncertainty after failed deployment.
+- Preserve local deployment migration from existing source symlinks, including checkouts with linked development dependencies, untouched link targets and restoration of the original links after failure.
+- Stop the manual shell checksum procedure immediately when either download fails verification.
+- Keep all three plugin targets while excluding development documentation, historical receipts and unused artwork from installable bundles. Remove the unsupported npm package path, unused guidance helper and obsolete Codex source fallback.
+- Consolidate component lists and repeated instructions; replace wording-coupled policy checks with focused contracts and add deployment CLI and checksum regression coverage.
+
 ## 3.3.2
 
 - Removed trailing blank lines from development, migration, and usage documentation.

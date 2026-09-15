@@ -5,7 +5,7 @@ description: Install or update Efficiency from its latest stable GitHub Release 
 
 # Install new Release from repo
 
-Install the latest stable release from `geldmacher/efficiency` for colleagues using Cursor or Codex. Read [the installation procedure](../../docs/installation.md) for prerequisites, first installation, conflicts, and recovery. Use [human communication](../efficiency/references/human-communication.md) for the result.
+Install the latest stable release from `geldmacher/efficiency` for colleagues using Cursor or Codex. Read [the installation procedure](../../docs/installation.md) when prerequisite, first-installation, conflict, or recovery details are needed. Use [human communication](../efficiency/references/human-communication.md) for the result.
 
 1. Resolve the invoking harness from explicit session context or the user's requested target. If uncertain, ask which harness to install into. The presence of both apps is not host selection. Other Agent Plugins clients have no supported release archive; explain this limit without writing host files.
 2. Locate [the bundled installer](scripts/install-release.mjs) relative to this skill, even when it runs from an installed cache or an unrelated working directory. Check Node.js 22 or newer. No Git checkout, GitHub CLI, npm installation, other skill, or external plugin is needed.

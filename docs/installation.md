@@ -73,8 +73,8 @@ verify_release_file() {
   fi
 }
 
-verify_release_file "$archive"
-verify_release_file "provenance.json"
+verify_release_file "$archive" || exit 1
+verify_release_file "provenance.json" || exit 1
 ```
 
 On Windows PowerShell, the equivalent check selects the exact two entries before comparing their hashes:

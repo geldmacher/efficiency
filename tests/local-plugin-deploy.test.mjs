@@ -19,9 +19,10 @@ import {
   deploymentReceipt,
   isInside,
   localVersion,
-  updateMarketplaceDocument,
   validateBundle,
 } from "../scripts/local-plugin-deploy.mjs";
+
+import { marketplaceDocument } from "../skills/install-new-release-from-repo/scripts/codex-install.mjs";
 
 const plugin = "geldmacher-test";
 const baseVersion = "1.2.3";
@@ -49,7 +50,7 @@ function fixture() {
     name: "personal",
     plugins: [
       { name: "unrelated", source: { source: "local", path: "./other" } },
-      { name: plugin, source: { source: "local", path: "./legacy" }, policy: { installation: "AVAILABLE" } },
+      { name: plugin, source: { source: "local", path: `./.codex/plugins/${plugin}` }, policy: { installation: "AVAILABLE" } },
     ],
   });
   return { root, repository, home, marketplace };
@@ -68,6 +69,44 @@ function metadata(root) {
 const neverCurrent = () => ({ current: false, installed: null, cachePath: null });
 const alwaysCurrent = () => ({ current: true, installed: { version: "current" }, cachePath: "/cache" });
 const successfulInstaller = ({ version, cache }) => ({ current: true, installed: { version }, cachePath: cache });
+
+test("local deployment rejects conflicting catalog sources before changing hosts", () => {
+  const item = fixture();
+  try {
+    const document = JSON.parse(readFileSync(item.marketplace));
+    document.plugins[1].source.path = "./foreign";
+    json(item.marketplace, document);
+    const original = readFileSync(item.marketplace);
+    assert.throws(() => deployPreparedTargets({ ...metadata(item.repository), home: item.home,
+      codexStateReader: neverCurrent, codexInstaller: successfulInstaller }), /another source/);
+    assert.deepEqual(readFileSync(item.marketplace), original);
+    const paths = deploymentPaths(item.home, plugin);
+    assert.equal(existsSync(paths.cursor), false);
+    assert.equal(existsSync(paths.codex), false);
+  } finally { rmSync(item.root, { recursive: true, force: true }); }
+});
+
+test("rollback preserves a concurrent marketplace edit and reports incomplete recovery", () => {
+  const item = fixture();
+  try {
+    rmSync(item.marketplace);
+    const concurrent = JSON.stringify({ name: "new-owner", plugins: [] });
+    assert.throws(() => deployPreparedTargets({ ...metadata(item.repository), home: item.home,
+      codexStateReader: neverCurrent, codexInstaller: () => {
+        writeFileSync(item.marketplace, concurrent);
+        throw Object.assign(new Error("native failure"), { nativeAttempted: true });
+      } }), (error) => {
+      assert.equal(error.result.source_rollback, "incomplete");
+      assert.equal(error.result.native_installation, "unverified_after_failure");
+      assert.match(error.result.recovery_errors[0], /Concurrent marketplace change preserved/);
+      return true;
+    });
+    assert.equal(readFileSync(item.marketplace, "utf8"), concurrent);
+    const paths = deploymentPaths(item.home, plugin);
+    assert.equal(existsSync(paths.cursor), false);
+    assert.equal(existsSync(paths.codex), false);
+  } finally { rmSync(item.root, { recursive: true, force: true }); }
+});
 
 test("local versions are host-specific and content-addressed", () => {
   const hash = "a".repeat(64);
@@ -127,23 +166,21 @@ test("path boundaries, symlinks, development roots, and wrong manifests fail clo
   }
 });
 
-test("Marketplace updates preserve every unrelated entry", () => {
-  const document = {
-    name: "personal",
-    plugins: [
-      { name: "alpha", source: { source: "local", path: "./alpha" } },
-      { name: plugin, source: { source: "local", path: "./old" }, extra: "preserve" },
-    ],
-  };
-  const result = updateMarketplaceDocument(document, plugin, `./.codex/plugins/${plugin}`);
-  assert.equal(result.plugins[0].source.path, "./alpha");
-  assert.equal(result.plugins[1].source.path, `./.codex/plugins/${plugin}`);
-  assert.equal(result.plugins[1].extra, "preserve");
-  const created = updateMarketplaceDocument(null, plugin, `./.codex/plugins/${plugin}`);
-  assert.equal(created.name, "personal");
-  assert.equal(created.plugins[0].name, plugin);
-  assert.equal(created.plugins[0].source.path, `./.codex/plugins/${plugin}`);
-  assert.throws(() => updateMarketplaceDocument({ name: "other", plugins: [] }, plugin, "./x"), /named personal/);
+test("Marketplace updates preserve existing names, entries and unchanged bytes", () => {
+  const original = Buffer.from(JSON.stringify({ name: "colleagues", interface: { displayName: "Team" }, plugins: [
+    { name: "alpha", source: { source: "local", path: "./alpha" } },
+  ] }));
+  const source = `./.codex/plugins/${plugin}`;
+  const result = marketplaceDocument(original, source, plugin);
+  const document = JSON.parse(result.bytes);
+  assert.equal(result.name, "colleagues");
+  assert.deepEqual(document.interface, { displayName: "Team" });
+  assert.deepEqual(document.plugins[0], JSON.parse(original).plugins[0]);
+  assert.deepEqual(marketplaceDocument(result.bytes, source, plugin).bytes, result.bytes);
+  assert.equal(marketplaceDocument(null, source, plugin).name, "geldmacher-personal");
+  assert.throws(() => marketplaceDocument(result.bytes, "./foreign", plugin), /another source/);
+  document.plugins.push(document.plugins[1]);
+  assert.throws(() => marketplaceDocument(Buffer.from(JSON.stringify(document)), source, plugin), /Duplicate/);
 });
 
 test("Cursor-only first install needs neither Codex nor a personal Marketplace", () => {
@@ -185,7 +222,7 @@ test("Codex-only first install creates its Marketplace entry without touching Cu
     assert.equal(existsSync(paths.cursor), false);
     assert.equal(readFileSync(join(paths.codex, ".codex-plugin", "plugin.json"), "utf8").includes("+local.codex."), true);
     const marketplace = JSON.parse(readFileSync(paths.marketplace, "utf8"));
-    assert.equal(marketplace.name, "personal");
+    assert.equal(marketplace.name, "geldmacher-personal");
     assert.equal(marketplace.plugins[0].source.path, `./.codex/plugins/${plugin}`);
   } finally {
     rmSync(item.root, { recursive: true, force: true });
@@ -265,7 +302,12 @@ test("a failure after both swaps restores both targets and Marketplace", () => {
       ...options,
       deployedAt: "2026-08-10T12:02:00.000Z",
       simulateFailure: "after-codex-add",
-    }), /deployment rolled back/);
+    }), (error) => {
+      assert.match(error.message, /deployment rolled back/);
+      assert.equal(error.result.source_rollback, "completed_or_not_needed");
+      assert.equal(error.result.native_installation, "unverified_after_failure");
+      return true;
+    });
     assert.equal(readFileSync(join(paths.cursor, ".local-deploy.json"), "utf8"), oldCursor);
     assert.equal(readFileSync(join(paths.codex, ".local-deploy.json"), "utf8"), oldCodex);
     assert.equal(readFileSync(item.marketplace, "utf8"), oldMarketplace);
@@ -275,4 +317,3 @@ test("a failure after both swaps restores both targets and Marketplace", () => {
     rmSync(item.root, { recursive: true, force: true });
   }
 });
-

@@ -1,31 +1,21 @@
 #!/usr/bin/env node
-import { spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { chmodSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
-import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PLUGIN_NAME, EXPECTED_REPOSITORY, RELEASE_HOSTS, assetName, canonicalJson, receiptForProvenance, sha256, validateProvenance } from "./release-format.mjs";
 import { verifyArchive } from "./release-archive.mjs";
+import { assertPath, present, sameTree, marketplaceDocument, defaultRunner, codexList, cacheState, installCodex } from "./codex-install.mjs";
+export { marketplaceDocument } from "./codex-install.mjs";
 
 const stableVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 const manifestPath = (host) => `${host === "cursor" ? ".cursor-plugin" : ".codex-plugin"}/plugin.json`;
 const json = (path) => JSON.parse(readFileSync(path, "utf8"));
-const present = (path) => { try { lstatSync(path); return true; } catch (error) { if (error.code === "ENOENT") return false; throw error; } };
+
 
 function assertHost(host) {
   if (!RELEASE_HOSTS.includes(host)) throw new Error("Choose the invoking harness explicitly: --host cursor or --host codex");
-}
-
-function assertPath(root, path) {
-  const tail = relative(root, path);
-  if (!tail || tail === ".." || tail.startsWith(`..${sep}`) || isAbsolute(tail)) throw new Error(`Path escapes installation root: ${path}`);
-  let current = root;
-  for (const part of tail.split(sep)) {
-    current = join(current, part);
-    if (!present(current)) break;
-    if (lstatSync(current).isSymbolicLink()) throw new Error(`Installation path contains a symlink: ${current}`);
-  }
 }
 
 function regularFile(path) {
@@ -87,82 +77,6 @@ export async function downloadLatest(directory, host, fetcher = fetch) {
     writeFileSync(join(directory, name), bytes, { flag: "wx" });
   }
   return verifyRelease(directory, host, version);
-}
-
-function sameTree(directory, entries) {
-  if (!present(directory)) return false;
-  const actual = [];
-  const walk = (folder, prefix = "") => {
-    if (!lstatSync(folder).isDirectory() || lstatSync(folder).isSymbolicLink()) throw new Error(`Unsafe installed directory: ${folder}`);
-    for (const name of readdirSync(folder)) {
-      const path = join(folder, name);
-      const key = prefix ? `${prefix}/${name}` : name;
-      const stat = lstatSync(path);
-      if (stat.isSymbolicLink()) throw new Error(`Installed tree contains a symlink: ${path}`);
-      if (stat.isDirectory()) walk(path, key);
-      else if (stat.isFile()) actual.push({ relativePath: key, bytes: readFileSync(path), mode: stat.mode & 0o777 });
-      else throw new Error(`Installed tree contains a non-regular file: ${path}`);
-    }
-  };
-  walk(directory);
-  const expected = new Map(entries.map((entry) => [entry.relativePath, entry]));
-  return actual.length === entries.length && actual.every((entry) => {
-    const wanted = expected.get(entry.relativePath);
-    return wanted && wanted.bytes.equals(entry.bytes) && (process.platform === "win32" || wanted.mode === entry.mode);
-  });
-}
-
-export function marketplaceDocument(original, sourcePath) {
-  const document = original ? JSON.parse(original.toString("utf8")) : {
-    name: "geldmacher-personal", interface: { displayName: "Geldmacher Plugins" }, plugins: [],
-  };
-  if (!/^[a-zA-Z0-9_-](?:[a-zA-Z0-9._-]*[a-zA-Z0-9_-])?$/.test(document?.name ?? "") || !Array.isArray(document.plugins)) throw new Error("Invalid personal marketplace");
-  const matches = document.plugins.filter((entry) => entry?.name === PLUGIN_NAME);
-  if (matches.length > 1) throw new Error("Duplicate Efficiency marketplace entries");
-  if (matches[0] && (matches[0].source?.source !== "local" || matches[0].source.path !== sourcePath)) {
-    throw new Error("Efficiency marketplace points to another source; resolve this conflict first");
-  }
-  if (!matches.length) document.plugins.push({
-    name: PLUGIN_NAME, source: { source: "local", path: sourcePath },
-    policy: { installation: "AVAILABLE", authentication: "ON_INSTALL" }, category: "Developer Tools",
-  });
-  return { name: document.name, bytes: matches.length ? original : Buffer.from(`${JSON.stringify(document, null, 2)}\n`) };
-}
-
-function defaultRunner(binary, args) {
-  return binary.endsWith(".mjs")
-    ? spawnSync(process.execPath, [binary, ...args], { encoding: "utf8", timeout: 60000, maxBuffer: 8 * 1024 * 1024 })
-    : spawnSync(binary, args, { encoding: "utf8", timeout: 60000, maxBuffer: 8 * 1024 * 1024 });
-}
-
-function codexList(binary, runner) {
-  const response = runner(binary, ["plugin", "list", "--json"]);
-  if (response.error?.code === "ENOENT") return null;
-  if (response.status !== 0) throw new Error(`Codex plugin inspection failed: ${response.stderr || response.error?.message || response.status}`);
-  const result = JSON.parse(response.stdout);
-  if (!Array.isArray(result.installed)) throw new Error("Unsupported Codex plugin list response");
-  return result.installed;
-}
-
-function cacheState(installed, marketplace, source, codexHome, release) {
-  const other = installed.filter((entry) => entry.name === PLUGIN_NAME && entry.pluginId !== `${PLUGIN_NAME}@${marketplace}`);
-  if (other.length) throw new Error("Efficiency is installed from another marketplace; resolve this conflict first");
-  const current = installed.find((entry) => entry.pluginId === `${PLUGIN_NAME}@${marketplace}`);
-  if (!current) return { current: false };
-  if (current.source?.source !== "local" || resolve(current.source.path || "/") !== source) throw new Error("Installed Codex plugin points to another source");
-  if (![release.provenance.version, "local"].includes(current.version)) return { current: false };
-  const cache = join(codexHome, "plugins", "cache", marketplace, PLUGIN_NAME, current.version);
-  assertPath(codexHome, cache);
-  return { current: sameTree(cache, release.entries), cache, enabled: current.enabled };
-}
-
-function assertCodexMarketplace(binary, runner, marketplace, home) {
-  const result = runner(binary, ["plugin", "marketplace", "list", "--json"]);
-  if (result.status !== 0) throw new Error(`Codex marketplace inspection failed: ${result.stderr || result.error?.message || result.status}`);
-  const matches = JSON.parse(result.stdout).marketplaces?.filter((entry) => entry.name === marketplace);
-  if (matches?.length !== 1 || !matches[0].root || !existsSync(matches[0].root) || realpathSync(matches[0].root) !== home) {
-    throw new Error("Codex does not resolve this marketplace to the intended home; refresh its local catalog before retrying");
-  }
 }
 
 function atomicWrite(path, bytes) {
@@ -243,7 +157,7 @@ export function installRelease(release, { home = homedir(), codexHome, codexBina
       original = present(marketplacePath) ? regularFile(marketplacePath) : null;
       marketplace = marketplaceDocument(original, "./.codex/plugins/geldmacher-efficiency");
       installed = codexList(codexBinary, runner);
-      if (installed) cache = cacheState(installed, marketplace.name, destination, codexHome, release);
+      if (installed) cache = cacheState(installed, marketplace.name, destination, codexHome, { version: provenance.version, entries });
     }
     const marketplaceChange = marketplace && !sameFile(marketplacePath, marketplace.bytes);
     const report = {
@@ -289,12 +203,8 @@ export function installRelease(release, { home = homedir(), codexHome, codexBina
       }
     }
     if (host === "codex" && installed && (!cache.current || marketplaceChange)) {
-      assertCodexMarketplace(codexBinary, runner, marketplace.name, home);
+      cache = installCodex({ binary: codexBinary, runner, marketplace: marketplace.name, home, source: destination, codexHome, version: provenance.version, entries });
       nativeAttempted = true;
-      const result = runner(codexBinary, ["plugin", "add", `${PLUGIN_NAME}@${marketplace.name}`, "--json"]);
-      if (result.status !== 0) throw new Error(`Codex installation failed: ${result.stderr || result.error?.message || result.status}`);
-      cache = cacheState(codexList(codexBinary, runner) ?? [], marketplace.name, destination, codexHome, release);
-      if (!cache.current) throw new Error("Codex installed cache differs from the selected release");
     }
     if (!sameTree(destination, entries)) throw new Error("Installed files differ from release");
     if (marketplace && !sameFile(marketplacePath, marketplace.bytes)) throw new Error("Marketplace changed during installation");
@@ -312,6 +222,7 @@ export function installRelease(release, { home = homedir(), codexHome, codexBina
           : "Codex CLI is unavailable. Fully restart the desktop app, open Plugins Directory, select your marketplace, install or refresh Efficiency, verify the installed cache version, then start a new task.",
     };
   } catch (error) {
+    nativeAttempted ||= error.nativeAttempted === true;
     const recovery = [];
     const attempt = (label, fn) => { try { fn(); } catch (failure) { recovery.push(`${label}: ${failure.message}`); } };
     if (placedSource) attempt("retain attempted source", () => renameSync(destination, join(backup, "attempted-plugin")));

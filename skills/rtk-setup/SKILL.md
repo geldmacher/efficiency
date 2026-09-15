@@ -5,7 +5,7 @@ description: Inspect and prepare optional RTK integration for Cursor, Codex, or 
 
 # RTK Setup
 
-Before writing a user-facing result, read [the human communication contract](../efficiency/references/human-communication.md). State the current RTK state, what is verified or still open, and the next safe action when useful. Summarize command evidence instead of returning an unexplained command wall.
+Before writing a user-facing result, read [the human communication contract](../efficiency/references/human-communication.md). Report the verified RTK state and open integration checks.
 
 Read [RTK evidence interpretation](../efficiency/references/rtk-evidence.md) before interpreting `rtk gain` or recommending RTK for efficiency. Report installation, host configuration, observed execution, estimated shell-output reduction, contributor concentration when material, and whole-task net effect as separate states. Whole-task savings remain `unverified` without comparable paired host and provider evidence.
 

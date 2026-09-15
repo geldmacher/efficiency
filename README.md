@@ -78,7 +78,7 @@ Efficiency adds no custom MCP server, telemetry, or background automation. RTK i
 
 - [Installation, updates, and rollback](docs/installation.md)
 - [Usage, compatibility, and troubleshooting](docs/usage.md)
-- [Development, target bundles, and verification](docs/development.md) — includes the portable Agent Plugins v1 target.
+- [Development, target bundles, and verification](https://github.com/geldmacher/efficiency/blob/main/docs/development.md) — includes the portable Agent Plugins v1 target.
 - [Migration from older versions](docs/migrations.md)
 - [Changelog](CHANGELOG.md) · [Report an issue](https://github.com/geldmacher/efficiency/issues)
 
