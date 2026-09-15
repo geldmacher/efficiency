@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 3.4.0
+
 - Sharpen all six skill descriptions, Cursor command summaries, and explicit independent-audit triggers; separate context, RTK, code, and communication branches while retaining implicit skill selection.
 - Generate a Codex-only root `AGENTS.md` from the existing response guidance. The optional setup now manages an explicit global reference to the verified stable installation, with legacy inline migration, no-op updates, conflict handling, and removal. Installation and deployment still leave global instructions unchanged.
 - Extend native smoke procedures with German and English selection cases and Codex reference lifecycle checks. Repository checks do not establish native selection or activation.
