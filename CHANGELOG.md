@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+- Make release installation and updates directly accessible in the README and installation guide, with separate manual steps and agent prompts using the existing update skill.
+
 ## 3.4.0
 
 - Sharpen all six skill descriptions, Cursor command summaries, and explicit independent-audit triggers; separate context, RTK, code, and communication branches while retaining implicit skill selection.

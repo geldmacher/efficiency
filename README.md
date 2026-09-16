@@ -14,11 +14,19 @@ Efficiency is a plugin for **Cursor and Codex**. It gives your agent guidance to
 [![Validate](https://github.com/geldmacher/efficiency/actions/workflows/validate.yml/badge.svg)](https://github.com/geldmacher/efficiency/actions/workflows/validate.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-## Install
+## Install from a release
 
 You need Cursor or Codex with plugin support, **Node.js 22 or newer**, and access to GitHub. You do not need to clone this repository.
 
-**Copy this request into Cursor or Codex:**
+### Manually
+
+1. Open the [latest stable GitHub Release](https://github.com/geldmacher/efficiency/releases/latest).
+2. Download `geldmacher-efficiency-cursor-v<version>.zip` or `geldmacher-efficiency-codex-v<version>.zip` for your app, plus `SHA256SUMS` and `provenance.json` from the same release. Use the packaged plugin ZIP, not GitHub's **Source code** archives.
+3. Follow the [manual installation steps](docs/installation.md#manual-installation) to verify the download, install it, and activate it in your app.
+
+### With your agent
+
+Copy this request into Cursor or Codex:
 
 ```text
 Install the latest stable Efficiency release from
@@ -30,7 +38,29 @@ Verify the release before installing and tell me whether a reload or new task is
 
 Your agent downloads and verifies the release, installs it for your app, and reports any remaining activation step. Reload Cursor or, once installation is complete in Codex, start a new task.
 
-Already installed? Follow the [update instructions](docs/installation.md#update-efficiency). For manual installation or help with a failed install, see the [installation guide](docs/installation.md).
+## Update from a release
+
+### Manually
+
+Download and verify the latest release for your app, keep the existing installation as a backup, and replace it with the complete new package. Follow the [manual update steps](docs/installation.md#manual-update), including the reload or refresh required by your app.
+
+### With your agent
+
+Use the installed update skill:
+
+**Cursor:**
+
+```text
+/install-new-release-from-repo Update Efficiency to the latest stable GitHub Release for Cursor.
+```
+
+**Codex:**
+
+```text
+$geldmacher-efficiency:install-new-release-from-repo Update Efficiency to the latest stable GitHub Release for Codex.
+```
+
+If the skill is missing, use the installation prompt above. See the [installation guide](docs/installation.md) for previews, activation, and recovery.
 
 ## Try it
 

@@ -2,14 +2,14 @@
 
 [Back to Efficiency](../README.md) · [Usage and examples](usage.md)
 
-The easiest way to install Efficiency is to ask your agent to install the latest stable GitHub Release for the app you are using. The installer checks the release files and keeps a backup when it replaces an existing installation.
+Install and update Efficiency from the latest stable [GitHub Release](https://github.com/geldmacher/efficiency/releases/latest). Choose the manual steps or copy a prompt for your agent. Both paths use the released package for Cursor or Codex; no repository checkout or build is needed.
 
-- [Install for the first time](#install-for-the-first-time)
-- [Update Efficiency](#update-efficiency)
+- Install for the first time: [manually](#manual-installation) or [with your agent](#installation-prompt)
+- Update Efficiency: [manually](#manual-update) or [with the update skill](#update-with-your-agent)
 - [Finish installation or find a missing skill](#finish-installation)
 - [Set up optional Codex response guidance](#optional-codex-response-guidance)
 - [Resolve a conflict or roll back](#conflicts-backups-and-recovery)
-- [Advanced: first-install verification](#first-installation-without-the-skill), [direct helper usage](#installed-skill-and-direct-helper-usage), or [manual installation](#manual-verified-download)
+- Reference: [download verification](#manual-verified-download), [agent bootstrap procedure](#first-installation-without-the-skill), and [direct helper usage](#installed-skill-and-direct-helper-usage)
 
 ## Before you start
 
@@ -18,6 +18,16 @@ You need **Cursor or Codex with plugin support**, **Node.js 22 or newer**, and G
 The installer has packages for Cursor and Codex and defaults to the app in which you make the request. The same helper supports macOS, Linux, and Windows; this does not mean every app and OS combination has been tested. Other Agent Plugins clients have no supported release archive.
 
 ## Install for the first time
+
+### Manual installation
+
+1. Open the [latest stable GitHub Release](https://github.com/geldmacher/efficiency/releases/latest) and note its version.
+2. Download the package for your app: `geldmacher-efficiency-cursor-v<version>.zip` or `geldmacher-efficiency-codex-v<version>.zip`. Download `SHA256SUMS` and `provenance.json` from that same release into the same new directory. GitHub's **Source code** archives are development sources, not installable plugin packages.
+3. [Verify the download](#manual-verified-download) before extracting it into a temporary directory.
+4. Follow the [Cursor](#cursor) or [Codex](#codex) procedure to place the complete package at its installation path and finish the app's installation steps.
+5. [Confirm activation](#finish-installation) in the reloaded app or a new task. Keep the downloaded release files with the version so they are available for later recovery.
+
+### Installation prompt
 
 Paste this request into Cursor or Codex:
 
@@ -35,21 +45,34 @@ You do not need to run the technical steps later in this guide yourself when the
 
 ## Update Efficiency
 
+### Manual update
+
+1. Download the latest stable package for your app, `SHA256SUMS`, and `provenance.json` together, then [verify the download](#manual-verified-download).
+2. Keep the current complete plugin directory and its matching release files as a backup before replacing it. Preserve any local changes you want to keep separately.
+3. Extract the new archive into a temporary directory. Replace the installed source with its complete `geldmacher-efficiency` directory at the same path; do not merge files from different versions.
+4. Finish the update for your app: [reload Cursor](#cursor), or [refresh/reinstall Efficiency in Codex](#codex) and verify the refreshed cache version before starting a new task. For Codex, preserve the existing Marketplace entry and its source path.
+
+If an update fails, follow [recovery and rollback](#conflicts-backups-and-recovery). To have download checks, backups, and installation handled for you, use the update skill below.
+
+### Update with your agent
+
 If you already have Efficiency 3.3.0 or newer, use its installed update skill.
 
 **Cursor:**
 
 ```text
-/install-new-release-from-repo Update Efficiency to the latest stable release for Cursor.
+/install-new-release-from-repo Update Efficiency to the latest stable GitHub Release for Cursor.
 ```
 
 **Codex:**
 
 ```text
-$geldmacher-efficiency:install-new-release-from-repo Update Efficiency to the latest stable release for Codex.
+$geldmacher-efficiency:install-new-release-from-repo Update Efficiency to the latest stable GitHub Release for Codex.
 ```
 
-For an older installation or a missing update skill, use the [first-install request](#install-for-the-first-time) instead.
+The skill downloads and verifies the selected release, previews the update, applies it under your request, and retains a backup when replacing an installation. It reports any remaining activation step.
+
+For an older installation or a missing update skill, use the [installation prompt](#installation-prompt) instead.
 
 To inspect an update without installing it, replace the request with “Preview the latest stable Efficiency update for this app. Preview only.” The preview may download temporary files, but it does not change your plugin, marketplace, cache, or retained backup. A normal update request authorizes the ordinary installation after preview; app permission prompts still apply.
 
