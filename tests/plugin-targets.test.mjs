@@ -32,7 +32,7 @@ test("packages contain only user documentation, required artwork and target sche
     for (const target of ["agent-plugins", "cursor", "codex"]) {
       const snapshot = directorySnapshot(built[target].path);
       assert.deepEqual(Object.keys(snapshot).filter((path) => path.startsWith("docs/")).sort(), [
-        "docs/installation.md", "docs/migrations.md", "docs/usage.md",
+        "docs/installation.md", "docs/usage.md",
       ]);
       assert.deepEqual(Object.keys(snapshot).filter((path) => path.startsWith("assets/")), ["assets/logo.svg"]);
       assert.equal(Object.keys(snapshot).some((path) => path.startsWith("schemas/")), target === "agent-plugins");

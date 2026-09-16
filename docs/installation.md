@@ -1,29 +1,151 @@
-# Installing Efficiency from a GitHub Release
+# Install and update Efficiency
 
-## Ask your harness to install
+[Back to Efficiency](../README.md) · [Usage and examples](usage.md)
 
-In Cursor, use `/install-new-release-from-repo`. In Codex, use `$geldmacher-efficiency:install-new-release-from-repo`. Ask for installation or an update; add "preview only" to inspect without changing plugin or marketplace state. The default is the latest published stable release from `geldmacher/efficiency`, for the invoking harness only. Other Agent Plugins clients can discover the skill but have no supported release archive.
+The easiest way to install Efficiency is to ask your agent to install the latest stable GitHub Release for the app you are using. The installer checks the release files and keeps a backup when it replaces an existing installation.
 
-The installer needs Node.js 22 or newer and GitHub HTTPS access. It uses the Node.js standard library, including a bounded reader for the ZIP format emitted by this repository. Git, npm packages, RTK, and the GitHub CLI are not required. It installs exact release files without development-version suffixes. macOS, Linux, and Windows use the same helper; actual OS and host activation evidence must be recorded separately.
+- [Install for the first time](#install-for-the-first-time)
+- [Update Efficiency](#update-efficiency)
+- [Finish installation or find a missing skill](#finish-installation)
+- [Set up optional Codex response guidance](#optional-codex-response-guidance)
+- [Resolve a conflict or roll back](#conflicts-backups-and-recovery)
+- [Advanced: first-install verification](#first-installation-without-the-skill), [direct helper usage](#installed-skill-and-direct-helper-usage), or [manual installation](#manual-verified-download)
 
-For a first installation, or an older version that does not contain this skill, paste this into your harness:
+## Before you start
 
-> Install the latest stable Efficiency release from https://github.com/geldmacher/efficiency for my current app. Follow https://github.com/geldmacher/efficiency/blob/main/docs/installation.md, section "First installation without the skill". Verify the release before installing and tell me whether a reload or new task is needed.
+You need **Cursor or Codex with plugin support**, **Node.js 22 or newer**, and GitHub HTTPS access. Git, npm packages, RTK, and the GitHub CLI are not required for release installation.
 
-### First installation without the skill
+The installer has packages for Cursor and Codex and defaults to the app in which you make the request. The same helper supports macOS, Linux, and Windows; this does not mean every app and OS combination has been tested. Other Agent Plugins clients have no supported release archive.
+
+## Install for the first time
+
+Paste this request into Cursor or Codex:
+
+```text
+Install the latest stable Efficiency release from
+https://github.com/geldmacher/efficiency for my current app.
+Follow https://github.com/geldmacher/efficiency/blob/main/docs/installation.md,
+section "First installation without the skill".
+Verify the release before installing and tell me whether a reload or new task is needed.
+```
+
+Your agent identifies the app, downloads and verifies one release, previews the installation, and applies it under your request. It reports the installed version, any backup, and the next activation step. If the existing installation contains local changes or a newer version, it asks before replacing that specific installation.
+
+You do not need to run the technical steps later in this guide yourself when the agent completes them for you. Continue with [Finish installation](#finish-installation).
+
+## Update Efficiency
+
+If you already have Efficiency 3.3.0 or newer, use its installed update skill.
+
+**Cursor:**
+
+```text
+/install-new-release-from-repo Update Efficiency to the latest stable release for Cursor.
+```
+
+**Codex:**
+
+```text
+$geldmacher-efficiency:install-new-release-from-repo Update Efficiency to the latest stable release for Codex.
+```
+
+For an older installation or a missing update skill, use the [first-install request](#install-for-the-first-time) instead.
+
+To inspect an update without installing it, replace the request with “Preview the latest stable Efficiency update for this app. Preview only.” The preview may download temporary files, but it does not change your plugin, marketplace, cache, or retained backup. A normal update request authorizes the ordinary installation after preview; app permission prompts still apply.
+
+## Finish installation
+
+Follow the installer's reported next step:
+
+| Result | What it means | What to do |
+| --- | --- | --- |
+| Cursor: `installed` | The verified plugin files are in place. | Reload Cursor, confirm the skill in Customize, then try `/efficiency`. |
+| Codex: `installed` | The source and the app's installed cache copy were checked. | Restart the app if needed, confirm the plugin is enabled, review any trust request, and start a new task. Then try `$geldmacher-efficiency:efficiency`. |
+| Codex: `prepared` | Files are ready, but installation through Codex is still pending. | Follow the reported desktop steps in [Codex](#codex), then start a new task. |
+| `no_op: true` | This run changed no installation files. | No extra reload is needed solely for this run. Any previously unfinished activation step still applies. |
+
+**Try it:** ask the skill to review current changes in a project. Seeing it available in the new or reloaded session checks discovery; the installer's file checks alone cannot show that a running task loaded it.
+
+If the skill is missing, check the [installed layout](#verify-the-installed-layout), then follow the [Cursor](#cursor) or [Codex](#codex) activation steps. Cursor must allow local imports; a marketplace installation with the same name must not take precedence. For Codex, use the app's refresh or reinstall action if needed; do not delete its cache manually.
+
+## Optional Codex response guidance
+
+This adds Efficiency's concise-response guidance to your global Codex instructions, so it can apply across projects. Plugin installation leaves those global instructions unchanged. Cursor already includes the equivalent always-applied rule.
+
+### Preview and configure
+
+After installing the plugin, ask:
+
+```text
+$geldmacher-efficiency:response-simplicity-setup Check the current status and preview setup of persistent response guidance.
+```
+
+The skill reads the active global `AGENTS.override.md` or `AGENTS.md`, verifies the stable plugin source reported by `codex plugin list --json`, and shows the exact proposed patch. To apply it, approve that patch and request configuration. Then start a new task.
+
+### How the reference works
+
+The managed block tells Codex to read an absolute Markdown link to the installed package's `AGENTS.md` before the first response in each task. It uses an explicit read instruction; it does not rely on `@path` expansion. The package's `AGENTS.md` alone is not automatically global.
+
+An update at the same stable installation path replaces the guidance without changing the global reference. Start a new task to use the updated text. Cache paths, `.build` output, temporary directories, and development checkouts are not supported reference targets.
+
+A missing global file is valid for first setup. An unchanged legacy inline block can be migrated to the reference during an approved update. An intact reference needs no change. Modified blocks, duplicate or unpaired markers, equivalent unmarked rules, missing plugin files, and conflicting sources are reported without overwriting them. A configured reference is not proof that a fresh task has loaded it or followed it.
+
+### Remove the guidance
+
+```text
+$geldmacher-efficiency:response-simplicity-setup Preview removal of the persistent response guidance.
+```
+
+After approval, the skill removes only its recognized managed block and preserves other instructions, including RTK imports. It can remove a broken reference even if the plugin source has disappeared.
+
+Disabling the plugin does not remove this global block. If you no longer want the guidance, remove it separately; deleting the plugin first can leave a broken link.
+
+## Conflicts, backups, and recovery
+
+### When replacement needs a decision
+
+The preview reports `previous_version`, the selected version, and `replacement_requires_approval` when the existing installation is newer, locally modified, or cannot be matched to retained release evidence.
+
+**Example:** Your installed copy has edits that are not in the selected release. The agent must identify that copy and explain that replacement would remove those edits from the active installation. Only your explicit decision to replace it permits `--replace-existing`.
+
+That flag retains the previous directory. It cannot bypass a wrong plugin identity, unsafe paths, a conflicting marketplace source, or failed release checks.
+
+### Keep the backup and release evidence
+
+A successful update retains the previous complete plugin in the reported backup directory, along with its release files when available, `marketplace.before.json` when applicable, and `recovery.json`.
+
+The adjacent `.geldmacher-efficiency.release` directory holds evidence for the current installation. Keep it so future updates can recognize local modifications.
+
+### Recover after a failed install
+
+The helper attempts to restore its previous source and marketplace changes after an ordinary failure. Read its error report before retrying.
+
+If a native Codex operation failed, the report may say `native_installation: unverified_after_failure`. The cache may differ even if source restoration succeeded. Inspect the retained evidence, reinstall the restored source through Codex, and verify its installed cache. For a failed first installation, inspect and, if necessary, remove only this plugin through the app. Never clear the cache directory manually.
+
+An interrupted process may leave an `.install-lock` directory. Inspect its owner and recorded paths; remove only an abandoned lock after confirming that no installation is running.
+
+### Roll back to a previous version
+
+With retained release files, use the prior release directory with `--release-dir`, preview the downgrade, approve replacement of the identified installation, and apply with `--replace-existing`. See [direct helper usage](#installed-skill-and-direct-helper-usage).
+
+For a backup made before the installer was used, restore the complete saved source using the manual [Cursor](#cursor) or [Codex](#codex) procedure. Never merge files from different versions. In Codex, also refresh the native installation and verify the cache before treating rollback as complete.
+
+## First installation without the skill
+
+This section is the procedure for the agent receiving the first-install request above. It verifies the downloaded package before running its installer.
 
 The command is included from release 3.3.0 onward, with `skills/install-new-release-from-repo/SKILL.md`. For older releases, use the manual installation sections below and report that the command is not part of the selected release.
 
-The receiving harness performs these steps without requiring a development checkout:
+The receiving agent performs these steps without requiring a development checkout:
 
 1. Identify Cursor or Codex from the session, or ask the user if uncertain. Check Node.js 22 or newer. Resolve `https://api.github.com/repos/geldmacher/efficiency/releases/latest` once; require a published, non-prerelease `vMAJOR.MINOR.PATCH` tag. Keep that exact version for all following downloads.
 2. Download the matching `geldmacher-efficiency-<host>-v<version>.zip`, `SHA256SUMS`, and `provenance.json` from that release into a new temporary directory. The archive URL must be under `https://github.com/geldmacher/efficiency/releases/download/<tag>/`. Do not run downloaded code yet.
 3. Verify exactly the selected ZIP and `provenance.json` using the checksum recipes below. Confirm provenance identifies `geldmacher-efficiency`, `geldmacher/efficiency`, the selected version/tag, and that selected archive. These checks establish consistency with assets obtained from the expected GitHub repository; they are not independent release signatures.
-4. Inspect the ZIP with the harness's available archive inspection tools before extraction. Require one `geldmacher-efficiency/` root, regular files/directories only, and reject links, absolute paths, `..`, duplicate paths, backslashes, Windows drive/device paths, and double nesting. Extract only into another newly created temporary directory, never directly into an installed plugin. If safe archive inspection is unavailable, stop with that prerequisite rather than executing an unchecked installer.
+4. Inspect the ZIP with the agent's available archive inspection tools before extraction. Require one `geldmacher-efficiency/` root, regular files/directories only, and reject links, absolute paths, `..`, duplicate paths, backslashes, Windows drive/device paths, and double nesting. Extract only into another newly created temporary directory, never directly into an installed plugin. If safe archive inspection is unavailable, stop with that prerequisite rather than executing an unchecked installer.
 5. Locate `geldmacher-efficiency/skills/install-new-release-from-repo/scripts/install-release.mjs` inside the verified extracted package. Invoke it with the selected host and `--release-dir` pointing at the downloaded ZIP/checksum/provenance directory, first with `--dry-run`. It revalidates the archive structure, receipt, manifest, file count and content hash before any installation. If the selected release predates the helper, follow the manual host procedure below instead.
 6. Apply with the same helper, host and `--release-dir`, omitting `--dry-run`, under the user's installation request. Follow the helper's conflict and native permission messages. Retain reported backups and recovery evidence, then clean up only the temporary download/extraction directories from this invocation. Finish with the reported host activation step.
 
-### Installed skill and direct helper usage
+## Installed skill and direct helper usage
 
 The skill resolves its helper relative to its own location, so it also works from a Codex cache and when the current working directory is another project. Paths containing spaces must be passed as quoted arguments.
 
@@ -37,23 +159,11 @@ Substitute `codex` for Codex. These commands also work in PowerShell with actual
 
 For Codex, the helper preserves the personal marketplace's existing name, interface and unrelated entries; an existing Efficiency entry must already point at the documented local source. It checks `codex plugin marketplace list --json` resolves the name to the intended personal root before calling `codex plugin add <plugin>@<actual-marketplace-name> --json`, then verifies `codex plugin list --json` plus the selected cache bytes. It respects the current `CODEX_HOME` for cache inspection. It does not manually create or delete cache copies. If the CLI is missing, `status: prepared` reports the exact desktop installation steps still needed. Other CLI errors stop the run.
 
-### Conflicts, backups, and recovery
-
-A successful update retains the previous complete plugin under the reported backup directory, together with its retained release assets when available, `marketplace.before.json` when applicable, and `recovery.json`. Current release evidence is stored in the adjacent `.geldmacher-efficiency.release` directory. Do not remove that evidence if you want future updates to detect local modifications automatically.
-
-An existing installation with newer, locally modified, or untracked bytes requires a concrete replacement decision. Preview displays `previous_version`, the selected version, and `replacement_requires_approval`. Only after the user approves replacing that identified installation may the harness add `--replace-existing`. This preserves the previous directory; it does not override wrong plugin identities, unsafe paths, conflicting marketplace sources, or failed release checks.
-
-After an ordinary failure, the helper restores its previous source and marketplace changes. A failed native Codex operation can leave a different cache installed even when source restoration succeeded: the report then explicitly says `native_installation: unverified_after_failure`. Inspect the retained evidence, reinstall the restored source through the native host, and verify its cache before claiming recovery. For a failed first installation, inspect and remove only this plugin through the host if needed. Never clear the cache directory manually.
-
-For a deliberate rollback, use the retained prior release directory with `--release-dir`, preview, approve the downgrade, then apply with `--replace-existing`. For a pre-installer backup without matching release files, restore the complete saved source directory using the manual host procedure below. Never merge versions. An interrupted process may retain an `.install-lock` directory; inspect its owner and recorded paths before recovering, and remove only the abandoned lock after confirming no installation is running.
-
-The result distinguishes verified downloads, source placement, native installation/cache checks, and live activation. `installed` never proves that a running task loaded the new skill. `prepared` is incomplete native installation. An identical repeat reports `no_op: true`; unchanged source does not require another reload by itself.
-
 ## Manual verified download
 
 Each Efficiency GitHub Release contains separate packages for Cursor and Codex. Download only the archive for the intended host plus `SHA256SUMS` and `provenance.json` from the [latest GitHub Release](https://github.com/geldmacher/efficiency/releases/latest). You do not need the other host archive or `RELEASE_NOTES.md` to verify this selected download. Do not install an archive until both the selected archive and `provenance.json` match their entries in `SHA256SUMS`.
 
-## Verify the download
+### Verify the download
 
 On macOS or Linux, replace the example version and host when necessary, then verify exactly the two downloaded files that are covered by `SHA256SUMS`:
 
@@ -116,18 +226,6 @@ Install the contents at the local Cursor plugin path:
 For a first installation, extract the archive to a temporary directory and move its single `geldmacher-efficiency` directory to that destination. For an update, keep the current directory as a backup, place the new complete directory at the same path, and do not merge old and new files. Then reload Cursor. Installation on disk and live plugin discovery are separate checks.
 
 To roll back, move the current directory aside, restore the previously retained complete directory, and reload Cursor. Keep the matching old archive, `SHA256SUMS`, and `provenance.json` so the restored bytes remain verifiable.
-
-## Optional Codex response guidance
-
-The Codex package includes a root `AGENTS.md` containing the same short response guidance as Cursor's always-applied rule. Installing the package alone does not make that file global. The release installer and local deployment leave global instructions unchanged.
-
-After installing the plugin, use `$geldmacher-efficiency:response-simplicity-setup` to check status or preview setup. To configure it, request installation of the response guidance. The skill reads the active global `AGENTS.override.md` or `AGENTS.md`, verifies the stable source reported by `codex plugin list --json`, and shows the exact patch before applying an approved change.
-
-The managed block contains an explicit instruction to read an absolute Markdown link to the installed package's `AGENTS.md` before the first response in each task. It does not depend on `@path` expansion. Updates at the same stable installation path replace the guidance without changing the global reference. A new task is needed to observe updated guidance. A cache path, `.build` output, temporary directory, or development checkout is not a supported reference target.
-
-An unconfigured global file supports first installation. An unchanged legacy inline block migrates to the reference on a requested, approved update. An intact reference is a no-op. Modified blocks, duplicate or unpaired markers, equivalent unmarked rules, missing files, and conflicting installation sources are reported without overwriting them. Status distinguishes configured files from observed loading in a fresh task.
-
-Use the same skill to request removal. It removes only the recognized managed block and preserves other instructions, including RTK imports. A broken reference can be removed even if the plugin source has disappeared. Global guidance is independent of plugin enablement: disabling the plugin does not remove the block, and deleting the target can leave a broken link. Remove the global guidance separately when it is no longer wanted.
 
 ## Codex
 

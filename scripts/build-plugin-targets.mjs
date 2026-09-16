@@ -27,7 +27,7 @@ const responseGuidanceRelative = `skills/${codexAdapterSkill}/references/respons
 const persistentOutput = join(defaultRoot, ".build", "plugins");
 const commonFiles = [
   "assets/logo.svg", "CHANGELOG.md", "LICENSE", "README.md",
-  "docs/installation.md", "docs/migrations.md", "docs/usage.md",
+  "docs/installation.md", "docs/usage.md",
   ...portableSkills.map((name) => `skills/${name}`),
 ];
 const allowed = {

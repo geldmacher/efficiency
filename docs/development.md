@@ -2,33 +2,19 @@
 
 [Back to Efficiency](../README.md)
 
-## Three deterministic targets
+Use this guide to change the plugin, check your work, and try a development build in Cursor or Codex. If you only want to use Efficiency, follow the [release installation guide](installation.md).
 
-`npm run build:targets` creates three isolated bundles:
+The normal development loop is: edit the source, run the repository checks, and deploy to your app when you want to try the result. Keep the Git checkout separate from installed plugin copies; deployment replaces those copies.
 
-| Target | Output | Surface |
-| --- | --- | --- |
-| Agent Plugins v1 | `.build/plugins/agent-plugins/geldmacher-efficiency` | Root `plugin.json` and exactly five portable skills |
-| Cursor | `.build/plugins/cursor/geldmacher-efficiency` | Cursor manifest, five skills, commands, agents, and rule |
-| Codex | `.build/plugins/codex/geldmacher-efficiency` | Codex manifest, five portable skills, the private setup skill, and generated response `AGENTS.md` |
+- [Set up a checkout](#set-up-a-checkout)
+- [Check a change](#check-a-change)
+- [Understand the three packages](#three-deterministic-targets)
+- [Try local changes in your app](#try-local-changes-in-your-app)
+- [Prepare a release or runtime check](#release-and-runtime-verification)
 
-Installable bundles contain only user documentation, required components and `assets/logo.svg`; development guides, runtime procedures, historical receipts and other artwork remain in this repository. The vendored Agent Plugins schema is included only in the portable target. npm is development tooling, not a supported distribution package.
+## Set up a checkout
 
-The portable manifest targets the Agent Plugins 1.0.0 Working Draft pinned in the [vendored schema](../schemas/agent-plugins/1.0.0/plugin.schema.json). It has no MCP server, extensions, commands, agents, rules, or hooks. Native bundles intentionally omit root `plugin.json` so manifest selection stays unambiguous.
-
-The Codex manifest uses the documented `./skills/` root and `.codex-plugin` contains only `plugin.json`. The Codex-only setup skill is maintained under `adapters/codex/skills` in the repository and projected into the generated Codex bundle as `skills/response-simplicity-setup`; it never enters the Agent Plugins or Cursor targets.
-
-The builder copies the setup skill's canonical response reference to the Codex package's root `AGENTS.md`. Built-target validation rejects missing or changed guidance and leakage into the other targets; the policy contract keeps its text equal to Cursor's response rule. This generated file contains response guidance only, with no automatic skill loading. Its global reference is configured separately through the setup skill and targets the stable installed source, never `.build` or a versioned cache. See [optional response guidance](installation.md#optional-codex-response-guidance).
-
-On Agent Plugins clients other than Cursor or Codex, the portable skills use conservative host-neutral behavior. They inspect only documented context or RTK integration surfaces, report unknown host integration as unverified, and do not assume Cursor hooks or Codex guidance paths.
-
-## Develop or deploy from a Git checkout
-
-Efficiency is not yet available in a public plugin store. Keep the Git checkout as the canonical source and deploy generated host copies from it. Do not clone into `~/.cursor/plugins/local` or `~/.codex/plugins`; those directories contain managed deployment copies and are atomically replaced.
-
-### Requirements and clone
-
-Install Git, Node.js 22 or newer, and npm. The selected host must also be installed: Cursor for a Cursor deployment, or the Codex CLI with plugin support for a Codex deployment.
+Install Git, Node.js 22 or newer, and npm. To try a local build, you also need Cursor or the Codex CLI with plugin support, depending on which app you want to use.
 
 ```bash
 mkdir -p ~/src/geldmacher-plugins
@@ -38,6 +24,56 @@ npm ci
 ```
 
 If you already have a checkout, use it instead and run `npm ci` from its repository root.
+
+## Check a change
+
+From the repository root, run:
+
+```bash
+npm run release-check
+git diff --check
+```
+
+`release-check` builds temporary packages and checks manifests, skill discovery, file paths, version alignment, links, policy contracts, and regression tests. `git diff --check` catches whitespace errors. Neither command installs or publishes the plugin.
+
+For example, after changing `docs/usage.md`, the package check confirms that the guide is included in each package and its local file links resolve. It does not establish that a new user understands the instructions; that still needs a content review or user feedback.
+
+The following results answer different questions:
+
+| Check | What a passing result establishes |
+| --- | --- |
+| `npm run release-check` | Repository checks and package validation passed. |
+| `npm run deploy:status` reports `current: true` for the selected app | The reported installed files, marketplace state, and cache match the checked local build. |
+| A check in a new or reloaded app session | The selected app can discover and run the plugin behavior exercised there. |
+| A completed release with downloaded read-back | The published assets match the release output. |
+
+Run a live app check when it is part of the assignment and needed for the changed behavior. See [release and runtime verification](#release-and-runtime-verification) for the separate procedures.
+
+## Three deterministic targets
+
+A **target** is a package prepared for one plugin format. `npm run build:targets` creates three separate, reproducible packages under `.build/plugins`:
+
+| Target | Output | Surface |
+| --- | --- | --- |
+| Agent Plugins v1 | `.build/plugins/agent-plugins/geldmacher-efficiency` | Root `plugin.json` and exactly five portable skills |
+| Cursor | `.build/plugins/cursor/geldmacher-efficiency` | Cursor manifest, five skills, commands, agents, and rule |
+| Codex | `.build/plugins/codex/geldmacher-efficiency` | Codex manifest, five portable skills, the Codex-only setup skill, and generated response `AGENTS.md` |
+
+Each installable package contains only user documentation, required components, and `assets/logo.svg`; development guides, runtime procedures, historical receipts and other artwork remain in this repository. The vendored Agent Plugins schema is included only in the portable target. npm is development tooling, not a supported distribution package.
+
+### Why the packages differ
+
+The portable manifest targets the Agent Plugins 1.0.0 Working Draft pinned in the [vendored schema](../schemas/agent-plugins/1.0.0/plugin.schema.json). It has no MCP server, extensions, commands, agents, rules, or hooks. Native bundles intentionally omit root `plugin.json` so manifest selection stays unambiguous.
+
+The Codex manifest uses the documented `./skills/` root and `.codex-plugin` contains only `plugin.json`. The Codex-only setup skill is maintained under `adapters/codex/skills` in the repository and projected into the generated Codex bundle as `skills/response-simplicity-setup`; it never enters the Agent Plugins or Cursor targets.
+
+The builder copies the setup skill's canonical response reference to the Codex package's root `AGENTS.md`. Built-target validation rejects missing or changed guidance and leakage into the other targets; the policy contract keeps its text equal to Cursor's response rule. This generated file contains response guidance only, with no automatic skill loading. Its global reference is configured separately through the setup skill and targets the stable installed source, never `.build` or a versioned cache. See [optional response guidance](installation.md#optional-codex-response-guidance).
+
+On Agent Plugins clients other than Cursor or Codex, the portable skills use conservative host-neutral behavior. They inspect only documented context or RTK integration surfaces, report unknown host integration as unverified, and do not assume Cursor hooks or Codex guidance paths.
+
+## Try local changes in your app
+
+Build and deploy from the Git checkout. Do not clone into `~/.cursor/plugins/local` or `~/.codex/plugins`; these directories hold managed copies that deployment replaces.
 
 ### Preview and install
 
@@ -83,17 +119,15 @@ npm run deploy:status
 
 Inspect a dirty status before pulling; commit or stash intentional local changes rather than discarding them. `git pull --ff-only` refuses a divergent history instead of creating an implicit merge. `npm ci` synchronizes dependencies with the updated lockfile. The last three commands above update both hosts; use the matching `--cursor-only` or `--codex-only` flag when only one host is installed. A failed native operation leaves cache recovery explicitly unverified even when the previous source was restored. Inspect the error report before retrying. An unchanged bundle with a matching native cache is a verified no-op; changed content receives a new host-specific local version and replaces the previous copy transactionally.
 
-## Development and verification
+## Release and runtime verification
 
-```bash
-npm ci
-npm run release-check
-git diff --check
-```
+Source link checks exclude ignored `.build` output; each newly generated package is checked directly for local file links. Live app behavior needs separate observation.
 
-The release check validates all three manifests and target bundles, Agent Skills discovery and frontmatter, path containment, version alignment, links, and policy contracts. Source links exclude ignored `.build` output, while every newly generated target is checked directly for bundle-local links. It proves repository format and bundle state—not installation, live host behavior, broad client compatibility, Marketplace state, or publication. The bounded Cursor smoke can check a supplied baseline restatement without an extra model call, but it leaves binding to the immediately preceding assistant response unverified unless that call is separately approved. The three-invocation Codex smoke separates implicit simplicity selection, RTK setup, and optional response-guidance evidence; exclusive restatement-only behavior still requires a separately approved additional call.
+The bounded Cursor smoke can check a supplied baseline restatement without an extra model call, but it leaves binding to the immediately preceding assistant response unverified unless that call is separately approved. The three-invocation Codex smoke separates implicit simplicity selection, RTK setup, and optional response-guidance evidence; exclusive restatement-only behavior still requires a separately approved additional call.
 
 Before a release, complete the [release checklist](release-checklist.md). Runtime checks remain separate: [Agent Plugins runtime smoke](agent-plugins-runtime-smoke.md), [Cursor runtime smoke](runtime-smoke.md), and [Codex runtime smoke](codex-runtime-smoke.md).
+
+### Publishing a release
 
 Repository maintainers may explicitly invoke `$release-plugin` in Codex or `/release-plugin` in Cursor. That single no-argument journey selects a semantic version from the actual changes, prepares consistent manifests and package metadata, runs the complete gate, may create one bounded release commit, creates a lightweight version tag, atomically pushes `main` and the tag, publishes only the Cursor and Codex archives, and verifies downloaded bytes. It reuses a suitable prepared version and resumes an exact incomplete release without bumping again. It never deploys or installs the plugin, restarts a host, overwrites an existing release, or repairs mixed remote state.
 

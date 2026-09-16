@@ -2,84 +2,61 @@
 
 # Efficiency
 
-**Simpler code. Leaner context. Clearer answers.**
+**Help your coding agent do useful work with less unnecessary complexity.**
 
-Efficiency helps coding agents choose simpler solutions, keep context lean, and communicate clearly. For Cursor and Codex.
+Efficiency is a plugin for **Cursor and Codex**. It gives your agent guidance to:
 
-[Install](#install) · [Try it](#try-it) · [Usage guide](docs/usage.md)
+- **Keep code easier to maintain:** reuse what your project already provides and avoid abstractions the task does not need.
+- **Keep instructions easier to manage:** find duplicated or misplaced guidance in files such as `AGENTS.md`, rules, and skills.
+- **Make results easier to act on:** explain what changed, what was checked, and what you need to do next.
 
 [![Latest release](https://img.shields.io/github/v/release/geldmacher/efficiency)](https://github.com/geldmacher/efficiency/releases/latest)
 [![Validate](https://github.com/geldmacher/efficiency/actions/workflows/validate.yml/badge.svg)](https://github.com/geldmacher/efficiency/actions/workflows/validate.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-- **Keep solutions simple.** Check what the task actually needs and what the project already provides before adding an abstraction or dependency.
-- **Keep context useful.** Find repeated or misplaced instructions and suggest how to consolidate them without losing necessary guidance.
-- **Make results easier to act on.** Match explanations and verification effort to the task, while preserving important evidence and uncertainty.
-
-## See the approach
-
-**You ask:** “Review this refactor for unnecessary complexity.”
-
-**Example situation:** A change adds a configurable formatter registry, but the current requirement is one date format and the project already has a helper that supports it.
-
-**Illustrative recommendation:** “Reuse the existing date helper. The registry adds configuration and another lookup path without meeting an additional requirement. Before changing it, verify that the helper preserves the required timezone and invalid-input behavior.”
-
-This example illustrates the guidance; it is not a recorded agent run or a benchmark. Efficiency can also conclude that the existing design is already appropriate. Review requests do not edit code.
-
 ## Install
 
-You need **Cursor or Codex with plugin support**, **Node.js 22 or newer**, and GitHub HTTPS access. RTK is optional. A release installation does not require Git or npm packages.
+You need Cursor or Codex with plugin support, **Node.js 22 or newer**, and access to GitHub. You do not need to clone this repository.
 
-For a first installation, copy this request into Cursor or Codex:
+**Copy this request into Cursor or Codex:**
 
 ```text
-Install the latest stable Efficiency release from https://github.com/geldmacher/efficiency for my current app. Follow https://github.com/geldmacher/efficiency/blob/main/docs/installation.md, section "First installation without the skill". Verify the release before installing and tell me whether a reload or new task is needed.
+Install the latest stable Efficiency release from
+https://github.com/geldmacher/efficiency for my current app.
+Follow https://github.com/geldmacher/efficiency/blob/main/docs/installation.md,
+section "First installation without the skill".
+Verify the release before installing and tell me whether a reload or new task is needed.
 ```
 
-The installer verifies the selected release and retains backups when updating. After installation, reload Cursor or start a new Codex task, then try an example below. If the skill is missing, follow the [installation and recovery guide](docs/installation.md).
+Your agent downloads and verifies the release, installs it for your app, and reports any remaining activation step. Reload Cursor or, once installation is complete in Codex, start a new task.
 
-Already have Efficiency 3.3.0 or newer? Ask for an update with `/install-new-release-from-repo` in Cursor or `$geldmacher-efficiency:install-new-release-from-repo` in Codex. Add “preview only” to inspect the proposed installation.
+Already installed? Follow the [update instructions](docs/installation.md#update-efficiency). For manual installation or help with a failed install, see the [installation guide](docs/installation.md).
 
 ## Try it
 
-In **Cursor**, try one of these requests:
+Open a project with code changes and ask for a review.
+
+**Cursor:**
 
 ```text
 /efficiency Review my current changes for unnecessary complexity.
-/context-optimization Find repeated instructions in this project's agent context.
-/efficiency Suggest the smallest sufficient verification for this change.
 ```
 
-In **Codex**, use the same requests with `$geldmacher-efficiency:efficiency` or `$geldmacher-efficiency:context-optimization`.
+**Codex:**
 
-Relevant skills can also be selected naturally during ordinary work. Explicit invocation gives you a clear starting point. For a review, name a file or proposal, or use the current Git changes; Efficiency asks for a focused scope when none is available.
+```text
+$geldmacher-efficiency:efficiency Review my current changes for unnecessary complexity.
+```
 
-## Workflows
+For example, if a change adds a configurable formatter but the project already has a suitable date helper, Efficiency can recommend reusing that helper and explain what needs checking. A review gives recommendations; ask for an implementation when you want changes made.
 
-| What you want to do | Skill / Cursor command |
-| --- | --- |
-| Review or simplify a solution; match effort to risk | `efficiency` |
-| Reduce repeated context and instructions | `context-optimization` |
-| Inspect or prepare optional RTK integration | `rtk-setup` |
-| Filter noisy terminal output while preserving diagnostics | `rtk-filter-design` |
-| Install or update a stable Efficiency release | `install-new-release-from-repo` |
+The [usage guide](docs/usage.md) has examples for code reviews, agent instructions, verification, and clearer change summaries. It also covers optional **RTK** integration, which reduces the terminal output sent to the agent. RTK is not required to use Efficiency.
 
-The agent can also select these skills from a matching natural-language request, without a command. Cursor includes an always-applied concise-response rule. In Codex, the optional `response-simplicity-setup` skill links global guidance to the installed package once. See the [usage guide](docs/usage.md) for selection examples and the [setup instructions](docs/installation.md#optional-codex-response-guidance) for activation and removal.
+## Learn more
 
-## How it works
-
-**Evidence-Guided Simplicity** means choosing the smallest solution supported by the requirements and repository: omit unnecessary work, reuse project capabilities, use the standard library, consider an existing dependency, then implement locally when needed.
-
-YAGNI, KISS, and DRY guide that choice. Correctness, security, public interfaces, and necessary verification remain protected. RTK can reduce the terminal output sent to the model; that alone does not establish lower provider costs or whole-task savings.
-
-Efficiency adds no custom MCP server, telemetry, or background automation. RTK integration and global response guidance are optional setup steps. [Read about behavior and boundaries](docs/usage.md#behavior-and-boundaries).
-
-## Documentation and support
-
-- [Installation, updates, and rollback](docs/installation.md)
-- [Usage, compatibility, and troubleshooting](docs/usage.md)
-- [Development, target bundles, and verification](https://github.com/geldmacher/efficiency/blob/main/docs/development.md) — includes the portable Agent Plugins v1 target.
-- [Migration from older versions](docs/migrations.md)
+- [Usage and examples](docs/usage.md)
+- [Installation, updates, and recovery](docs/installation.md)
+- [Contributing and development](https://github.com/geldmacher/efficiency/blob/main/docs/development.md)
 - [Changelog](CHANGELOG.md) · [Report an issue](https://github.com/geldmacher/efficiency/issues)
 
 [MIT](LICENSE) · Built by [Dennis Geldmacher](https://github.com/geldmacher)
