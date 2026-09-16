@@ -4,6 +4,9 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 3.4.1
+
+- Consolidate installation, usage, development, and recovery documentation; remove the redundant migration guide from plugin packages.
 - Make release installation and updates directly accessible in the README and installation guide, with separate manual steps and agent prompts using the existing update skill.
 
 ## 3.4.0
