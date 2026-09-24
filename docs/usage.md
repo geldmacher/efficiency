@@ -44,6 +44,8 @@ You get a recommendation tied to the requirement and the code: what adds unneces
 
 **Example:** A change adds a configurable formatter registry for one date format. The project already has a date helper. A useful recommendation is to reuse the helper after checking timezone and invalid-input behavior. An adapter that hides necessary transaction recovery may still be worth keeping, even if it has only one implementation.
 
+**Example:** A large new TypeScript module adds several `any` casts, an empty `catch`, and two near-identical helpers. A useful recommendation is to narrow the types, surface the error, and keep one helper — without demanding a coverage or mutation score the project does not already enforce.
+
 These are illustrative examples, not recorded agent results or benchmarks.
 
 A review leaves files unchanged. To request an implementation, name the change and its scope:

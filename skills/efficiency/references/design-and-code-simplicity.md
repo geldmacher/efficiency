@@ -28,6 +28,17 @@ Run the full challenge only when the user explicitly requests a simplicity chall
 2. Inspect whether complexity is local or repeatedly exposed to callers and maintainers. Assess reader load on two independent axes: the layers someone must trace between a question and its answer, and the hidden or mutable state they must hold in mind. Include everything a caller must know: ordering, invariants, errors, configuration, and performance as well as signatures. Prefer project vocabulary and existing utilities over a new generic design language.
 3. Treat a seam or abstraction as justified only when current evidence shows real variation or meaningful behavior behind it. Use the deletion test: if removing it makes complexity disappear, it is likely an unnecessary pass-through; if complexity spreads into callers, it may be earning its place.
 4. Before adding a new abstraction or guard, look for demonstrably dead paths, duplicated decisions or validation, empty stubs, and speculative protection that the current requirements do not need. Remove an item only when the supplied scope proves that behavior and every affected caller remain safe.
+
+### Generated-code smell signals
+
+During an explicit simplicity review or when the quick ladder identifies material complexity risk, also scan the approved scope for these signals. Treat them as evidence cues, not numeric gates. Report a finding only with a concrete location and a safer in-scope alternative; do not invent thresholds or run specialized metric tools unless the project already exposes them.
+
+1. **Branching load:** nested conditionals, large switch/if cascades, or many early exits that force a reader to hold several paths at once. Prefer extracting the shared decision or collapsing dead branches over counting cyclomatic or cognitive complexity scores.
+2. **File cohesion:** a file that mixes unrelated responsibilities or keeps growing around one hotspot. Prefer splitting by responsibility or moving helpers next to their callers. Do not treat a line-count ceiling as a simplicity target.
+3. **Dead or redundant surface:** unused exports, empty stubs, copy-pasted blocks with renamed identifiers, pass-through wrappers that add no behavior. Remove only when every in-scope caller and required public surface stay safe.
+4. **Type and error escape hatches:** new `any` / unbounded `unknown`, empty `catch`, or log-and-continue that hides failures. Prefer a precise type, a narrowed unknown, or an explicit error path at the trust boundary.
+5. **Weak verification theater:** tests that mirror implementation structure, assert only mocks, or add coverage without a caller-visible contract. Prefer one check that would fail on a real defect over more lines of coverage. Do not recommend 100% coverage, mutation score zero, CRAP, or Halstead metrics unless the repository already uses those tools and the risk warrants them.
+
 5. Compare the current design with only the smallest viable alternative. State the difference in observable behavior, risk, validation effort, locality, reader load, and interface burden.
 6. Prefer the alternative only when it materially reduces independent concepts without weakening correctness, security, performance, lifecycle semantics, domain distinctions, or project conventions. Otherwise conclude that the current design is already proportionate and explain why.
 
