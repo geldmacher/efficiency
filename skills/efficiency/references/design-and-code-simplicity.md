@@ -37,7 +37,7 @@ During an explicit simplicity review or when the quick ladder identifies materia
 2. **File cohesion:** a file that mixes unrelated responsibilities or keeps growing around one hotspot. Prefer splitting by responsibility or moving helpers next to their callers. Do not treat a line-count ceiling as a simplicity target.
 3. **Dead or redundant surface:** unused exports, empty stubs, copy-pasted blocks with renamed identifiers, pass-through wrappers that add no behavior. Remove only when every in-scope caller and required public surface stay safe.
 4. **Type and error escape hatches:** new `any` / unbounded `unknown`, empty `catch`, or log-and-continue that hides failures. Prefer a precise type, a narrowed unknown, or an explicit error path at the trust boundary.
-5. **Weak verification theater:** tests that mirror implementation structure, assert only mocks, or add coverage without a caller-visible contract. Prefer one check that would fail on a real defect over more lines of coverage. Do not recommend 100% coverage, mutation score zero, CRAP, or Halstead metrics unless the repository already uses those tools and the risk warrants them.
+5. **Weak verification theater:** tests that mirror implementation structure, assert only mocks, or add coverage without a caller-visible contract. Prefer one check that would fail on a real defect over more lines of coverage. When tests are in scope, apply the test-surface cues. Do not recommend 100% coverage, mutation score zero, CRAP, or Halstead metrics unless the repository already uses those tools and the risk warrants them.
 
 5. Compare the current design with only the smallest viable alternative. State the difference in observable behavior, risk, validation effort, locality, reader load, and interface burden.
 6. Prefer the alternative only when it materially reduces independent concepts without weakening correctness, security, performance, lifecycle semantics, domain distinctions, or project conventions. Otherwise conclude that the current design is already proportionate and explain why.
@@ -53,3 +53,28 @@ When a comment claims an invariant or required constraint, consider whether a ty
 When a comment is flagged, distinguish a redundant comment from a symptom of unclear code. During an authorized change, remove only the former directly. For the latter, recommend or, when authorized, apply the smallest in-scope root-cause clarification; retain any rationale the code still cannot express.
 
 Do not repeat the challenge recursively, enforce this vocabulary over the project's terms, equate fewer lines with better design, or manufacture a finding. Report a candidate rather than implementing it when behavior preservation is uncertain or the alternative expands the approved scope.
+
+### Test surface
+
+When an authorized change adds or changes tests, or an explicit simplicity review includes tests, use the questions and cues below. They are evidence cues. A review reports a concrete location and a safer in-scope alternative. This subsection does not authorize creating, running, or deleting tests outside the approved scope.
+
+Before adding or changing a test, answer four questions. A missing answer means do not add that test yet:
+
+1. What observable behavior, invariant, or independent contract does it protect?
+2. What credible regression makes it fail?
+3. Why does existing coverage not already catch that failure? Prefer one primary owner at the strongest boundary. Another layer needs its own distinct risk. Prefer extending a table-driven case or shared fixture over a near-duplicate.
+4. Does it need a production seam (export, flag, wrapper, or injection hook) that no production caller needs? If it does, move the test to the real boundary instead.
+
+These patterns are evidence cues. A match still needs a concrete location; the pattern alone does not prove the test should be removed:
+
+- assertion-free coverage probes
+- self-comparisons and identity copies
+- exact source, import, or string searches of the implementation
+- private predicate or call-shape tests duplicated at a real boundary
+- duplicate invocations of the same contract across layers without a distinct risk
+- tests whose only purpose is preserving test-only exports, globals, or wrappers
+- expected values produced by the helper or renderer under test
+- mocks that implement the asserted behavior
+- negative controls that pass for an unrelated reason
+
+Optimize for confidence, not for how many tests are removed. A new test that must change under behavior-preserving refactoring is suspect; rewrite it at the owning boundary before adding it. An existing test with that shape is not automatically removable. Recommend removal only with evidence of redundancy or no contract value, and prefer improving a weak test so it observes the contract it was meant to protect.
