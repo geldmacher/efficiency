@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 3.4.2
+
+- Add advisory generated-code smell signals to explicit design and code simplicity reviews. They cover branching load, file cohesion, dead or redundant surface, type and error escape hatches, and weak verification theater, and stay evidence cues without numeric gates or extra tools.
+
 ## 3.4.1
 
 - Consolidate installation, usage, development, and recovery documentation; remove the redundant migration guide from plugin packages.
