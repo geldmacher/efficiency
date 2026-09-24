@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Add advisory test-surface cues to weak verification theater: authoring questions and junk-pattern evidence for tests in an authorized change or an explicit simplicity review, without a new skill, deletion mandate, or coverage target.
+
 ## 3.4.2
 
 - Add advisory generated-code smell signals to explicit design and code simplicity reviews. They cover branching load, file cohesion, dead or redundant surface, type and error escape hatches, and weak verification theater, and stay evidence cues without numeric gates or extra tools.
