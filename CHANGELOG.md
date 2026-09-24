@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 3.4.3
+
 ### Changed
 
 - Add advisory test-surface cues to weak verification theater: authoring questions and junk-pattern evidence for tests in an authorized change or an explicit simplicity review, without a new skill, deletion mandate, or coverage target.
