@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Narrow Efficiency selection to reviews, simplification, task or verification effort, and change summaries. Load the design reference only for a review, a simplification, or a code or design change requested through that skill.
+- Add a short code core to the shared always-applied guidance: reuse what exists, build only what the requirement needs, stay in scope, and preserve behavior. It applies in Cursor and in configured Codex guidance without loading the Efficiency skill.
+- Route ordinary debugging, verification, repeated-work, and new-abstraction decisions from that guidance to the matching Efficiency reference, applied silently. Shrink the `efficiency` skill to a short router and move its task-economy phases, scope selection, code checks, and review result format into references.
+- Load the DDEV filter reference only for a `ddev` command, and read the human communication contract once per task.
+- Treat the installed RTK command surface as authoritative, with 0.44.2 recorded as the verified Codex baseline. Leave generated `RTK.md` setup and verification sections to `rtk init`.
+- Keep an authorized debugging fix on its existing approval, and recommend a separate install-verifier review only when one is requested or a specific risk remains.
+- Cover every independent material verification risk with the smallest sufficient set of facts.
+- Run plugin validation once during a full local deployment.
+
 ## 3.4.3
 
 ### Changed

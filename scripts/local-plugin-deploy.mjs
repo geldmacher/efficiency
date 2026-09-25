@@ -565,6 +565,10 @@ export async function deploymentStatus({ root = repositoryRoot, home = process.e
   };
 }
 
+export function preparationScripts(full) {
+  return full ? ["build:targets", "release-check"] : ["deploy:prepare"];
+}
+
 function npmScript(name, root) {
   run("npm", ["run", name], { cwd: root, inherit: true });
 }
@@ -608,8 +612,7 @@ async function main() {
   if (cursorManifest.version !== packageManifest.version || codexManifest.version !== packageManifest.version) {
     throw new Error("repository manifests must keep the regular package product version");
   }
-  npmScript("deploy:prepare", repositoryRoot);
-  if (full) npmScript("release-check", repositoryRoot);
+  for (const script of preparationScripts(full)) npmScript(script, repositoryRoot);
   const git = repositoryState(repositoryRoot);
   const result = deployPreparedTargets({
     root: repositoryRoot,

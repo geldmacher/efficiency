@@ -1,6 +1,6 @@
 # DDEV Command Surface
 
-Read project instructions, `.ddev/config.yaml`, custom commands, docs, workflows, and observed RTK fallbacks before selecting filters.
+Before selecting a filter for a ddev command, read only the project sources that define that command, including `.ddev/config.yaml`, custom commands, and observed RTK fallbacks when they apply.
 
 - Filter finite project gates, tests, quality checks, builds, docs, bounded maintenance, and documented package-manager commands.
 - Match the outer `ddev ...` command. Generic `ddev exec` uses a positive allowlist of finite inner commands.

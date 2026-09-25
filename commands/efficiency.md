@@ -1,6 +1,6 @@
 ---
 name: efficiency
-description: Choose simple implementations, review complexity and task effort, or prepare change summaries.
+description: Review or simplify code or a design, assess task or verification effort, or draft change summaries.
 ---
 
 # Efficiency

@@ -14,7 +14,7 @@ Start with the task you want help with:
 | Remove duplicated agent instructions | [Improve context](#improve-agent-instructions) | `context-optimization` |
 | Explain a change clearly | [Write a change summary](#explain-a-change-clearly) | `efficiency` |
 | Reduce noisy terminal output | [Use RTK](#reduce-terminal-output-with-rtk-optional) | `rtk-setup`, `rtk-filter-design` |
-| Make concise responses a lasting preference | [Set up response guidance](#make-clear-responses-a-lasting-preference) | `response-simplicity-setup` in Codex |
+| Make concise responses and simple code changes a lasting preference | [Set up persistent guidance](#make-clear-responses-a-lasting-preference) | `response-simplicity-setup` in Codex |
 
 ## Select a skill
 
@@ -68,7 +68,7 @@ The approach is called **Evidence-Guided Simplicity**: start from what the task 
 
 Three familiar principles guide the choice: build for current needs (**YAGNI**), keep the design easy to understand (**KISS**), and keep each shared rule in one authoritative place (**DRY**). Similar-looking code alone is not a reason to combine two rules that may change independently.
 
-During ordinary coding work, this quick check usually stays in the background. An explicit review or a material complexity risk triggers a fuller comparison with one smaller alternative. Fewer lines are not the goal: behavior, public interfaces, saved data formats, security, accessibility, performance, and necessary error recovery must remain intact unless your assignment explicitly changes them.
+Ordinary code changes do not load this skill. The always-applied guidance keeps a short core for them: reuse what exists, build only what the requirement needs, stay in scope, and preserve behavior. It also points to the debugging, verification, repeated-work, and design references when one of those situations arises, so they apply silently without an efficiency assessment. When this skill reviews or changes code, the quick check stays quiet unless it changes the chosen solution, scope, or risk. An explicit review or a material complexity risk triggers a fuller comparison with one smaller alternative. Fewer lines are not the goal: behavior, public interfaces, saved data formats, security, accessibility, performance, and necessary error recovery must remain intact unless your assignment explicitly changes them.
 
 ## Choose what to check
 
@@ -78,7 +78,7 @@ Use this to decide which evidence would show that a proposed or completed change
 /efficiency What should we check for this date-formatting change? Explain which behavior each check would verify.
 ```
 
-Efficiency identifies at most two facts that matter most to the risk and recommends the least costly adequate way to check them, alongside any required project checks.
+Efficiency covers every independent material risk in scope with the smallest set of facts and recommends the least costly adequate way to check them, alongside any required project checks. It does not add a fact that does not change the check.
 
 **Example:** For a date helper, a focused check of timezone boundaries and invalid input may answer the main correctness questions. If the claim is that the date is readable in a browser, a unit test cannot establish that; an inspection of the rendered result is still needed.
 
@@ -142,8 +142,8 @@ For a one-off shorter answer, simply ask “Explain your last answer more simply
 
 ## Make clear responses a lasting preference
 
-- **Cursor:** the plugin includes a short response rule that applies automatically.
-- **Codex:** global response guidance is an optional, separate setup step. Ask `$geldmacher-efficiency:response-simplicity-setup Show the current status and preview setup.`
+- **Cursor:** the plugin includes a short rule for clear responses and simple, in-scope code changes. It applies automatically.
+- **Codex:** the same global guidance is an optional, separate setup step. Ask `$geldmacher-efficiency:response-simplicity-setup Show the current status and preview setup.`
 
 The Codex skill shows the proposed change to your global instructions before asking for approval. Once configured, start a new task. See [setup and removal](installation.md#optional-codex-response-guidance) for details.
 
@@ -155,7 +155,7 @@ The Codex skill shows the proposed change to your global instructions before ask
 /rtk-setup Check whether RTK is installed and integrated with my app. Report what works and what still needs setup.
 ```
 
-This checks the current state. If you request configuration, the skill previews the affected settings before applying the authorized change.
+This checks the current state. If you request configuration, the skill previews the affected settings before applying the authorized change. The `RTK.md` file created by `rtk init` includes setup examples and a Verification section for setup or troubleshooting. Those sections are not instructions for every task. Leave that generated file unchanged; a later `rtk init` can overwrite manual edits.
 
 For a recurring noisy command:
 
@@ -178,7 +178,7 @@ A large `rtk gain` percentage alone does not establish lower total cost. That cl
 
 ## Behavior and boundaries
 
-Skills can be selected explicitly or when relevant to a request. Only Cursor's short response rule is always applied; Codex needs the optional global setup for equivalent persistent guidance. Specialized instructions load for the task that needs them.
+Skills can be selected explicitly or when relevant to a request. Only Cursor's short rule for responses and code changes is always applied; Codex needs the optional global setup for equivalent persistent guidance. That rule routes ordinary debugging, verification, repeated-work, and design decisions to the matching Efficiency reference; the `efficiency` skill itself is a short router for explicit reviews, assessments, and change texts. Specialized instructions load for the task that needs them.
 
 Reviews give recommendations and do not edit files. Implementation stays within the change you requested. Existing project checks and app approvals still apply, and concise answers must retain material evidence, uncertainty, risks, blockers, and validation status. Efficiency adds no custom MCP server, telemetry, or background automation.
 

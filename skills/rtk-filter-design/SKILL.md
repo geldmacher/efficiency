@@ -7,9 +7,9 @@ description: Create, review, or refine project-specific RTK output filters for r
 
 Use this skill for filter behavior and diagnostic preservation. Use `rtk-setup` for installing, configuring, or removing host integration. Do not start filter work merely because a task produces terminal output. A filter review remains read-only; editing a filter requires a change request.
 
-Before writing a user-facing result, read [the human communication contract](../efficiency/references/human-communication.md). Report filter coverage and diagnostic risks.
+Before writing a user-facing result, read [the human communication contract](../efficiency/references/human-communication.md) once per task, unless it is already loaded. Report filter coverage and diagnostic risks.
 
-Read [filter-format](references/filter-format.md). Also read [DDEV command surfaces](references/ddev-command-surface.md) when the project uses DDEV, databases, logs, package wrappers, or generic exec forms.
+Read [filter-format](references/filter-format.md). Also read [DDEV command surfaces](references/ddev-command-surface.md) only when the command being filtered is a ddev command.
 
 Inspect the project's documented and observed command surface. Prefer recurring finite checks, tests, lint, builds, documentation gates, generators, and bounded maintenance. Avoid filtering interactive, streaming, destructive, lifecycle, server, watcher, shell, or SSH operations because compacting them can hide state or change their usefulness.
 

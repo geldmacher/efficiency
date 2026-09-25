@@ -54,6 +54,16 @@ When a comment is flagged, distinguish a redundant comment from a symptom of unc
 
 Do not repeat the challenge recursively, enforce this vocabulary over the project's terms, equate fewer lines with better design, or manufacture a finding. Report a candidate rather than implementing it when behavior preservation is uncertain or the alternative expands the approved scope.
 
+## Scope
+
+For design simplicity, use the explicitly supplied design or proposal as the scope. For code simplicity, use an explicitly named scope first. Otherwise inspect the current Git change set: staged changes, unstaged changes, and untracked files reported by Git. If no changes exist or the project is not a Git repository, ask one focused question for the scope instead of expanding to the whole repository. Read nearby definitions, utilities, and conventions only when needed to assess the scoped code; keep findings and edits inside the approved scope.
+
+Within that scope, check consistent names, cohesive concepts, reuse, derivable state, and redundant parameters. Comments should explain reasons or constraints that code cannot express; use the comment checks above to distinguish redundancy from unclear code. Keep code understandable without conversation history. Remove compatibility only when evidence shows that it was never shipped and every affected caller in scope is updated.
+
+## Result
+
+For a design or code review, return a concise verdict, material findings with evidence, the root complexity decision when material, practical improvements, required validation, and evidence limitations.
+
 ### Test surface
 
 When an authorized change adds or changes tests, or an explicit simplicity review includes tests, use the questions and cues below. They are evidence cues. A review reports a concrete location and a safer in-scope alternative. This subsection does not authorize creating, running, or deleting tests outside the approved scope.

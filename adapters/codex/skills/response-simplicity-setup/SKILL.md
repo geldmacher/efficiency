@@ -1,6 +1,6 @@
 ---
 name: response-simplicity-setup
-description: Check, preview, configure, or remove persistent Efficiency response guidance in Codex's global AGENTS.md. Use for lasting response preferences, not a one-off shorter answer.
+description: Check, preview, configure, or remove Efficiency's persistent response and code-change guidance in Codex's global AGENTS.md. Use for lasting preferences, not a one-off shorter answer.
 ---
 
 # Response Simplicity Setup
@@ -29,7 +29,7 @@ Manage exactly one block delimited by these markers:
 Between the markers, write one sentence: `Before your first user-facing response in each task, read and follow` followed by an absolute Markdown link labelled `Efficiency response guidance`, then a period. The link targets the verified stable source's root `AGENTS.md`; enclose the absolute path in angle brackets and URI-encode characters that would break Markdown. Do not inline the response rules or point at other skills. This is one read per task, not per response; reuse guidance already loaded in that task.
 
 - With neither marker present and no equivalent unmarked guidance, append a new block for an approved installation.
-- With one correctly ordered marker pair, replace only its contents. An exact canonical inline body is the supported legacy form and migrates to the reference on an approved update. An unchanged generated reference is a no-op, with no file write or new approval request.
+- With one correctly ordered marker pair, replace only its contents. An exact canonical inline body is the supported legacy form and migrates to the reference on an approved update. An exact inline copy of the canonical text without its `Code changes` section is the same legacy form. An unchanged generated reference is a no-op, with no file write or new approval request.
 - If a marker is unpaired, duplicated, malformed, the managed body has user changes, or equivalent unmarked guidance already exists, stop and explain the conflict instead of guessing or duplicating content. Preserve all user changes. Do not silently retarget a reference to a different installation source.
 - For status, distinguish absent configuration, a legacy inline block, an intact reference, a missing or changed target, and a conflict. A reference to a missing target is broken, not active guidance.
 - Removal deletes only the marked block. A recognized generated reference can be removed even when its target is missing or native plugin inspection is unavailable. Removal with no block is a no-op. Unknown or modified block contents still require the user to resolve the conflict.

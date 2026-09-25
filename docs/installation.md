@@ -93,7 +93,7 @@ If the skill is missing, check the [installed layout](#verify-the-installed-layo
 
 ## Optional Codex response guidance
 
-This adds Efficiency's concise-response guidance to your global Codex instructions, so it can apply across projects. Plugin installation leaves those global instructions unchanged. Cursor already includes the equivalent always-applied rule.
+This adds Efficiency's guidance for concise responses and simple, in-scope code changes to your global Codex instructions, so it can apply across projects. Plugin installation leaves those global instructions unchanged. Cursor already includes the equivalent always-applied rule.
 
 ### Preview and configure
 

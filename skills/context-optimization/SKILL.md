@@ -7,7 +7,7 @@ description: Optimize agent context in AGENTS.md, rules, skills, commands, and r
 
 Use this skill when the request concerns the context sources themselves, including skill descriptions and loading conditions. Use `efficiency` for overall task effort or code simplicity. A request to shorten one human-facing answer does not require a context audit.
 
-Before writing a user-facing result, read [the human communication contract](../efficiency/references/human-communication.md). Identify the affected context sources.
+Before writing a user-facing result, read [the human communication contract](../efficiency/references/human-communication.md) once per task, unless it is already loaded. Identify the affected context sources.
 
 Inspect only the context sources relevant to the user's goal. In Cursor, these can include project instructions, rules, commands, skills, and mode guidance. In Codex, these can include global and project `AGENTS.md`, project `.codex/config.toml`, plugins, skills, and repeated command output. In another Agent Plugins client, inspect only context and configuration surfaces documented by that host; do not infer Cursor or Codex paths. Include documentation only when it actually contributes recurring context. Identify duplicated, obsolete, overly broad, or always-loaded material and the constraints that must survive any reduction.
 

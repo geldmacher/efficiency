@@ -7,7 +7,7 @@ description: Inspect, configure, verify, or remove Rust Token Killer (RTK) integ
 
 Use this skill for RTK installation state and host integration. Use `rtk-filter-design` when the requested work concerns a command's output filter. An ordinary task that happens to execute `rtk` does not require integration inspection.
 
-Before writing a user-facing result, read [the human communication contract](../efficiency/references/human-communication.md). Report the verified RTK state and open integration checks.
+Before writing a user-facing result, read [the human communication contract](../efficiency/references/human-communication.md) once per task, unless it is already loaded. Report the verified RTK state and open integration checks.
 
 Read [RTK evidence interpretation](../efficiency/references/rtk-evidence.md) before interpreting `rtk gain` or recommending RTK for efficiency. Report installation, host configuration, observed execution, estimated shell-output reduction, contributor concentration when material, and whole-task net effect as separate states. Whole-task savings remain `unverified` without comparable paired host and provider evidence.
 
@@ -21,7 +21,7 @@ After a change, repeat the integration inspection and use `rtk hook check --agen
 
 Run the real smoke check through Cursor and use `rtk gain --history` to confirm only that RTK executed the rewritten command. If Cursor requests approval, keep that approval in Cursor's native flow; headless non-execution of an `ask` result is expected until approval is available.
 
-For Codex, use the locally verified RTK 0.44.2 command surface. Inspect with `rtk init --codex --show`. Before a global change, run `rtk init --global --codex --dry-run` and summarize the affected `AGENTS.md` and `RTK.md` files. Apply the non-dry-run command only when the user explicitly requested the change and Codex granted any required filesystem approval. Verify the active instruction reference, run one approved finite command directly as `rtk <command>`, and inspect `rtk gain --history` as execution evidence. Do not expect or claim Cursor-style `updated_input`, `permission`, or hook-processor evidence in Codex.
+For Codex, the commands below were verified with RTK 0.44.2; confirm syntax against the installed version. Inspect with `rtk init --codex --show`. Before a global change, run `rtk init --global --codex --dry-run` and summarize the affected `AGENTS.md` and `RTK.md` files. The generated `RTK.md` import is owned by `rtk init`. Its setup examples and Verification section apply to RTK setup or troubleshooting, not to every task. The recurring instruction is the operational prefix rule and the raw-output bypass. Do not edit that generated file to split those sections; a later `rtk init` can overwrite the edit. Apply the non-dry-run command only when the user explicitly requested the change and Codex granted any required filesystem approval. Verify the active instruction reference, run one approved finite command directly as `rtk <command>`, and inspect `rtk gain --history` as execution evidence. Do not expect or claim Cursor-style `updated_input`, `permission`, or hook-processor evidence in Codex.
 
 For another Agent Plugins client, keep host integration read-only and generic. Use `rtk --version` and `rtk gain`, then inspect only integration commands or configuration surfaces documented by that host and the installed RTK version. If no documented integration exists, report it as unavailable or unverified; do not run Cursor or Codex setup commands and do not edit host configuration.
 

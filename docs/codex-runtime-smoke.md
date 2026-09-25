@@ -51,7 +51,7 @@ Use the setup skill's actual [managed-reference contract](../adapters/codex/skil
 | Case | Starting state | Expected observation |
 | --- | --- | --- |
 | First installation | Neither marker exists; unrelated guidance such as an RTK import may exist. | Preview appends one reference block. After separately approved application, unrelated bytes remain intact. A missing global file is allowed. |
-| Legacy migration | One ordered marker pair surrounds the exact canonical inline response text. | Requested update previews replacing that body with the stable reference; no duplicate block. |
+| Legacy migration | One ordered marker pair surrounds the exact canonical inline text, with or without its `Code changes` section. | Requested update previews replacing that body with the stable reference; no duplicate block. |
 | No-op | One generated reference points to the verified stable source. | Status reports an intact reference; update writes nothing and asks for no new patch approval. |
 | Stable update | An installed update retains the source path; the new task and source package match. | The existing reference remains unchanged and a fresh task reads the updated file. No reference to the previous version's cache is introduced. |
 | Missing or mismatched target | Target absent, source identity/version/text differs, or native source is ambiguous. | Report the concrete missing or stale prerequisite. No alternate cache guessing, overwrites, or claim of activation. |

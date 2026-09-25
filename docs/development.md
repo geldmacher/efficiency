@@ -67,7 +67,7 @@ The portable manifest targets the Agent Plugins 1.0.0 Working Draft pinned in th
 
 The Codex manifest uses the documented `./skills/` root and `.codex-plugin` contains only `plugin.json`. The Codex-only setup skill is maintained under `adapters/codex/skills` in the repository and projected into the generated Codex bundle as `skills/response-simplicity-setup`; it never enters the Agent Plugins or Cursor targets.
 
-The builder copies the setup skill's canonical response reference to the Codex package's root `AGENTS.md`. Built-target validation rejects missing or changed guidance and leakage into the other targets; the policy contract keeps its text equal to Cursor's response rule. This generated file contains response guidance only, with no automatic skill loading. Its global reference is configured separately through the setup skill and targets the stable installed source, never `.build` or a versioned cache. See [optional response guidance](installation.md#optional-codex-response-guidance).
+The builder copies the setup skill's canonical response reference to the Codex package's root `AGENTS.md`. Built-target validation rejects missing or changed guidance and leakage into the other targets; the policy contract keeps its text equal to Cursor's response rule. This generated file contains only the shared guidance for responses and code changes, with no automatic skill loading. Its global reference is configured separately through the setup skill and targets the stable installed source, never `.build` or a versioned cache. See [optional response guidance](installation.md#optional-codex-response-guidance).
 
 On Agent Plugins clients other than Cursor or Codex, the portable skills use conservative host-neutral behavior. They inspect only documented context or RTK integration surfaces, report unknown host integration as unverified, and do not assume Cursor hooks or Codex guidance paths.
 
@@ -85,7 +85,7 @@ Choose one host or deploy both:
 | Codex only | `npm run deploy:local -- --dry-run --codex-only` | `npm run deploy:local -- --codex-only` |
 | Cursor and Codex | `npm run deploy:local -- --dry-run` | `npm run deploy:local` |
 
-Append `--full` to an install command to run the complete repository `release-check` before deployment. Inspect the current installed state with `npm run deploy:status`; add `--cursor-only` or `--codex-only` to limit that check to one host.
+Append `--full` to an install command to build the targets and then run the complete repository `release-check` before deployment. Plugin validation runs once, inside that release check. Inspect the current installed state with `npm run deploy:status`; add `--cursor-only` or `--codex-only` to limit that check to one host.
 
 The deploy command builds and validates all three deterministic bundles, then atomically replaces only the selected Cursor and Codex copies. There is no Agent Plugins deploy flag; `.build/plugins/agent-plugins/geldmacher-efficiency` is a conformance, package, and client-integration output.
 

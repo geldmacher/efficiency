@@ -2,7 +2,7 @@
 
 Use this reference only when task economy concerns choosing, reviewing, or reporting validation for proposed or completed work. Use [debugging feedback economy](debugging-feedback-economy.md) instead when the goal is to make an investigation loop efficient.
 
-- Name the behavior or artifact that must hold, then identify at most two facts on which the material risk depends. Do not expand into a general risk inventory.
+- Name the behavior or artifact that must hold, then cover every independent material risk in scope with the smallest set of facts. Do not add a fact that does not change the check, and do not expand into a general risk inventory.
 - For each fact, choose the cheapest adequate direct observation. Source inspection can support a claim; a focused check that runs the relevant code is stronger; a live path is necessary only when the risk depends on host or runtime behavior.
 - Treat builds, summaries, caches, timestamps, generated reports, and derived state as proxies unless the risk actually lives there. Do not upgrade proxy evidence into direct or live evidence.
 - For an integration, trace and check the risk-bearing input-to-output path only as far as needed. Follow relevant serialized formats, indirect consumers, pinned library versions or local patches, and scheduling or teardown behavior that symbol searches can miss. State where direct observation stopped and what remains unverified.

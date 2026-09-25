@@ -57,9 +57,11 @@ test("public skills remain available for implicit selection without file scoping
 test("communication and specialized references remain reachable through their entrypoints", () => {
   for (const name of portableSkills) assert.match(read(`skills/${name}/SKILL.md`), /references\/human-communication\.md/);
   const efficiency = read("skills/efficiency/SKILL.md");
-  for (const name of ["change-communication", "verification-economy", "repeatable-work-economy", "debugging-feedback-economy", "rtk-evidence", "design-and-code-simplicity", "auditor"]) {
+  for (const name of ["change-communication", "task-economy", "verification-economy", "repeatable-work-economy", "debugging-feedback-economy", "rtk-evidence", "design-and-code-simplicity", "auditor"]) {
     assert.ok(efficiency.includes(`references/${name}.md`), `missing branch: ${name}`);
   }
+  // The skill stays a router: branch detail lives in the references it selects.
+  assert.ok(body(efficiency).split(/\s+/).length <= 450, "efficiency SKILL.md must stay a short router");
   assert.match(read("skills/context-optimization/SKILL.md"), /references\/agent-document-design\.md/);
   assert.match(read("skills/rtk-filter-design/SKILL.md"), /references\/filter-format\.md/);
   // Critical selection boundaries; these are instruction checks, not observations of model behavior.
@@ -108,6 +110,13 @@ test("global response guidance remains opt-in and identical to the Cursor rule",
   assert.equal(body(rule), canonical.trim());
   const setup = read("adapters/codex/skills/response-simplicity-setup/SKILL.md");
   for (const text of ["AGENTS.override.md", "AGENTS.md", "geldmacher-efficiency:response-simplicity:start", "geldmacher-efficiency:response-simplicity:end"]) assert.ok(setup.includes(text));
+  // The always-applied guidance routes ordinary work to existing references that the skill also selects.
+  const routed = [...body(rule).matchAll(/`(skills\/efficiency\/references\/[a-z-]+\.md)`/g)].map((match) => match[1]);
+  assert.ok(routed.length >= 3, "rule must route to efficiency references");
+  for (const path of routed) {
+    assert.ok(existsSync(join(defaultRoot, path)), `rule routes to missing ${path}`);
+    assert.ok(read("skills/efficiency/SKILL.md").includes(path.replace("skills/efficiency/", "")), `skill must also select ${path}`);
+  }
   assert.match(setup, /show the exact diff and wait for explicit user approval/);
   assert.match(setup, /Removal deletes only the marked block/);
   assert.match(setup, /equivalent unmarked guidance already exists, stop/i);

@@ -11,3 +11,17 @@
 - Keep code, commands, paths, identifiers, and error messages exact.
 - Use structure only when it improves scanning; do not force a fixed template.
 - Add detail when requested or risk requires it; prefer clarity and avoid filler or rigid limits.
+
+## Code changes
+
+- Before adding code, reuse what the project, standard library, or installed dependencies already provide.
+- Build only what the current requirement needs; do not add options, layers, or configuration for possible future cases.
+- Keep changes within the requested scope.
+- Preserve existing behavior, public interfaces, and saved data formats unless the task changes them.
+
+When one of these situations arises during authorized work, read the matching reference once and apply it silently; report an efficiency assessment only when asked. Paths are relative to this plugin's root directory, the directory that contains `skills/`.
+
+- Fixing a failure or a performance regression: `skills/efficiency/references/debugging-feedback-economy.md`
+- Choosing what to check after a change: `skills/efficiency/references/verification-economy.md`
+- Repeating the same manual edit across many places: `skills/efficiency/references/repeatable-work-economy.md`
+- Adding a new abstraction, layer, or configuration surface: the quick ladder in `skills/efficiency/references/design-and-code-simplicity.md`

@@ -15,4 +15,4 @@ Use this reference only to assess or adjust the efficiency of debugging a failur
 - If no safe loop is available, state the evidence gap and the precise access, redacted artifact, or separate permission that would unblock it.
 - Keep credentials, authentication material, personal data, and sensitive payloads out of commands, fixtures, and reported output. Use redacted excerpts when the full artifact is unnecessary.
 
-This guidance may recommend a next step. It does not authorize creating tests, starting servers, instrumenting production, changing code, dispatching agents, or persisting debugging artifacts. Those actions require their own task scope and approval.
+This guidance may recommend a next step. It does not authorize creating tests, starting servers, instrumenting production, changing code, dispatching agents, or persisting debugging artifacts. In an assessment, recommend only. In an already authorized fix assignment, this reference adds no extra approval step for in-scope checks and corrections. Ask when an action exceeds that assignment or needs a native approval.

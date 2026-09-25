@@ -19,10 +19,19 @@ import {
   deploymentReceipt,
   isInside,
   localVersion,
+  preparationScripts,
   validateBundle,
 } from "../scripts/local-plugin-deploy.mjs";
 
 import { marketplaceDocument } from "../skills/install-new-release-from-repo/scripts/codex-install.mjs";
+
+test("full deployment validates plugin output once inside release-check", () => {
+  const scripts = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).scripts;
+  assert.deepEqual(preparationScripts(false), ["deploy:prepare"]);
+  assert.deepEqual(preparationScripts(true), ["build:targets", "release-check"]);
+  const expanded = preparationScripts(true).map((name) => scripts[name]).join(" && ");
+  assert.equal(expanded.split("npm run validate").length - 1, 1);
+});
 
 const plugin = "geldmacher-test";
 const baseVersion = "1.2.3";
