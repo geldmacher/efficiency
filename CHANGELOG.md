@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 3.5.0
+
 ### Changed
 
 - Narrow Efficiency selection to reviews, simplification, task or verification effort, and change summaries. Load the design reference only for a review, a simplification, or a code or design change requested through that skill.
