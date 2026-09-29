@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Write durable agent instructions and new code in English from the always-applied guidance, including comments and names. Replies stay in the user's language. Domain terms, user-facing product copy, and user-facing error messages stay in their original language, and existing external identifiers stay exact.
+
 ## 3.5.0
 
 ### Changed

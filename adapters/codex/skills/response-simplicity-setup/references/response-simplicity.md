@@ -25,3 +25,10 @@ When one of these situations arises during authorized work, read the matching re
 - Choosing what to check after a change: `skills/efficiency/references/verification-economy.md`
 - Repeating the same manual edit across many places: `skills/efficiency/references/repeatable-work-economy.md`
 - Adding a new abstraction, layer, or configuration surface: the quick ladder in `skills/efficiency/references/design-and-code-simplicity.md`
+
+## Language
+
+- Write rules, skills, commands, and `AGENTS.md` in English.
+- Write code in English, including comments, names, and other text introduced in the source.
+- Reply to the user in the language they are using.
+- Keep domain terms, user-facing product copy, and user-facing error messages in their original language. Keep existing external identifiers exact.

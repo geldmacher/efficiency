@@ -108,6 +108,8 @@ test("global response guidance remains opt-in and identical to the Cursor rule",
   const canonical = read("adapters/codex/skills/response-simplicity-setup/references/response-simplicity.md");
   assert.equal(parseFrontmatter(join(defaultRoot, "rules/response-simplicity.mdc")).alwaysApply, true);
   assert.equal(body(rule), canonical.trim());
+  assert.match(body(rule), /Write rules, skills, commands, and `AGENTS\.md` in English/);
+  assert.match(body(rule), /Write code in English/);
   const setup = read("adapters/codex/skills/response-simplicity-setup/SKILL.md");
   for (const text of ["AGENTS.override.md", "AGENTS.md", "geldmacher-efficiency:response-simplicity:start", "geldmacher-efficiency:response-simplicity:end"]) assert.ok(setup.includes(text));
   // The always-applied guidance routes ordinary work to existing references that the skill also selects.

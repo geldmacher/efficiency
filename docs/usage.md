@@ -142,7 +142,7 @@ For a one-off shorter answer, simply ask “Explain your last answer more simply
 
 ## Make clear responses a lasting preference
 
-- **Cursor:** the plugin includes a short rule for clear responses and simple, in-scope code changes. It applies automatically.
+- **Cursor:** the plugin includes a short rule for clear responses and simple, in-scope code changes. It applies automatically. The same rule writes rules, skills, commands, `AGENTS.md`, and new code in English, including comments and names, and keeps replies in the user's language.
 - **Codex:** the same global guidance is an optional, separate setup step. Ask `$geldmacher-efficiency:response-simplicity-setup Show the current status and preview setup.`
 
 The Codex skill shows the proposed change to your global instructions before asking for approval. Once configured, start a new task. See [setup and removal](installation.md#optional-codex-response-guidance) for details.
