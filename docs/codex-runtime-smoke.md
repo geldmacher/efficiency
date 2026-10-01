@@ -25,9 +25,13 @@ In the fresh task:
 
 ## Smoke 2: RTK host selection
 
-1. Invoke `$rtk-setup` with a read-only inspection request.
-2. Confirm that it uses `rtk init --codex --show`, identifies the installed RTK binary, and does not promise `updated_input`, `permission`, or Cursor hook-processor evidence.
-3. If a finite direct RTK command is within the approved scope, run exactly one and verify it with `rtk gain --history`. Treat the history entry as execution evidence and the gain figure as scoped estimated shell-output reduction; keep provider tokens or cost, agent turns, result quality, and whole-task net effect unverified without a comparable paired run.
+1. Invoke `$rtk-setup` with a read-only post-update inspection request.
+2. Confirm that it uses `rtk init --codex --show`, identifies the binary in the actual host environment, compares installed command support and current upstream guidance, and previews setup without global writes. Record any generated `RTK.md` replacement and preservation of custom tracking/environment/sandbox settings.
+3. Follow the installed version's [Codex procedure](../skills/rtk-setup/references/codex.md). If native hooks are supported, inspect registration and enabled/trusted state, and run the processor fixture with its required `permission_mode`. Verify `hookSpecificOutput.updatedInput` and the Codex protocol fields separately from actual native approval. Do not substitute Cursor's `updated_input` or `permission` schema. If only instruction-based integration is available, verify the active reference and leave automatic rewriting unverified.
+4. If a finite command is within the approved scope, run exactly one through the selected path and inspect the actual executed command and native permission result, then verify RTK execution with `rtk gain --history`. A manually prefixed command or processor fixture does not prove automatic rewriting. Keep live hook behavior unverified if it cannot be observed in this task; do not change permissions or bypass hook trust to force a result.
+
+For the plugin updater's optional RTK branch, observe a missing/outdated RTK offer and a decline in an isolated authorized fixture. Confirm no native RTK or global configuration change. A subsequent accepted lifecycle action and plugin success are separate results; helper fixture tests alone cannot prove the agent respected the human decision.
+5. Treat the history entry as execution evidence and the gain figure as scoped estimated shell-output reduction. Check effective tracking paths/writable state and available representative output-quality evidence. Keep provider tokens or cost, agent turns, result quality, and whole-task net effect unverified without a comparable paired run.
 
 ## Smoke 3: optional guidance and review boundary
 

@@ -149,13 +149,25 @@ The Codex skill shows the proposed change to your global instructions before ask
 
 ## Reduce terminal output with RTK (optional)
 
-**RTK (Rust Token Killer)** is a separate tool that condenses command output before the agent reads it. Efficiency can help inspect its integration and create project-specific output filters. You can use all other Efficiency workflows without installing RTK.
+**RTK (Rust Token Killer)** is a separate tool that condenses command output before the agent reads it. Efficiency can inspect, install or update RTK, verify its integration and create project-specific output filters. You can use all other Efficiency workflows without installing RTK.
 
 ```text
 /rtk-setup Check whether RTK is installed and integrated with my app. Report what works and what still needs setup.
 ```
 
-This checks the current state. If you request configuration, the skill previews the affected settings before applying the authorized change. The `RTK.md` file created by `rtk init` includes setup examples and a Verification section for setup or troubleshooting. Those sections are not instructions for every task. Leave that generated file unchanged; a later `rtk init` can overwrite manual edits.
+This checks the current state. In Codex, invoke `$geldmacher-efficiency:rtk-setup` instead. After updating RTK, use the same skill with this request:
+
+```text
+Check RTK integration after the update. Compare the installed version and current upstream guidance with this app's configuration. Inspect setup dry-runs, command rewriting, native approvals, tracking, and output quality. Report the smallest needed changes; do not change configuration.
+```
+
+The update check distinguishes configured hooks, processor results, actual execution in the app, and output quality. Codex can use native hooks or instruction-based integration depending on the installed RTK and active Codex runtime. A terminal test or history entry alone does not prove automatic rewriting in either app.
+
+To request the update itself, use `/rtk-setup Update RTK to the latest stable official release and verify integration in this app.` The skill previews the identified package-manager command before applying the requested change. It preserves pins and newer/development installations and gives instructions for unknown/manual binaries. In this plugin's development checkout, the update also reconciles affected skills and documentation, even when RTK is already current. Installed plugin bundles are updated through plugin releases.
+
+After a successful Efficiency plugin update, `install-new-release-from-repo` also checks RTK. It offers first installation or a needed update separately. Only your acceptance starts RTK changes; a decline or RTK failure leaves the successful plugin update intact. Checks run on these relevant invocations, without a background watcher.
+
+If you request configuration, the skill previews the affected settings before applying the authorized change. Generated `RTK.md` content belongs to `rtk init` and can change between versions. Setup examples and verification instructions in older versions apply to setup or troubleshooting. Before replacing a file with custom additions, account for needed tracking, environment, and sandbox settings in user-owned configuration or instructions; do not silently lose them or hand-edit the generated file as a durable fix.
 
 For a recurring noisy command:
 
@@ -192,7 +204,7 @@ If you explicitly ask for an independent second pass, Cursor provides the read-o
 | Codex with plugin support | The same five skills, plus `response-simplicity-setup`. |
 | Other Agent Plugins v1 clients | Five portable skills; app-specific integration must be verified for that client. The release installer supports only Cursor and Codex. |
 | Release installer and development tools | Node.js 22 or newer. See [installation requirements](installation.md#before-you-start). |
-| Optional RTK integration | Documented workflows cover macOS, Linux, and WSL. Verified baselines are RTK 0.44.0 for Cursor hooks and 0.44.2 for Codex commands. |
+| Optional RTK integration | Native Cursor and version-dependent Codex hook or instruction paths. Verify the installed RTK version and active host runtime after updates; processor checks alone do not certify live compatibility. |
 
 The five shared skills are `efficiency`, `context-optimization`, `rtk-setup`, `rtk-filter-design`, and `install-new-release-from-repo`. Broad version compatibility is not certified; release records state the versions actually tested.
 

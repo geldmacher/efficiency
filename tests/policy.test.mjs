@@ -92,15 +92,34 @@ test("advisory branches do not independently authorize execution", () => {
 });
 
 test("RTK setup and filtering retain distinct host paths and native trust", () => {
-  const setup = read("skills/rtk-setup/SKILL.md");
+  const entrypoint = read("skills/rtk-setup/SKILL.md");
+  for (const host of ["cursor", "codex"]) assert.ok(entrypoint.includes(`references/${host}.md`));
+  const setup = entrypoint + read("skills/rtk-setup/references/cursor.md") + read("skills/rtk-setup/references/codex.md");
   for (const command of ["rtk --version", "rtk gain", "rtk init --show --agent cursor", "rtk init --codex --show", "rtk init --global --codex --dry-run", "--uninstall --dry-run"]) assert.ok(setup.includes(command));
-  assert.match(setup, /Do not expect or claim Cursor-style `updated_input`/);
   assert.match(setup, /do not run Cursor or Codex setup commands/i);
   const filter = read("skills/rtk-filter-design/SKILL.md") + read("skills/rtk-filter-design/references/filter-format.md");
   assert.match(filter, /rtk verify --require-all/);
   assert.match(filter, /re-trust/i);
   assert.match(filter, /complete and exact paths.*exit status.*machine-consumed or piped output/is);
   assert.match(read("skills/efficiency/references/rtk-evidence.md"), /not provider-billed tokens/);
+});
+
+test("documented RTK processor fixtures include each host's required input fields", () => {
+  const fixture = (host) => {
+    const json = read(`skills/rtk-setup/references/${host}.md`).match(/```json\r?\n([\s\S]*?)\r?\n```/);
+    assert.ok(json, `${host} processor fixture must be available`);
+    return JSON.parse(json[1]);
+  };
+  const cursor = fixture("cursor");
+  assert.equal(cursor.tool_name, "Shell");
+  assert.equal(cursor.tool_input.command, "git status --short");
+  const codex = fixture("codex");
+  assert.equal(codex.hook_event_name, "PreToolUse");
+  assert.equal(codex.tool_name, "Bash");
+  // RTK 0.50.0 silently passes through a payload without this field.
+  assert.equal(codex.permission_mode, "default");
+  assert.equal(codex.tool_input.command, "git status --short");
+  assert.equal(codex.tool_input.timeout_ms, 1000);
 });
 
 test("global response guidance remains opt-in and identical to the Cursor rule", () => {

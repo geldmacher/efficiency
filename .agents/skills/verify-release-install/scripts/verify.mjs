@@ -3,9 +3,10 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { fixtureRelease, writeCodexDriver } from "../../../../tests/helpers/release-install-fixture.mjs";
+import { writeCargoTools, writeRtkTools } from "../../../../tests/helpers/rtk-lifecycle-fixture.mjs";
 import { verifyRelease } from "../../../../skills/install-new-release-from-repo/scripts/install-release.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
@@ -14,6 +15,7 @@ const work = mkdtempSync(join(tmpdir(), "efficiency-release-install-drive-"));
 const checks = [];
 const transcripts = [];
 let installer;
+let lifecycle;
 let failure;
 function drive(args, expectedExit = 0) {
   const result = spawnSync(process.execPath, [installer, ...args], { cwd: work, encoding: "utf8", timeout: 60000 });
@@ -24,6 +26,15 @@ function drive(args, expectedExit = 0) {
   return JSON.parse(expectedExit === 0 ? result.stdout : result.stderr);
 }
 const manifest = (path, host) => JSON.parse(readFileSync(join(path, host === "cursor" ? ".cursor-plugin" : ".codex-plugin", "plugin.json"), "utf8"));
+function driveRtk(tools, args, expectedExit = 0) {
+  const command = [process.execPath, lifecycle, ...args, "--release-metadata", tools.metadata];
+  const result = spawnSync(command[0], command.slice(1), { cwd: work, env: tools.env, encoding: "utf8", timeout: 60000 });
+  const record = { command, isolated_path: tools.env.PATH, exit: result.status, stdout: result.stdout, stderr: result.stderr };
+  transcripts.push(record);
+  writeFileSync(join(evidence, `drive-${transcripts.length}.json`), JSON.stringify(record, null, 2));
+  assert.equal(result.status, expectedExit, result.stderr || result.stdout);
+  return JSON.parse(result.stdout || result.stderr);
+}
 try {
   const version = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).version;
   const parts = version.split(".").map(Number);
@@ -39,7 +50,9 @@ try {
     writeFileSync(path, entry.bytes, { mode: entry.mode }); chmodSync(path, entry.mode);
   }
   installer = join(bootstrap, "skills", "install-new-release-from-repo", "scripts", "install-release.mjs");
+  lifecycle = join(bootstrap, "skills", "rtk-setup", "scripts", "rtk-lifecycle.mjs");
   assert.ok(existsSync(installer));
+  assert.ok(existsSync(lifecycle));
   const ready = spawnSync(process.execPath, [installer, "--help"], { cwd: work, encoding: "utf8" });
   assert.equal(ready.status, 0, ready.stderr);
   assert.match(ready.stdout, /Usage: node install-release.mjs/);
@@ -57,6 +70,83 @@ try {
   assert.equal(verifyRelease(join(update.backup, "release"), "cursor").provenance.version, previousVersion);
   assert.equal(drive([...cursor, current.directory]).no_op, true);
   checks.push("Cursor update, retained release, and unchanged repeat");
+  const rtkRoot = join(work, "rtk-tools");
+  let tools = writeRtkTools(rtkRoot);
+  const absent = driveRtk(tools, ["inspect"]);
+  assert.equal(absent.state, "absent");
+  assert.equal(absent.source_context, null);
+  assert.equal(drive([...cursor, current.directory]).no_op, true);
+  assert.equal(existsSync(tools.mutations), false);
+  assert.equal(existsSync(tools.rtk), false);
+  const declined = driveRtk(tools, ["preview", "--target", "0.50.0"]);
+  assert.equal(declined.operation, "install");
+  assert.equal(existsSync(tools.mutations), false);
+  assert.equal(existsSync(tools.rtk), false);
+  checks.push("Optional RTK absent/declined companion leaves native tools unchanged and plugin usable");
+  const previewPath = join(work, "rtk-preview.json");
+  writeFileSync(previewPath, JSON.stringify(declined));
+  assert.equal(driveRtk(tools, ["apply", "--preview", previewPath]).status, "binary_verified");
+  assert.equal(driveRtk(tools, ["inspect"]).state, "current");
+  checks.push("Packaged RTK first installation with exact preview and isolated Homebrew double");
+  tools = writeRtkTools(rtkRoot, { version: "0.49.0" });
+  const outdated = driveRtk(tools, ["inspect"]);
+  assert.equal(outdated.state, "update_available");
+  writeFileSync(previewPath, JSON.stringify(driveRtk(tools, ["preview", "--target", "0.50.0"])));
+  assert.equal(driveRtk(tools, ["apply", "--preview", previewPath]).status, "binary_verified");
+  const currentRtk = driveRtk(tools, ["preview", "--target", "0.50.0"]);
+  assert.equal(currentRtk.reason, "already_current");
+  checks.push("Packaged RTK update and already-current inspection");
+  tools = writeRtkTools(rtkRoot, { version: "0.49.0", fail: true });
+  writeFileSync(previewPath, JSON.stringify(driveRtk(tools, ["preview", "--target", "0.50.0"])));
+  assert.equal(driveRtk(tools, ["apply", "--preview", previewPath], 1).status, "failed");
+  assert.equal(drive([...cursor, current.directory]).no_op, true);
+  checks.push("RTK package failure reports failure without rolling back successful plugin installation");
+  tools = writeRtkTools(rtkRoot, { version: "0.49.0", noChange: true });
+  writeFileSync(previewPath, JSON.stringify(driveRtk(tools, ["preview", "--target", "0.50.0"])));
+  assert.equal(driveRtk(tools, ["apply", "--preview", previewPath], 1).status, "failed");
+  tools = writeRtkTools(rtkRoot, { version: "0.51.0" });
+  assert.equal(driveRtk(tools, ["preview", "--target", "0.50.0"]).operation, "none");
+  tools = writeRtkTools(rtkRoot, { version: "0.49.0", pinned: true });
+  assert.equal(driveRtk(tools, ["preview", "--target", "0.50.0"]).operation, "none");
+  tools = writeRtkTools(rtkRoot, { version: "0.49.0", wrong: true });
+  assert.equal(driveRtk(tools, ["inspect"]).identity, "unknown");
+  checks.push("Resulting-version mismatch, newer binaries, pins, and wrong RTK are retained safely");
+  tools = writeRtkTools(join(work, "untapped-homebrew"), { tapRegistered: false });
+  const alternative = writeCargoTools(join(work, "cargo-alternative"));
+  tools.env = { ...tools.env, CARGO_HOME: alternative.env.CARGO_HOME, PATH: [tools.env.PATH, alternative.env.PATH].join(delimiter) };
+  const untapped = driveRtk(tools, ["inspect"]);
+  assert.equal(untapped.manager.kind, "homebrew");
+  assert.equal(untapped.manager.tap_registered, false);
+  const preparation = driveRtk(tools, ["preview", "--target", "0.50.0"]);
+  assert.equal(preparation.operation, "prepare");
+  assert.equal(existsSync(tools.mutations), false);
+  writeFileSync(previewPath, JSON.stringify(preparation));
+  const prepared = driveRtk(tools, ["apply", "--preview", previewPath]);
+  assert.equal(prepared.status, "prepared");
+  assert.equal(existsSync(tools.rtk), false);
+  assert.equal(prepared.next_preview.operation, "install");
+  writeFileSync(previewPath, JSON.stringify(prepared.next_preview));
+  assert.equal(driveRtk(tools, ["apply", "--preview", previewPath]).status, "binary_verified");
+  assert.equal(existsSync(alternative.mutations), false);
+  assert.deepEqual(readFileSync(tools.mutations, "utf8").trim().split("\n").map(JSON.parse), [preparation.command.args, ["install", "rtk-ai/tap/rtk"]]);
+  checks.push("Missing official Homebrew tap retains preference, prepares only the tap, then installs from a separate preview");
+  tools = writeRtkTools(join(work, "failed-tap"), { tapRegistered: false, failTap: true });
+  writeFileSync(previewPath, JSON.stringify(driveRtk(tools, ["preview", "--target", "0.50.0"])));
+  assert.equal(driveRtk(tools, ["apply", "--preview", previewPath], 1).status, "failed");
+  assert.equal(existsSync(tools.rtk), false);
+  assert.equal(drive([...cursor, current.directory]).no_op, true);
+  checks.push("Failed tap registration changes no RTK binary and preserves plugin installation");
+  for (const version of [null, "0.49.0"]) {
+    tools = writeCargoTools(join(work, version ? "cargo-update" : "cargo-first"), { version });
+    const cargoPreview = driveRtk(tools, ["preview", "--target", "0.50.0"]);
+    assert.equal(cargoPreview.command.binary, tools.cargo);
+    assert.equal(cargoPreview.operation, version ? "update" : "install");
+    assert.equal(existsSync(tools.mutations), false);
+    writeFileSync(previewPath, JSON.stringify(cargoPreview));
+    assert.equal(driveRtk(tools, ["apply", "--preview", previewPath]).status, "binary_verified");
+    assert.equal(driveRtk(tools, ["inspect"]).installed_version, "0.50.0");
+  }
+  checks.push("Packaged Cargo first installation and update preserve dispatch through an actual cargo-to-rustup symlink");
   const codexHome = join(work, "codex-home"); mkdirSync(codexHome);
   const binary = writeCodexDriver(codexHome);
   const marketplace = join(codexHome, ".agents", "plugins", "marketplace.json");
@@ -87,7 +177,7 @@ try {
 } finally {
   rmSync(work, { recursive: true, force: true });
   const report = { status: failure ? "failed" : "passed", platform: process.platform, node: process.version, checks, failure: failure ?? null, fixture_cleanup: !existsSync(work), evidence,
-    limits: ["No real GitHub download", "Controlled Codex CLI only", "No agent routing or live host discovery", "Only the recorded operating system was executed"] };
+    limits: ["No real GitHub download; explicit local RTK release metadata fixture", "Controlled Codex CLI and RTK/Homebrew/Cargo tools only", "No agent routing, user consent behavior, or live host discovery", "Only the recorded operating system was executed; Winget receives unit coverage only"] };
   const reportPath = join(evidence, "report.json");
   writeFileSync(reportPath, JSON.stringify(report, null, 2));
   assert.ok(existsSync(reportPath));

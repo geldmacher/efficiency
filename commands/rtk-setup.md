@@ -1,6 +1,6 @@
 ---
 name: rtk-setup
-description: Inspect, configure, verify, or remove Rust Token Killer integration for the active host.
+description: Inspect, install, update, configure, or verify Rust Token Killer and its integration for the active host.
 ---
 
 # RTK Setup

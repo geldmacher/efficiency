@@ -63,6 +63,9 @@ test("deterministic allowlists isolate Agent Plugins, Cursor, and Codex bundles"
     const second = buildPluginTargets(join(output, "second"));
     for (const target of ["agent-plugins", "cursor", "codex"]) {
       assert.equal(first[target].hash, second[target].hash);
+      for (const asset of ["scripts/rtk-lifecycle.mjs", "references/lifecycle.md", "references/source-maintenance.md", "references/codex.md", "references/cursor.md"]) {
+        assert.ok(existsSync(join(first[target].path, "skills/rtk-setup", asset)), `${target} missing RTK lifecycle asset: ${asset}`);
+      }
     }
 
     const portableManifest = JSON.parse(readFileSync(join(first["agent-plugins"].path, "plugin.json")));

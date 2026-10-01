@@ -1,0 +1,11 @@
+# Optional RTK companion
+
+Execute the real lifecycle helper extracted from the current release ZIP, from an unrelated working directory. A local release metadata fixture binds version 0.50.0; controlled executable doubles implement RTK identity and official Homebrew formula ownership. Their PATH contains only owned fixture directories, while Node is invoked by absolute path. No real HOME or CODEX_HOME is overridden.
+
+Inspecting missing RTK and ending after an installation preview model the unrequested/declined branch: no RTK binary or package mutation log may appear, and the plugin's unchanged-repeat check must still pass. Applying a retained preview models an explicitly accepted installation/update and must verify the exact resulting binary/version. Exercise already-current, newer, pinned and unrelated RTK states. Package failure and a successful command that leaves the wrong version must report failure without undoing the successful plugin install.
+
+For a first installation with the official tap absent, the Homebrew double must reject formula inspection like the native CLI. Inspection/preview may only list taps, even if Cargo is also available. An authorized preparation registers the explicit official tap and leaves RTK absent; a separate preview binds the subsequently inspected formula before installation. A failed tap registration must preserve the plugin and create no RTK binary. Unit checks also block an unexpected formula version after preparation.
+
+For Cargo, drive first installation and update with an actual `cargo → rustup` symlink. The double dispatches on its invocation name and rejects Cargo arguments sent directly to `rustup`. Assert the preserved command path, exact stable Git tag, resulting version and official source ownership. These cases must use native process invocation, not an injected resolver that skips executable lookup.
+
+Retain CLI transcripts and the final report outside the owned workspace; confirm they survive cleanup. The drive proves these helper effects, not actual human consent, agent skill routing, host hooks or real Homebrew/Cargo/Winget compatibility. Winget branches have unit coverage only, with actual Windows execution unverified.

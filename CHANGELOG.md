@@ -4,6 +4,24 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 3.7.0
+
+### Added
+
+- Install or update Rust Token Killer from official stable releases through the existing `rtk-setup` skill, with package-manager ownership checks, retained previews, exact target verification, and protection for pinned, manual, development, or newer installations.
+- Check optional RTK after a successful Efficiency installation or update, including an unchanged repeat. Offer installation or update with host integration; require explicit acceptance and preserve successful plugin installation if the RTK step fails.
+
+### Changed
+
+- Reconcile affected skills, commands, documentation, and tests after an RTK internet update in the Efficiency source checkout, including when RTK is already current. Preserve installed plugin packages and user-owned global configuration.
+- Document version-appropriate Cursor and Codex integration, including native Codex hooks, while distinguishing configuration, processor results, actual host rewriting, native approvals, tracking, and output quality.
+- Extend the packaged release-install verifier with isolated RTK, Homebrew, and Cargo processes, first-installation prerequisites, failure boundaries, and retained CLI evidence.
+
+### Fixed
+
+- Preserve Cargo's invocation path through rustup symlinks while using canonical paths for ownership checks, so both first installation and updates reach the Cargo proxy correctly.
+- Retain Homebrew preference when the official RTK tap is missing. Preview and apply tap preparation separately, then recheck the formula and preview installation without switching managers or installing a mismatched version.
+
 ## 3.6.0
 
 ### Changed

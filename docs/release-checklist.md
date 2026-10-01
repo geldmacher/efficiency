@@ -14,7 +14,7 @@ See [release validation](release-validation.md) for the mechanism and its failur
 
 ## Checks matched to the change
 
-- [ ] For installer or packaging changes, run `node .agents/skills/verify-release-install/scripts/verify.mjs`. Inspect its retained report and CLI transcripts after fixture cleanup. It executes the packaged CLI from a temporary extraction path and a different working directory, including platform path aliases such as macOS `/var` and `/private/var`. Assert expected output and resulting state, not exit code alone.
+- [ ] For installer, RTK lifecycle, or packaging changes, run `node .agents/skills/verify-release-install/scripts/verify.mjs`. Inspect its retained report and CLI transcripts after fixture cleanup. It executes the packaged CLIs from a temporary extraction path and a different working directory, including platform path aliases such as macOS `/var` and `/private/var`. The optional RTK drive uses isolated tool doubles and retains successful plugin installation through companion failure. Assert expected output and resulting state, not exit code alone.
 - [ ] For instruction changes, inspect representative matching and non-matching requests and verify that each remaining loading path supplies its necessary constraints. A content review or text assertion does not prove model behavior or human comprehension.
 - [ ] Review the final changes for protected data, unexpected generated files, accidental public capability removal and obsolete references. Keep release receipts and recovery state outside cleanup.
 
