@@ -169,6 +169,8 @@ After a successful Efficiency plugin update, `install-new-release-from-repo` als
 
 If you request configuration, the skill previews the affected settings before applying the authorized change. Generated `RTK.md` content belongs to `rtk init` and can change between versions. Setup examples and verification instructions in older versions apply to setup or troubleshooting. Before replacing a file with custom additions, account for needed tracking, environment, and sandbox settings in user-owned configuration or instructions; do not silently lose them or hand-edit the generated file as a durable fix.
 
+For native Codex integration, the skill explains the local RTK hook before asking you to trust it. An authorized setup adds a missing execution status message such as `RTK – Compact terminal output` or, in German, `RTK – Terminalausgaben komprimieren`, while preserving existing custom messages. This message describes the hook while it runs; the trust dialog may still call it "Hook 1". Metadata does not replace Codex's trust review, and changes to the hook definition may require renewed trust. Inspection-only requests leave configuration unchanged. The displayed title and status are verified separately in a local setup; until observed, they remain unverified.
+
 For a recurring noisy command:
 
 ```text

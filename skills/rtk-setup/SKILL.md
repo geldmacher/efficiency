@@ -15,6 +15,8 @@ Use RTK's installed command surface as the source of truth. Start with read-only
 
 Identify the active host and read only its procedure: [Cursor](references/cursor.md) or [Codex](references/codex.md). Follow the installed version's supported path rather than assuming either the old instruction-only integration or the newest hook is available.
 
+Before asking the user to trust a native hook, explain that it runs the local RTK program automatically, routes supported shell commands through RTK, and makes their output more compact. For an authorized Codex integration setup or update, follow the [hook metadata procedure](references/codex.md#hook-metadata-and-trust) to add a missing status message to the existing native hook. An inspection only reports missing metadata; it never adds it. Distinguish the execution status message from the title in Codex's trust dialog, whose display remains unverified until observed.
+
 ## After an RTK update
 
 When asked to assess integration after an update, check the following within the requested scope:
