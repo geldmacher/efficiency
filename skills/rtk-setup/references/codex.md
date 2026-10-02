@@ -6,6 +6,20 @@ RTK 0.44.2 was tested with instruction-based Codex integration. RTK 0.50.0 provi
 
 ## Native hook path
 
+### Processor and live execution
+
+When supported, inspect registration, enabled/trusted hook state in Codex, and `rtk hook check --agent codex 'git status --short'`. Exercise `rtk hook codex` with this RTK 0.50.0 processor fixture on stdin:
+
+```json
+{"hook_event_name":"PreToolUse","permission_mode":"default","tool_name":"Bash","tool_input":{"command":"git status --short","timeout_ms":1000}}
+```
+
+The fixture does not execute the command. `hook_event_name`, the shell tool name, and a supported `permission_mode` matter: omitting `permission_mode` makes RTK 0.50.0 pass through without a rewrite. If the actual host sends a different payload, verify that payload against the installed processor rather than inventing compatibility.
+
+Expect `hookSpecificOutput.hookEventName: PreToolUse`, `hookSpecificOutput.updatedInput.command: rtk git status --short`, and `hookSpecificOutput.permissionDecision: allow`, with other input fields retained. These are Codex fields, not Cursor's `updated_input` and `permission`. Protocol-level `allow` is required for Codex's replacement input; it does not prove that the rewritten command bypassed or satisfied native approvals and sandbox checks. Do not copy Cursor's `ask` response into Codex or interpret unsupported fields as an enforced approval gate.
+
+For a valid, supported, policy-permitted fixture, missing replacement input remains failed or unverified. Unsupported inputs or policy-based passthrough are separate observations. A successful processor result proves only the processor. In a fresh actual Codex task, observe an unprefixed finite shell call, its replacement/executed command and native permission result. Do not relax permissions or bypass hook trust for the smoke. Then check `rtk gain --history`; it proves RTK execution, not automatic rewriting by itself.
+
 ### Hook metadata and trust
 
 Before asking the user to trust the hook, explain in their language that `rtk hook codex` runs the local RTK program before shell calls and rewrites supported commands to use RTK's compact output. Codex requires trust for automatic hook execution. Metadata does not replace that trust review or establish approval of a rewritten command.
@@ -25,20 +39,6 @@ This is a handler example, not a replacement for the complete file. Show the exa
 Recheck the metadata after later authorized native setup or integration updates because native init may replace configuration. Inspection-only requests report a missing message without changing anything. Do not edit RTK-generated `RTK.md`, add a wrapper, or bypass hook trust. A changed hook definition may require renewed trust.
 
 `statusMessage` describes the hook while it runs; it is not a documented hook name. During a separately commissioned local setup or live smoke, record the trust-dialog title and execution status display separately, with the Codex version and observed evidence. A dialog still titled "Hook 1" is compatible with successful metadata setup; mark any unobserved display as `unverified` and do not claim the title changed from configuration alone. A metadata-only source change does not authorize a personal configuration change, deployment, or extra model invocation.
-
-### Processor and live execution
-
-When supported, inspect registration, enabled/trusted hook state in Codex, and `rtk hook check --agent codex 'git status --short'`. Exercise `rtk hook codex` with this RTK 0.50.0 processor fixture on stdin:
-
-```json
-{"hook_event_name":"PreToolUse","permission_mode":"default","tool_name":"Bash","tool_input":{"command":"git status --short","timeout_ms":1000}}
-```
-
-The fixture does not execute the command. `hook_event_name`, the shell tool name, and a supported `permission_mode` matter: omitting `permission_mode` makes RTK 0.50.0 pass through without a rewrite. If the actual host sends a different payload, verify that payload against the installed processor rather than inventing compatibility.
-
-Expect `hookSpecificOutput.hookEventName: PreToolUse`, `hookSpecificOutput.updatedInput.command: rtk git status --short`, and `hookSpecificOutput.permissionDecision: allow`, with other input fields retained. These are Codex fields, not Cursor's `updated_input` and `permission`. Protocol-level `allow` is required for Codex's replacement input; it does not prove that the rewritten command bypassed or satisfied native approvals and sandbox checks. Do not copy Cursor's `ask` response into Codex or interpret unsupported fields as an enforced approval gate.
-
-For a valid, supported, policy-permitted fixture, missing replacement input remains failed or unverified. Unsupported inputs or policy-based passthrough are separate observations. A successful processor result proves only the processor. In a fresh actual Codex task, observe an unprefixed finite shell call, its replacement/executed command and native permission result. Do not relax permissions or bypass hook trust for the smoke. Then check `rtk gain --history`; it proves RTK execution, not automatic rewriting by itself.
 
 ## Instruction-based path
 
