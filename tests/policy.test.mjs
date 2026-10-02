@@ -106,9 +106,12 @@ test("RTK setup and filtering retain distinct host paths and native trust", () =
 
 test("documented RTK processor fixtures include each host's required input fields", () => {
   const fixture = (host) => {
-    const json = read(`skills/rtk-setup/references/${host}.md`).match(/```json\r?\n([\s\S]*?)\r?\n```/);
-    assert.ok(json, `${host} processor fixture must be available`);
-    return JSON.parse(json[1]);
+    // Metadata examples may precede the processor payload's tool_input envelope.
+    const fixtures = [...read(`skills/rtk-setup/references/${host}.md`).matchAll(/```json\r?\n([\s\S]*?)\r?\n```/g)]
+      .map(([, json]) => JSON.parse(json))
+      .filter((payload) => payload !== null && typeof payload === "object" && Object.hasOwn(payload, "tool_input"));
+    assert.equal(fixtures.length, 1, `${host} must document exactly one processor fixture with tool_input`);
+    return fixtures[0];
   };
   const cursor = fixture("cursor");
   assert.equal(cursor.tool_name, "Shell");

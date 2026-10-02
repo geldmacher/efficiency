@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 3.7.1
+
+### Changed
+
+- Clarify Codex RTK hook trust and execution status in setup guidance. Add missing localized status messages during authorized integration changes, preserve custom messages, and distinguish configured metadata from unverified dialog titles.
+
 ## 3.7.0
 
 ### Added
