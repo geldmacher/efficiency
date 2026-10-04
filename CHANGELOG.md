@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- When a review covers agent instructions, or a change that exists only to stop an agent repeating a mistake, prefer a test or lint the repository can run, or removing the need for the instruction, over a new always-on prose rule.
+
 ## 3.8.0
 
 ### Added

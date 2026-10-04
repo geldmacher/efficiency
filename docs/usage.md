@@ -120,6 +120,8 @@ You get specific suggestions about what to keep, combine, or load only when need
 
 **Example:** If three files repeat the same test command, keep one authoritative instruction and clear references to it. If deployment instructions are long and only matter during a release, keep a short pointer that says exactly when to read them. Required security or approval rules must remain available wherever they apply.
 
+**Example:** An always-on rule is proposed only because an agent keeps repeating a mistake. Prefer a test or lint the repository can run, or a change that removes the need for the instruction. Keep concise guidance when the agent still needs the requirement, even if a check also enforces it.
+
 To implement a recommendation, ask for it explicitly:
 
 ```text
