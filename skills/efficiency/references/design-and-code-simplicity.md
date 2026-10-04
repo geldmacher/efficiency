@@ -60,6 +60,8 @@ For design simplicity, use the explicitly supplied design or proposal as the sco
 
 Within that scope, check consistent names, cohesive concepts, reuse, derivable state, and redundant parameters. Comments should explain reasons or constraints that code cannot express; use the comment checks above to distinguish redundancy from unclear code. Keep code understandable without conversation history. Remove compatibility only when evidence shows that it was never shipped and every affected caller in scope is updated.
 
+When the change exists only to stop an agent repeating a mistake, read [agent document design](../../context-optimization/references/agent-document-design.md) and apply its preference for that case.
+
 ## Result
 
 For a design or code review, return a concise verdict, material findings with evidence, the root complexity decision when material, practical improvements, required validation, and evidence limitations.
