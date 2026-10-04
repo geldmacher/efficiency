@@ -13,7 +13,7 @@ Start with the task you want help with:
 | Improve a bug investigation or repeated work | [Keep work focused](#keep-debugging-and-repeated-work-focused) | `efficiency` |
 | Remove duplicated agent instructions | [Improve context](#improve-agent-instructions) | `context-optimization` |
 | Explain a change clearly | [Write a change summary](#explain-a-change-clearly) | `efficiency` |
-| Reduce noisy terminal output | [Use RTK](#reduce-terminal-output-with-rtk-optional) | `rtk-setup`, `rtk-filter-design` |
+| Reduce noisy terminal output | [Use RTK](#reduce-terminal-output-with-rtk-optional) | `rtk-setup`, `rtk-update`, `rtk-filter-design` |
 | Make concise responses and simple code changes a lasting preference | [Set up persistent guidance](#make-clear-responses-a-lasting-preference) | `response-simplicity-setup` in Codex |
 
 ## Select a skill
@@ -163,9 +163,13 @@ Check RTK integration after the update. Compare the installed version and curren
 
 The update check distinguishes configured hooks, processor results, actual execution in the app, and output quality. Codex can use native hooks or instruction-based integration depending on the installed RTK and active Codex runtime. A terminal test or history entry alone does not prove automatic rewriting in either app.
 
-To request the update itself, use `/rtk-setup Update RTK to the latest stable official release and verify integration in this app.` The skill previews the identified package-manager command before applying the requested change. It preserves pins and newer/development installations and gives instructions for unknown/manual binaries. In this plugin's development checkout, the update also reconciles affected skills and documentation, even when RTK is already current. Installed plugin bundles are updated through plugin releases.
+To update existing RTK, invoke `/rtk-update` in Cursor or `$geldmacher-efficiency:rtk-update` in Codex. A bare invocation requests the latest official stable release and verification of the existing host integration, including necessary adjustments after a concrete preview. To inspect availability without changes, use `/rtk-update Check whether an update is available; do not change anything.` For a preview, use `/rtk-update Preview the update; do not apply it.`
 
-After a successful Efficiency plugin update, `install-new-release-from-repo` also checks RTK. It offers first installation or a needed update separately. Only your acceptance starts RTK changes; a decline or RTK failure leaves the successful plugin update intact. Checks run on these relevant invocations, without a background watcher.
+The update skill stops when RTK is absent and points to `rtk-setup` for first installation. Setup also handles configuration, removal, diagnosis, and integration checks after an external update. Existing `/rtk-setup Update RTK...` requests delegate to `rtk-update`.
+
+Both skills use the same lifecycle helper and integration references. The update procedure previews the identified package-manager command, preserves pins and newer/development installations, and gives instructions for unknown/manual binaries. In this plugin's development checkout, an authorized update also reconciles affected source instructions, even when RTK is already current; read-only and preview requests only report findings. Installed plugin bundles are updated through plugin releases.
+
+After a successful Efficiency plugin update, `install-new-release-from-repo` also checks RTK. It offers first installation through `rtk-setup` or a needed update through `rtk-update` separately. Only your acceptance starts RTK changes; a decline or RTK failure leaves the successful plugin update intact. Checks run on these relevant invocations, without a background watcher.
 
 If you request configuration, the skill previews the affected settings before applying the authorized change. Generated `RTK.md` content belongs to `rtk init` and can change between versions. Setup examples and verification instructions in older versions apply to setup or troubleshooting. Before replacing a file with custom additions, account for needed tracking, environment, and sandbox settings in user-owned configuration or instructions; do not silently lose them or hand-edit the generated file as a durable fix.
 
@@ -202,13 +206,13 @@ If you explicitly ask for an independent second pass, Cursor provides the read-o
 
 | App or component | Support |
 | --- | --- |
-| Cursor with plugin support | Five skills, matching slash commands, two optional auditors, and the response rule. |
-| Codex with plugin support | The same five skills, plus `response-simplicity-setup`. |
-| Other Agent Plugins v1 clients | Five portable skills; app-specific integration must be verified for that client. The release installer supports only Cursor and Codex. |
+| Cursor with plugin support | Six skills, matching slash commands, two optional auditors, and the response rule. |
+| Codex with plugin support | The same six skills, plus `response-simplicity-setup`. |
+| Other Agent Plugins v1 clients | Six portable skills; app-specific integration must be verified for that client. The release installer supports only Cursor and Codex. |
 | Release installer and development tools | Node.js 22 or newer. See [installation requirements](installation.md#before-you-start). |
 | Optional RTK integration | Native Cursor and version-dependent Codex hook or instruction paths. Verify the installed RTK version and active host runtime after updates; processor checks alone do not certify live compatibility. |
 
-The five shared skills are `efficiency`, `context-optimization`, `rtk-setup`, `rtk-filter-design`, and `install-new-release-from-repo`. Broad version compatibility is not certified; release records state the versions actually tested.
+The six shared skills are `efficiency`, `context-optimization`, `rtk-setup`, `rtk-update`, `rtk-filter-design`, and `install-new-release-from-repo`. Broad version compatibility is not certified; release records state the versions actually tested.
 
 ## Troubleshooting
 

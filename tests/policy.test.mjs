@@ -91,10 +91,11 @@ test("advisory branches do not independently authorize execution", () => {
   }
 });
 
-test("RTK setup and filtering retain distinct host paths and native trust", () => {
+test("shared RTK integration and filtering retain distinct host paths and native trust", () => {
   const entrypoint = read("skills/rtk-setup/SKILL.md");
-  for (const host of ["cursor", "codex"]) assert.ok(entrypoint.includes(`references/${host}.md`));
-  const setup = entrypoint + read("skills/rtk-setup/references/cursor.md") + read("skills/rtk-setup/references/codex.md");
+  const integration = read("skills/rtk-setup/references/integration.md");
+  for (const host of ["cursor", "codex"]) assert.ok(integration.includes(`](${host}.md)`));
+  const setup = entrypoint + integration + read("skills/rtk-setup/references/cursor.md") + read("skills/rtk-setup/references/codex.md");
   for (const command of ["rtk --version", "rtk gain", "rtk init --show --agent cursor", "rtk init --codex --show", "rtk init --global --codex --dry-run", "--uninstall --dry-run"]) assert.ok(setup.includes(command));
   assert.match(setup, /do not run Cursor or Codex setup commands/i);
   const filter = read("skills/rtk-filter-design/SKILL.md") + read("skills/rtk-filter-design/references/filter-format.md");

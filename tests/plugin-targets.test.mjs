@@ -12,7 +12,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import test from "node:test";
 import { buildPluginTargets, validateBuiltTarget } from "../scripts/build-plugin-targets.mjs";
 import { checkLinks } from "../scripts/check-links.mjs";
@@ -63,9 +63,26 @@ test("deterministic allowlists isolate Agent Plugins, Cursor, and Codex bundles"
     const second = buildPluginTargets(join(output, "second"));
     for (const target of ["agent-plugins", "cursor", "codex"]) {
       assert.equal(first[target].hash, second[target].hash);
-      for (const asset of ["scripts/rtk-lifecycle.mjs", "references/lifecycle.md", "references/source-maintenance.md", "references/codex.md", "references/cursor.md"]) {
+      for (const asset of ["scripts/rtk-lifecycle.mjs", "references/lifecycle.md", "references/integration.md", "references/source-maintenance.md", "references/codex.md", "references/cursor.md"]) {
         assert.ok(existsSync(join(first[target].path, "skills/rtk-setup", asset)), `${target} missing RTK lifecycle asset: ${asset}`);
       }
+      const root = first[target].path;
+      assert.deepEqual(Object.keys(directorySnapshot(root)).filter((path) => basename(path) === "rtk-lifecycle.mjs"), [
+        join("skills", "rtk-setup", "scripts", "rtk-lifecycle.mjs"),
+      ], `${target} must retain one RTK lifecycle helper`);
+      for (const skill of ["rtk-setup", "rtk-update"]) {
+        const entrypoint = join(root, "skills", skill, "SKILL.md");
+        const references = [...readFileSync(entrypoint, "utf8").matchAll(/\]\(([^)]+)\)/g)]
+          .map(([, link]) => resolve(dirname(entrypoint), link));
+        for (const reference of ["integration.md", "lifecycle.md"]) {
+          assert.ok(references.includes(join(root, "skills/rtk-setup/references", reference)),
+            `${target} ${skill} must reach the canonical ${reference}`);
+        }
+      }
+      const lifecycle = join(root, "skills/rtk-setup/references/lifecycle.md");
+      const helperLink = readFileSync(lifecycle, "utf8").match(/\]\(([^)]+rtk-lifecycle\.mjs)\)/);
+      assert.ok(helperLink, `${target} lifecycle must link its helper`);
+      assert.equal(resolve(dirname(lifecycle), helperLink[1]), join(root, "skills/rtk-setup/scripts/rtk-lifecycle.mjs"));
     }
 
     const portableManifest = JSON.parse(readFileSync(join(first["agent-plugins"].path, "plugin.json")));
@@ -93,6 +110,7 @@ test("deterministic allowlists isolate Agent Plugins, Cursor, and Codex bundles"
       "install-new-release-from-repo.md",
       "rtk-filter-design.md",
       "rtk-setup.md",
+      "rtk-update.md",
     ]);
     for (const reference of ["human-communication.md", "change-communication.md"]) {
       for (const target of [first["agent-plugins"].path, first.cursor.path, first.codex.path]) {

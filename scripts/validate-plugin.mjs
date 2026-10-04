@@ -672,7 +672,7 @@ export function validateRepositoryPolicy(root = defaultRoot) {
   if (portableManifest.name === "geldmacher-efficiency") {
     const expectedCursorSkills = portableSkills.map((name) => `./skills/${name}/SKILL.md`);
     if (JSON.stringify(manifest.skills) !== JSON.stringify(expectedCursorSkills)) {
-      failures.push("Cursor plugin must declare exactly the five shared skills explicitly");
+      failures.push(`Cursor plugin must declare exactly the ${portableSkills.length} shared skills explicitly`);
     }
     const sourceSkills = readdirSync(join(rootPath, "skills"), { withFileTypes: true })
       .filter((entry) => entry.isDirectory())

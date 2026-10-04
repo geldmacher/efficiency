@@ -1,6 +1,6 @@
 # Cursor RTK integration
 
-Inspect with `rtk init --show --agent cursor`. RTK may also print Claude-related status; only Cursor's registration and effective Cursor settings establish Cursor configuration. Before a requested global change, run `rtk init --global --agent cursor --dry-run` and summarize every affected file or setting, including files outside Cursor's directory.
+Inspect with `rtk init --show --agent cursor`. RTK may also print Claude-related status; only Cursor's registration and effective Cursor settings establish Cursor configuration. RTK 0.51.0 scopes `--agent cursor` setup to Cursor, without installing Claude files. Before a requested global change, run `rtk init --global --agent cursor --dry-run` and summarize every affected file or setting, including files outside Cursor's directory. Older RTK versions may include Claude files in that preview; do not refresh unrelated hosts merely to record an update.
 
 Use `rtk hook check --agent cursor 'git status --short'` before the finite smoke. When the installed version provides `rtk hook cursor`, exercise it with this JSON on stdin; this tests the processor without executing the command:
 

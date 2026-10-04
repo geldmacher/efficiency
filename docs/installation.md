@@ -15,7 +15,7 @@ Install and update Efficiency from the latest stable [GitHub Release](https://gi
 
 You need **Cursor or Codex with plugin support**, **Node.js 22 or newer**, and GitHub HTTPS access. Git, npm packages, RTK, and the GitHub CLI are not required for release installation.
 
-After a successful agent-driven Efficiency update, the skill checks optional RTK installation and the latest stable RTK version. If missing or outdated, it offers installation/update and integration in your app. Only your explicit acceptance permits RTK or global configuration changes. Declining, a failed lookup, or an RTK failure does not undo the successful plugin update. See [RTK usage](usage.md#reduce-terminal-output-with-rtk-optional) for a direct update request.
+After a successful agent-driven Efficiency update, the skill checks optional RTK installation and the latest stable RTK version. If missing, it offers installation and integration through `rtk-setup`; if outdated, it offers the update and integration through `rtk-update`. Only your explicit acceptance permits RTK or global configuration changes. Declining, a failed lookup, or an RTK failure does not undo the successful plugin update. See [RTK usage](usage.md#reduce-terminal-output-with-rtk-optional) for a direct update request.
 
 The installer has packages for Cursor and Codex and defaults to the app in which you make the request. The same helper supports macOS, Linux, and Windows; this does not mean every app and OS combination has been tested. Other Agent Plugins clients have no supported release archive.
 

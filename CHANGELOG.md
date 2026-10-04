@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Add `rtk-update` for updating an existing RTK installation and checking its host integration, with a matching Cursor command. A bare invocation requests the latest official stable release; inspection and preview requests remain read-only, and missing RTK routes to first installation through `rtk-setup`.
+
+### Changed
+
+- Share RTK lifecycle and integration instructions between setup and update without duplicating the helper or host procedures. Keep existing `rtk-setup` update requests working through delegation and route the plugin installer's accepted RTK companion to the appropriate skill.
+- Document RTK 0.51.0's Cursor-only setup scope and explicit shell syntax for generic runners.
+
 ## 3.7.1
 
 ### Changed

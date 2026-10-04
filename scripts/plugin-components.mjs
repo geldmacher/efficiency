@@ -4,5 +4,6 @@ export const portableSkills = Object.freeze([
   "install-new-release-from-repo",
   "rtk-filter-design",
   "rtk-setup",
+  "rtk-update",
 ]);
 export const codexAdapterSkill = "response-simplicity-setup";

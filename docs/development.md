@@ -55,9 +55,9 @@ A **target** is a package prepared for one plugin format. `npm run build:targets
 
 | Target | Output | Surface |
 | --- | --- | --- |
-| Agent Plugins v1 | `.build/plugins/agent-plugins/geldmacher-efficiency` | Root `plugin.json` and exactly five portable skills |
-| Cursor | `.build/plugins/cursor/geldmacher-efficiency` | Cursor manifest, five skills, commands, agents, and rule |
-| Codex | `.build/plugins/codex/geldmacher-efficiency` | Codex manifest, five portable skills, the Codex-only setup skill, and generated response `AGENTS.md` |
+| Agent Plugins v1 | `.build/plugins/agent-plugins/geldmacher-efficiency` | Root `plugin.json` and exactly six portable skills |
+| Cursor | `.build/plugins/cursor/geldmacher-efficiency` | Cursor manifest, six skills, commands, agents, and rule |
+| Codex | `.build/plugins/codex/geldmacher-efficiency` | Codex manifest, six portable skills, the Codex-only setup skill, and generated response `AGENTS.md` |
 
 Each installable package contains only user documentation, required components, and `assets/logo.svg`; development guides, runtime procedures, historical receipts and other artwork remain in this repository. The vendored Agent Plugins schema is included only in the portable target. npm is development tooling, not a supported distribution package.
 
