@@ -18,4 +18,10 @@ Identify whether the intended reader must act, decide, or understand. Use exact 
 - Make every material claim traceable to a diff, check, other evidence, or a clearly labelled assumption.
 - Keep verified behavior, intended behavior, and open work distinct.
 
+For a pull request or change summary, add any of these when it helps the reader decide faster than the prose already required above. Skip an item when it would repeat that prose, guess at an unknown fact, or crowd the decision.
+
+- When a short diff, a shallow tree, or a compact before/after sketch shows the change faster than prose, include the smallest one beside the point it supports.
+- When behavior changes, show the observed before and after: the check, command output, or screenshot that demonstrates it. Call a side unverified when it was not observed.
+- For a pull request, name the door and the blast radius when they affect the merge. A two-way door is straightforward to revert. A one-way door is hard to undo, such as a destructive data change or a published contract. The blast radius is who or what a bad merge would affect. A few words are enough unless that consequence is not obvious.
+
 Do not score style, assess whether text appears AI-written, or trade necessary evidence for brevity.

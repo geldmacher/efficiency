@@ -85,6 +85,19 @@ test("review and delegation preserve user authority", () => {
   }
 });
 
+test("change communication keeps sketches and merge notes optional", () => {
+  const communication = read("skills/efficiency/references/change-communication.md");
+  assert.match(communication, /add any of these when it helps/i);
+  assert.match(communication, /short diff/);
+  assert.match(communication, /shallow tree/);
+  assert.match(communication, /observed before and after/);
+  assert.match(communication, /two-way door/);
+  assert.match(communication, /one-way door/);
+  assert.match(communication, /blast radius/i);
+  assert.match(communication, /unverified/);
+  assert.doesNotMatch(read("rules/response-simplicity.mdc"), /one-way door|blast radius|change-communication/);
+});
+
 test("advisory branches do not independently authorize execution", () => {
   for (const name of ["verification-economy", "repeatable-work-economy", "debugging-feedback-economy"]) {
     assert.match(read(`skills/efficiency/references/${name}.md`), /does not authorize/i, name);

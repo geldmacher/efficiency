@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Pull request and change-summary drafts may add the smallest useful sketch (a short diff, tree, or before/after), the observed before and after of a behavior change, and a merge note for revert difficulty (a one-way or two-way door) and blast radius. These stay optional in the existing change-communication guidance. Adapted from [Matt Pocock's `/pr` skill](https://github.com/mattpocock/skills/blob/main/skills/engineering/pr/SKILL.md), which builds on [Humanlayer's `show-me` skill](https://github.com/humanlayer/skills/blob/main/plugins/show-me/skills/show-me/SKILL.md) by Dex Horthy.
+
 ## 3.8.1
 
 ### Changed
