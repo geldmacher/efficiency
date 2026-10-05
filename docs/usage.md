@@ -88,6 +88,12 @@ The recommendation explains what the evidence proves and what remains unknown. A
 
 Efficiency can help decide where to spend effort during an existing assignment.
 
+It uses **Pareto prioritization** to focus effort on the work that most advances the agreed goal or reduces material risk, accounting for effort and dependencies. "80/20" is a heuristic: all agreed requirements, required checks, and necessary safeguards still apply, including rare failures with severe consequences. Optional refinement stops when it would no longer materially improve the outcome.
+
+A short task-focus principle applies through the Cursor rule and configured Codex response guidance. The detailed assessment stays in the Efficiency skill's task-effort branch; ordinary tasks need no extra reference read or separate prioritization report.
+
+**Example:** Several callers fail because of one shared parsing error. Fix the common cause within the agreed scope first, check the affected callers and necessary failure cases, and defer optional cosmetic cleanup. The work is complete only when the agreed behavior and required verification are satisfied.
+
 ### When attempted fixes leave the same failure
 
 ```text

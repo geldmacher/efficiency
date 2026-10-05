@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 3.9.0
+
+### Changed
+
+- Add Pareto prioritization to the shared Cursor and Codex guidance, with detailed task-effort advice and a usage example. Focus on the highest-impact work while preserving all agreed requirements, required checks, and necessary safeguards; treat "80/20" as a heuristic and stop optional refinement when it adds no material value.
+
 ## 3.8.1
 
 ### Changed
