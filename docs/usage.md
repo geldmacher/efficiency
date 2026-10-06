@@ -142,7 +142,7 @@ Use Efficiency to prepare a commit message, pull request description, release no
 /efficiency Draft a pull request description from this diff and the checks we ran. Explain the user-visible change and any remaining verification gaps.
 ```
 
-The summary follows project conventions and leads with the result. It distinguishes what the diff changes, what checks actually passed, and what is still unverified. This request drafts text; it does not start a code review or an RTK inspection.
+The summary follows project conventions and leads with the result. It distinguishes what the diff changes, what checks actually passed, and what is still unverified. When useful, a pull request or change summary may include a compact sketch or existing before/after evidence. A pull request may also describe rollback difficulty and affected people or systems. This request drafts text; it does not start a code review or an RTK inspection.
 
 **Example:** “Invalid dates now show a validation message. The parser tests pass; the browser display has not been checked yet.” This tells a reviewer both what changed and the limit of the evidence.
 

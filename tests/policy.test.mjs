@@ -85,6 +85,13 @@ test("review and delegation preserve user authority", () => {
   }
 });
 
+test("change communication keeps review aids optional and uses existing evidence", () => {
+  const communication = read("skills/efficiency/references/change-communication.md");
+  assert.match(communication, /these additions are optional/i);
+  assert.match(communication, /use existing evidence from authorized work/i);
+  assert.doesNotMatch(read("rules/response-simplicity.mdc"), /change-communication/);
+});
+
 test("advisory branches do not independently authorize execution", () => {
   for (const name of ["verification-economy", "repeatable-work-economy", "debugging-feedback-economy"]) {
     assert.match(read(`skills/efficiency/references/${name}.md`), /does not authorize/i, name);

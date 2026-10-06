@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Pull request and change-summary drafts may include compact sketches and existing before/after evidence. Pull request drafts may also describe rollback difficulty and affected people or systems, distinguishing code reverts from data changes or external effects. These additions remain optional in the existing change-communication guidance. Adapted from [Matt Pocock's `/pr` skill](https://github.com/mattpocock/skills/blob/main/skills/engineering/pr/SKILL.md), which builds on [Humanlayer's `show-me` skill](https://github.com/humanlayer/skills/blob/main/plugins/show-me/skills/show-me/SKILL.md) by Dex Horthy.
+
 ## 3.9.0
 
 ### Changed
