@@ -17,6 +17,10 @@ alwaysApply: true
 - Use structure only when it improves scanning; do not force a fixed template.
 - Add detail when requested or risk requires it; prefer clarity and avoid filler or rigid limits.
 
+## Task focus
+
+Prioritize the work that most advances the agreed goal or reduces material risk. Complete all agreed requirements and required checks; stop optional refinement when further work would not materially improve the outcome.
+
 ## Code changes
 
 - Before adding code, reuse what the project, standard library, or installed dependencies already provide.

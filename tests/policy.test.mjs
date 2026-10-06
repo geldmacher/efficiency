@@ -85,17 +85,11 @@ test("review and delegation preserve user authority", () => {
   }
 });
 
-test("change communication keeps sketches and merge notes optional", () => {
+test("change communication keeps review aids optional and uses existing evidence", () => {
   const communication = read("skills/efficiency/references/change-communication.md");
-  assert.match(communication, /add any of these when it helps/i);
-  assert.match(communication, /short diff/);
-  assert.match(communication, /shallow tree/);
-  assert.match(communication, /observed before and after/);
-  assert.match(communication, /two-way door/);
-  assert.match(communication, /one-way door/);
-  assert.match(communication, /blast radius/i);
-  assert.match(communication, /unverified/);
-  assert.doesNotMatch(read("rules/response-simplicity.mdc"), /one-way door|blast radius|change-communication/);
+  assert.match(communication, /these additions are optional/i);
+  assert.match(communication, /use existing evidence from authorized work/i);
+  assert.doesNotMatch(read("rules/response-simplicity.mdc"), /change-communication/);
 });
 
 test("advisory branches do not independently authorize execution", () => {

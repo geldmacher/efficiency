@@ -88,6 +88,12 @@ The recommendation explains what the evidence proves and what remains unknown. A
 
 Efficiency can help decide where to spend effort during an existing assignment.
 
+It uses **Pareto prioritization** to focus effort on the work that most advances the agreed goal or reduces material risk, accounting for effort and dependencies. "80/20" is a heuristic: all agreed requirements, required checks, and necessary safeguards still apply, including rare failures with severe consequences. Optional refinement stops when it would no longer materially improve the outcome.
+
+A short task-focus principle applies through the Cursor rule and configured Codex response guidance. The detailed assessment stays in the Efficiency skill's task-effort branch; ordinary tasks need no extra reference read or separate prioritization report.
+
+**Example:** Several callers fail because of one shared parsing error. Fix the common cause within the agreed scope first, check the affected callers and necessary failure cases, and defer optional cosmetic cleanup. The work is complete only when the agreed behavior and required verification are satisfied.
+
 ### When attempted fixes leave the same failure
 
 ```text
@@ -136,7 +142,7 @@ Use Efficiency to prepare a commit message, pull request description, release no
 /efficiency Draft a pull request description from this diff and the checks we ran. Explain the user-visible change and any remaining verification gaps.
 ```
 
-The summary follows project conventions and leads with the result. It distinguishes what the diff changes, what checks actually passed, and what is still unverified. When it helps the reviewer decide, a pull request draft may also include the smallest sketch of the change, the observed before and after of a behavior change, and a short note on how hard the change is to revert and how far a bad merge would reach. This request drafts text; it does not start a code review or an RTK inspection.
+The summary follows project conventions and leads with the result. It distinguishes what the diff changes, what checks actually passed, and what is still unverified. When useful, a pull request or change summary may include a compact sketch or existing before/after evidence. A pull request may also describe rollback difficulty and affected people or systems. This request drafts text; it does not start a code review or an RTK inspection.
 
 **Example:** “Invalid dates now show a validation message. The parser tests pass; the browser display has not been checked yet.” This tells a reviewer both what changed and the limit of the evidence.
 

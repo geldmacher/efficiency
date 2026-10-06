@@ -6,7 +6,13 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
-- Pull request and change-summary drafts may add the smallest useful sketch (a short diff, tree, or before/after), the observed before and after of a behavior change, and a merge note for revert difficulty (a one-way or two-way door) and blast radius. These stay optional in the existing change-communication guidance. Adapted from [Matt Pocock's `/pr` skill](https://github.com/mattpocock/skills/blob/main/skills/engineering/pr/SKILL.md), which builds on [Humanlayer's `show-me` skill](https://github.com/humanlayer/skills/blob/main/plugins/show-me/skills/show-me/SKILL.md) by Dex Horthy.
+- Pull request and change-summary drafts may include compact sketches and existing before/after evidence. Pull request drafts may also describe rollback difficulty and affected people or systems, distinguishing code reverts from data changes or external effects. These additions remain optional in the existing change-communication guidance. Adapted from [Matt Pocock's `/pr` skill](https://github.com/mattpocock/skills/blob/main/skills/engineering/pr/SKILL.md), which builds on [Humanlayer's `show-me` skill](https://github.com/humanlayer/skills/blob/main/plugins/show-me/skills/show-me/SKILL.md) by Dex Horthy.
+
+## 3.9.0
+
+### Changed
+
+- Add Pareto prioritization to the shared Cursor and Codex guidance, with detailed task-effort advice and a usage example. Focus on the highest-impact work while preserving all agreed requirements, required checks, and necessary safeguards; treat "80/20" as a heuristic and stop optional refinement when it adds no material value.
 
 ## 3.8.1
 
