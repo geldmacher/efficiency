@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 3.9.2
+
+### Changed
+
+- Put the recommended setup and everyday use at the start of the README. Explain Cursor's automatic rule, Codex's optional persistent guidance, and when to request a focused skill assessment.
+- Provide complete Cursor and Codex requests in the usage guide, with expected results and next steps. Clarify the distinction between recommendations and requested implementation, and between RTK terminal-output reduction and evidence of lower total task cost.
+
 ## 3.9.1
 
 ### Changed
