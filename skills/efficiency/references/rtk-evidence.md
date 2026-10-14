@@ -3,6 +3,7 @@
 Use this reference whenever RTK history, `rtk gain`, or filtered output is used to assess efficiency or justify a setup or filter decision.
 
 - Treat RTK `Input`, `Output`, `Saved`, and `Save%` as estimates of raw versus filtered shell-output volume. RTK derives the token figures from output size; they are not provider-billed tokens, whole-session input, or task cost.
+- Gain rates from RTK 1.0 onward are not 1:1 comparable with 0.x rates. From 1.0, `rtk gain` excludes very large outputs from the headline rate. Cite the RTK version with any rate.
 - Keep four evidence classes distinct:
   - **Execution coverage:** `rtk gain --history` or equivalent host evidence shows that RTK executed for a command.
   - **Shell-output reduction:** RTK estimates how much command output it removed.

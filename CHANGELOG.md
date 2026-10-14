@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- RTK 1.0.0 compatibility (bypass, gain, licence/rtk-oss, pipeline trust).
+
 ## 3.9.2
 
 ### Changed

@@ -72,6 +72,16 @@ test("official metadata rejects prereleases, drafts, malformed versions and fore
   for (const value of [{ ...metadata(), prerelease: true }, { ...metadata(), draft: true }, metadata("0.50.0;evil"), { ...metadata(), html_url: "https://foreign/rtk" }]) assert.throws(() => releaseVersion(value));
 });
 
+test("RTK 1.0.0 release metadata is a valid stable target and keeps the Cargo install path", async (t) => {
+  assert.equal(releaseVersion(metadata("1.0.0")), "1.0.0");
+  const f = fixture(t, { manager: "cargo", version: "0.51.0" });
+  f.options.releaseMetadata = metadata("1.0.0");
+  const report = await inspectRtk(f.options);
+  assert.equal(report.latest_stable_version, "1.0.0");
+  assert.equal(report.state, "update_available");
+  assert.deepEqual(previewRtk(report, "1.0.0").command.args, ["install", "--git", "https://github.com/rtk-ai/rtk", "--tag", "v1.0.0", "--locked", "--force", "rtk"]);
+});
+
 test("network or malformed release results stay unknown and cannot produce an update", async (t) => {
   for (const fetcher of [async () => { throw new Error("Network unavailable"); }, async () => ({ ok: false, status: 429 }), async () => ({ ok: true, json: async () => ({}) })]) {
     const f = fixture(t); delete f.options.releaseMetadata; f.options.fetcher = fetcher;

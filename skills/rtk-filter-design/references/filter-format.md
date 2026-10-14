@@ -22,4 +22,6 @@ Add representative fixtures for every required semantic property, including comp
 
 Run `rtk verify --require-all`. Trust is a separate user-approved step after edits: run the native `rtk trust` flow from the intended project root, and re-trust whenever the filter content changes. Do not bypass that boundary with non-interactive trust unless the user explicitly requests it.
 
+The filter schema is unchanged (`schema_version = 1`). Project pipelines (`.rtk/pipeline.toml` and `.rtk/pipelines/*.toml`) also go through `rtk trust` and `rtk untrust`. Pipelines do not replace filters, and their hook rules apply to Claude Code only.
+
 RTK 0.44.0 or newer wires trusted custom TOML filters into Cursor's hook rewrite path. Use `rtk hook check --agent cursor '<command>'` and inspect the resulting `updated_input` and `permission` when hook rewriting is in scope. `allow` and `ask` are both valid outcomes when they match Cursor's active policy; the latter must remain approval-gated. Filter execution or `rtk verify` alone does not prove Cursor-hook rewriting.
