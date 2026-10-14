@@ -2,7 +2,7 @@
 
 Inspect with `rtk init --codex --show`. Before a requested global change, run `rtk init --global --codex --dry-run`; when supported, use `rtk -v init --global --codex --dry-run` to inspect replacement content. Summarize all affected files, including `AGENTS.md`, generated `RTK.md`, and `hooks.json` when the installed version supports hooks. Preserve user-owned tracking/environment/sandbox configuration and existing hooks.
 
-RTK 0.44.2 was tested with instruction-based Codex integration. RTK 0.50.0 provides a native `PreToolUse` processor and setup path. Confirm the installed command surface and the active Codex app/core's support using the [official hook documentation](https://learn.chatgpt.com/docs/hooks); a separate CLI's version does not establish the desktop app's capabilities. Do not migrate merely because a newer path exists.
+RTK 0.44.2 was tested with instruction-based Codex integration. RTK 0.50.0 provides a native `PreToolUse` processor and setup path. This setup was verified with RTK 1.0.0, and hook registration is unchanged. Verify it with `rtk hook check --agent codex '<command>'`. Confirm the installed command surface and the active Codex app/core's support using the [official hook documentation](https://learn.chatgpt.com/docs/hooks); a separate CLI's version does not establish the desktop app's capabilities. Do not migrate merely because a newer path exists.
 
 ## Native hook path
 
