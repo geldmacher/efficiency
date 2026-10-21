@@ -2,7 +2,7 @@
 
 [Back to Efficiency](../README.md) · [Usage and examples](usage.md)
 
-Install and update Efficiency from the latest stable [GitHub Release](https://github.com/geldmacher/efficiency/releases/latest). Choose the manual steps or copy a prompt for your agent. Both paths use the released package for Cursor or Codex; no repository checkout or build is needed.
+Install and update Efficiency from the latest stable [GitHub Release](https://github.com/geldmacher/efficiency/releases/latest). Choose the manual steps or copy a prompt for your agent. These paths use the released package for Cursor, Codex, or OpenCode 2.1.2; no repository checkout or build is needed.
 
 - Install for the first time: [manually](#manual-installation) or [with your agent](#installation-prompt)
 - Update Efficiency: [manually](#manual-update) or [with the update skill](#update-with-your-agent)
@@ -13,25 +13,25 @@ Install and update Efficiency from the latest stable [GitHub Release](https://gi
 
 ## Before you start
 
-You need **Cursor or Codex with plugin support**, **Node.js 22 or newer**, and GitHub HTTPS access. Git, npm packages, RTK, and the GitHub CLI are not required for release installation.
+You need **Cursor, Codex, or OpenCode 2.1.2** (`@opencode/cli`, not the `opencode-ai` 1.x package), **Node.js 22 or newer**, and GitHub HTTPS access. Git, npm packages, RTK, and the GitHub CLI are not required for release installation.
 
 After a successful agent-driven Efficiency update, the skill checks optional RTK installation and the latest stable RTK version. If missing, it offers installation and integration through `rtk-setup`; if outdated, it offers the update and integration through `rtk-update`. Only your explicit acceptance permits RTK or global configuration changes. Declining, a failed lookup, or an RTK failure does not undo the successful plugin update. See [RTK usage](usage.md#reduce-terminal-output-with-rtk-optional) for a direct update request.
 
-The installer has packages for Cursor and Codex and defaults to the app in which you make the request. The same helper supports macOS, Linux, and Windows; this does not mean every app and OS combination has been tested. Other Agent Plugins clients have no supported release archive.
+The installer has packages for Cursor, Codex, and OpenCode and defaults to the app in which you make the request. The same helper supports macOS, Linux, and Windows; this does not mean every app and OS combination has been tested. Other Agent Plugins clients have no supported release archive. OpenCode 1.x is not a supported host.
 
 ## Install for the first time
 
 ### Manual installation
 
 1. Open the [latest stable GitHub Release](https://github.com/geldmacher/efficiency/releases/latest) and note its version.
-2. Download the package for your app: `geldmacher-efficiency-cursor-v<version>.zip` or `geldmacher-efficiency-codex-v<version>.zip`. Download `SHA256SUMS` and `provenance.json` from that same release into the same new directory. GitHub's **Source code** archives are development sources, not installable plugin packages.
+2. Download the package for your app: `geldmacher-efficiency-cursor-v<version>.zip`, `geldmacher-efficiency-codex-v<version>.zip`, or `geldmacher-efficiency-opencode-v<version>.zip`. Download `SHA256SUMS` and `provenance.json` from that same release into the same new directory. GitHub's **Source code** archives are development sources, not installable plugin packages. Extra checksum lines for the other hosts are expected.
 3. [Verify the download](#manual-verified-download) before extracting it into a temporary directory.
-4. Follow the [Cursor](#cursor) or [Codex](#codex) procedure to place the complete package at its installation path and finish the app's installation steps.
+4. Follow the [Cursor](#cursor), [Codex](#codex), or [OpenCode](#opencode) procedure to place the complete package at its installation path and finish the app's installation steps.
 5. [Confirm activation](#finish-installation) in the reloaded app or a new task. Keep the downloaded release files with the version so they are available for later recovery.
 
 ### Installation prompt
 
-Paste this request into Cursor or Codex:
+Paste this request into Cursor, Codex, or OpenCode:
 
 ```text
 Install the latest stable Efficiency release from
@@ -72,6 +72,14 @@ If you already have Efficiency 3.3.0 or newer, use its installed update skill.
 $geldmacher-efficiency:install-new-release-from-repo Update Efficiency to the latest stable GitHub Release for Codex.
 ```
 
+**OpenCode:**
+
+```text
+@install-new-release-from-repo Update Efficiency to the latest stable GitHub Release for OpenCode.
+```
+
+`/install-new-release-from-repo` sends the same request.
+
 The skill downloads and verifies the selected release, previews the update, applies it under your request, and retains a backup when replacing an installation. It reports any remaining activation step.
 
 For an older installation or a missing update skill, use the [installation prompt](#installation-prompt) instead.
@@ -87,6 +95,7 @@ Follow the installer's reported next step:
 | Cursor: `installed` | The verified plugin files are in place. | Reload Cursor, confirm the skill in Customize, then try `/efficiency`. |
 | Codex: `installed` | The source and the app's installed cache copy were checked. | Restart the app if needed, confirm the plugin is enabled, review any trust request, and start a new task. Then try `$geldmacher-efficiency:efficiency`. |
 | Codex: `prepared` | Files are ready, but installation through Codex is still pending. | Follow the reported desktop steps in [Codex](#codex), then start a new task. |
+| OpenCode: `installed` | The package, skills registration, and Efficiency commands are on disk. | Start a new OpenCode session, then try `@efficiency` or `/efficiency`. |
 | `no_op: true` | This run changed no installation files. | No extra reload is needed solely for this run. Any previously unfinished activation step still applies. |
 
 **Try it:** ask the skill to review current changes in a project. Seeing it available in the new or reloaded session checks discovery; the installer's file checks alone cannot show that a running task loaded it.
@@ -163,7 +172,7 @@ The command is included from release 3.3.0 onward, with `skills/install-new-rele
 
 The receiving agent performs these steps without requiring a development checkout:
 
-1. Identify Cursor or Codex from the session, or ask the user if uncertain. Check Node.js 22 or newer. Resolve `https://api.github.com/repos/geldmacher/efficiency/releases/latest` once; require a published, non-prerelease `vMAJOR.MINOR.PATCH` tag. Keep that exact version for all following downloads.
+1. Identify Cursor, Codex, or OpenCode 2.1.2 from the session, or ask the user if uncertain. OpenCode means `@opencode/cli` 2.1.2, not `opencode-ai`. When an older installed copy of this skill names only Cursor and Codex, follow this guide from the selected release tag for the host list. Check Node.js 22 or newer. Resolve `https://api.github.com/repos/geldmacher/efficiency/releases/latest` once; require a published, non-prerelease `vMAJOR.MINOR.PATCH` tag. Keep that exact version for all following downloads.
 2. Download the matching `geldmacher-efficiency-<host>-v<version>.zip`, `SHA256SUMS`, and `provenance.json` from that release into a new temporary directory. The archive URL must be under `https://github.com/geldmacher/efficiency/releases/download/<tag>/`. Do not run downloaded code yet.
 3. Verify exactly the selected ZIP and `provenance.json` using the checksum recipes below. Confirm provenance identifies `geldmacher-efficiency`, `geldmacher/efficiency`, the selected version/tag, and that selected archive. These checks establish consistency with assets obtained from the expected GitHub repository; they are not independent release signatures.
 4. Inspect the ZIP with the agent's available archive inspection tools before extraction. Require one `geldmacher-efficiency/` root, regular files/directories only, and reject links, absolute paths, `..`, duplicate paths, backslashes, Windows drive/device paths, and double nesting. Extract only into another newly created temporary directory, never directly into an installed plugin. If safe archive inspection is unavailable, stop with that prerequisite rather than executing an unchecked installer.
@@ -180,13 +189,13 @@ node "/absolute/path/to/skill/scripts/install-release.mjs" --host cursor --relea
 node "/absolute/path/to/skill/scripts/install-release.mjs" --host cursor --release-dir "/new/temporary/release-directory"
 ```
 
-Substitute `codex` for Codex. These commands also work in PowerShell with actual absolute paths. `--download-dir` creates a new directory and performs only download/verification. `--release-dir` pins already downloaded assets and requires no network. A direct invocation without either option resolves and installs latest in one run. A dry run may download temporary files and inspect the native CLI, but changes no plugin, marketplace, cache, or retained backup.
+Substitute `codex` for Codex or `opencode` for OpenCode. These commands also work in PowerShell with actual absolute paths. `--download-dir` creates a new directory and performs only download/verification. `--release-dir` pins already downloaded assets and requires no network. A direct invocation without either option resolves and installs latest in one run. A dry run may download temporary files and inspect the native CLI, but changes no plugin, marketplace, cache, or retained backup.
 
 For Codex, the helper preserves the personal marketplace's existing name, interface and unrelated entries; an existing Efficiency entry must already point at the documented local source. It checks `codex plugin marketplace list --json` resolves the name to the intended personal root before calling `codex plugin add <plugin>@<actual-marketplace-name> --json`, then verifies `codex plugin list --json` plus the selected cache bytes. It respects the current `CODEX_HOME` for cache inspection. It does not manually create or delete cache copies. If the CLI is missing, `status: prepared` reports the exact desktop installation steps still needed. Other CLI errors stop the run.
 
 ## Manual verified download
 
-Each Efficiency GitHub Release contains separate packages for Cursor and Codex. Download only the archive for the intended host plus `SHA256SUMS` and `provenance.json` from the [latest GitHub Release](https://github.com/geldmacher/efficiency/releases/latest). You do not need the other host archive or `RELEASE_NOTES.md` to verify this selected download. Do not install an archive until both the selected archive and `provenance.json` match their entries in `SHA256SUMS`.
+Each Efficiency GitHub Release contains separate packages for Cursor, Codex, and OpenCode. Download only the archive for the intended host plus `SHA256SUMS` and `provenance.json` from the [latest GitHub Release](https://github.com/geldmacher/efficiency/releases/latest). You do not need the other host archives or `RELEASE_NOTES.md` to verify this selected download. Do not install an archive until both the selected archive and `provenance.json` match their entries in `SHA256SUMS`. Extra checksum lines for the other hosts are expected and are not a mismatch.
 
 ### Verify the download
 
@@ -236,10 +245,13 @@ foreach ($file in $files) {
 
 `provenance.json` additionally identifies the exact version, tag, repository commit, Git tree, target content hashes, archive hashes, file counts, release-gate result, release-notes hash, and receipt. Confirm that its version, tag, repository, and selected archive name describe the intended release. A checksum or identity mismatch is a hard stop.
 
+Schema 1 provenance lists exactly `cursor` and `codex` under `targets`. Schema 2 adds `opencode` and keeps the same Cursor and Codex target fields. Installing one host reads `targets.<host>` for that host. Additional target keys are compatible and must not be rejected because an older installer knew a shorter host list. `published_assets` may name the other host archives; verifying the selected archive does not require downloading them. An already installed Efficiency 3.10.0 helper rejects schema 2 because it requires schema 1. For that older helper, follow this guide from the selected release tag instead of the installed copy.
+
 Every archive must expand to exactly one top-level `geldmacher-efficiency/` directory. Avoid an additional nesting level such as `geldmacher-efficiency/geldmacher-efficiency/`. Before installation, confirm that the host manifest is located at:
 
 - Cursor: `geldmacher-efficiency/.cursor-plugin/plugin.json`
 - Codex: `geldmacher-efficiency/.codex-plugin/plugin.json`
+- OpenCode: `geldmacher-efficiency/.opencode-plugin/plugin.json`
 
 ## Cursor
 
@@ -304,6 +316,25 @@ For an update, retain the current source directory and its matching release file
 
 For rollback, restore the retained complete old source directory and its verified release files, keep the Marketplace entry unchanged, and repeat the same restart, Plugins Directory refresh or reinstall, cache-version check, and new-task steps. Do not combine files from different versions and do not treat restored source bytes as proof that the cached installed copy changed.
 
+## OpenCode
+
+Install the package at:
+
+- macOS/Linux: `~/.config/opencode/geldmacher-efficiency`
+- Windows: `%USERPROFILE%\.config\opencode\geldmacher-efficiency`
+
+OpenCode config (opencode.json, commands/) is shared with Workflow and Design: merge only, always write a persistent backup before changing anything, touch only your own entries, rollback/uninstall removes only your own entries.
+
+OpenCode 2.1.2 discovers skills from directories listed in the `skills` array of `opencode.json` or `opencode.jsonc`. Register this package's `skills/` directory with an absolute path. Relative paths in `skills` are resolved from the working directory, not from the config file, so do not use a relative entry. Leave `opencode.jsonc` unchanged. If `opencode.json` already contains Workflow or Design entries, keep those entries and every other key. Add the absolute `skills/` path only when that path is absent. Before every write that changes `opencode.json` or one of Efficiency's command files, save a timestamped backup under `~/.config/opencode/.local-deploy-backups/geldmacher-efficiency/` and leave it on disk. A failed change restores those shared files from that backup. A second run that changes nothing does not write.
+
+Skill ids are the directory names. Model auto-invocation stays enabled. `@efficiency` loads the skill. `/efficiency` runs the command that loads the same skill. The same pair works for every packaged skill. Commands live in the package and are installed to `~/.config/opencode/commands/<name>.md`. If a destination file exists and does not load that Efficiency skill, stop. Do not edit Workflow or Design command files.
+
+The manifest's `opencodeCompatibility` value is `2.1.2`. Do not add `CLAUDE.md`, `opencode/slash`, or `opencode/autoinvoke: false`. Do not install this package into `~/.agents/skills` or `~/.claude/skills`.
+
+For an update, back up the complete package directory. Replace the whole package directory. Keep the skills path. Replace only Efficiency command files. Start a new session and check `@efficiency` and `/efficiency`.
+
+To uninstall, run `npm run deploy:uninstall` from a development checkout, or remove only Efficiency's skills entries, Efficiency command files whose text loads that skill, and `~/.config/opencode/geldmacher-efficiency`. Leave Workflow and Design entries, unrelated commands, `opencode.jsonc`, and the timestamped backups in place.
+
 ## Verify the installed layout
 
-After copying, verify that the manifest sits directly below the destination, that its `name` is `geldmacher-efficiency`, and that its `version` matches the selected release. The archive checksum proves downloaded bytes; it does not prove that Cursor reloaded, the Codex Marketplace accepted the entry, or a new Codex task loaded the package. Confirm those host-specific activation steps separately.
+After copying, verify that the manifest sits directly below the destination, that its `name` is `geldmacher-efficiency`, and that its `version` matches the selected release. For OpenCode, also verify that the `skills` entry points at this package's `skills/` directory and that each packaged Efficiency command is present under `~/.config/opencode/commands/`. The archive checksum proves downloaded bytes; it does not prove that Cursor reloaded, the Codex Marketplace accepted the entry, a new Codex task loaded the package, or a new OpenCode session loaded the skills. Confirm those host-specific activation steps separately.

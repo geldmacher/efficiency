@@ -11,6 +11,21 @@ const read = (path) => readFileSync(join(defaultRoot, path), "utf8");
 const entries = (path, extension) => readdirSync(join(defaultRoot, path)).filter((name) => name.endsWith(extension)).sort();
 const body = (text) => text.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "").trim();
 
+test("OpenCode shared-config rule is fixed in deploy and release instructions", () => {
+  const rule = "OpenCode config (opencode.json, commands/) is shared with Workflow and Design: merge only, always write a persistent backup before changing anything, touch only your own entries, rollback/uninstall removes only your own entries.";
+  for (const path of [
+    "AGENTS.md",
+    ".agents/skills/deploy-local-plugin/SKILL.md",
+    ".agents/skills/release-plugin/SKILL.md",
+    "docs/development.md",
+    "docs/installation.md",
+    "docs/release-checklist.md",
+    "docs/release-validation.md",
+    "skills/install-new-release-from-repo/SKILL.md",
+    "targets/opencode/README.md",
+  ]) assert.ok(read(path).includes(rule), path);
+});
+
 test("public surface retains portable skills, matching commands and the Codex adapter", () => {
   const skills = readdirSync(join(defaultRoot, "skills")).filter((name) => existsSync(join(defaultRoot, "skills", name, "SKILL.md"))).sort();
   assert.deepEqual(skills, portableSkills);

@@ -23,7 +23,7 @@ Call a skill when you want a focused review, assessment, or change text. A **ski
 
 ## Select a skill
 
-In **Cursor**, type `/` followed by the skill name. In **Codex**, use `$geldmacher-efficiency:` followed by the skill name. Each core example below includes the complete request for both apps.
+In **Cursor**, type `/` followed by the skill name. In **Codex**, use `$geldmacher-efficiency:` followed by the skill name. In **OpenCode 2.1.2**, type `@` or `/` followed by the skill name. Each core example below includes the complete request for Cursor and Codex; use the same words with `@name` or `/name` in OpenCode.
 
 Natural-language requests such as “Review this refactor for complexity” or “Find duplicated instructions in AGENTS.md” can also select the matching skill. Selection depends on your app and the task. Name the skill explicitly when you want to make your choice clear.
 
@@ -337,7 +337,8 @@ A short task-focus principle applies through the Cursor rule and configured Code
 | --- | --- |
 | Cursor with plugin support | Six skills, matching slash commands, two optional auditors, and the response rule. |
 | Codex with plugin support | The same six skills, plus `response-simplicity-setup`. |
-| Other Agent Plugins v1 clients | Six portable skills; app-specific integration must be verified for that client. The release installer supports only Cursor and Codex. |
+| OpenCode 2.1.2 (`@opencode/cli`) | The same six skills, each callable as `@name` or `/name`. No global instruction file and no OpenCode 1.x support. |
+| Other Agent Plugins v1 clients | Six portable skills; app-specific integration must be verified for that client. The release installer supports Cursor, Codex, and OpenCode 2.1.2. |
 | Release installer and development tools | Node.js 22 or newer. See [installation requirements](installation.md#before-you-start). |
 | Optional RTK integration | Native Cursor and version-dependent Codex hook or instruction paths. Verify the installed RTK version and active host runtime after updates; processor checks alone do not certify live compatibility. |
 

@@ -15,10 +15,14 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseDocument } from "yaml";
 import { checkLinks } from "./check-links.mjs";
-import { validateAgentPlugin, validateCodexPlugin, validatePlugin } from "./validate-plugin.mjs";
+import { openCodeCommand, OPENCODE_COMPATIBILITY } from "../skills/install-new-release-from-repo/scripts/opencode-config.mjs";
+import { validateAgentPlugin, validateCodexPlugin, validateOpenCodePackage, validatePlugin } from "./validate-plugin.mjs";
 
 import { portableSkills, codexAdapterSkill } from "./plugin-components.mjs";
+
+export { OPENCODE_COMPATIBILITY, openCodeCommand };
 
 const defaultRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const plugin = "geldmacher-efficiency";
@@ -26,16 +30,17 @@ const codexAdapterSource = `adapters/codex/skills/${codexAdapterSkill}`;
 const responseGuidanceRelative = `skills/${codexAdapterSkill}/references/response-simplicity.md`;
 const persistentOutput = join(defaultRoot, ".build", "plugins");
 const commonFiles = [
-  "assets/logo.svg", "CHANGELOG.md", "LICENSE", "README.md",
+  "assets/logo.svg", "CHANGELOG.md", "LICENSE",
   "docs/installation.md", "docs/usage.md",
   ...portableSkills.map((name) => `skills/${name}`),
 ];
 const allowed = {
-  "agent-plugins": ["plugin.json", "schemas/agent-plugins", ...commonFiles],
-  cursor: [".cursor-plugin", "agents", "commands", "rules", ...commonFiles],
-  codex: [".codex-plugin", ...commonFiles],
+  "agent-plugins": ["plugin.json", "schemas/agent-plugins", "README.md", ...commonFiles],
+  cursor: [".cursor-plugin", "agents", "commands", "rules", "README.md", ...commonFiles],
+  codex: [".codex-plugin", "README.md", ...commonFiles],
+  opencode: commonFiles,
 };
-const developmentRoots = [".agents", ".build", ".cursor", ".git", "adapters", "node_modules", "test", "tests"];
+const developmentRoots = [".agents", ".build", ".cursor", ".git", "adapters", "node_modules", "targets", "test", "tests"];
 
 function inside(base, path) {
   const item = relative(resolve(base), resolve(path));
@@ -125,6 +130,15 @@ function copyRegular(source, destination, projectRoot) {
   chmodSync(destination, stat.mode & 0o777);
 }
 
+function copyPackagedJsoncParser(destination) {
+  const source = join(defaultRoot, "node_modules", "jsonc-parser");
+  const manifestPath = join(source, "package.json");
+  if (!existsSync(manifestPath)) throw new Error("jsonc-parser is not installed; run npm ci before building packages");
+  const version = JSON.parse(readFileSync(manifestPath, "utf8")).version;
+  if (version !== "3.3.1") throw new Error(`packaged OpenCode parser requires jsonc-parser 3.3.1, found ${version}`);
+  copyRegular(source, join(destination, "skills", "install-new-release-from-repo", "scripts", "node_modules", "jsonc-parser"), defaultRoot);
+}
+
 function copyAllowed(projectRoot, destination, item) {
   const source = resolve(projectRoot, item);
   const output = resolve(destination, item);
@@ -133,14 +147,30 @@ function copyAllowed(projectRoot, destination, item) {
   copyRegular(source, output, projectRoot);
 }
 
-function copyMapped(projectRoot, destination, sourceItem, destinationItem) {
+function copyMapped(projectRoot, destination, sourceItem, destinationItem, transform = null) {
   const source = resolve(projectRoot, sourceItem);
   const output = resolve(destination, destinationItem);
   if (!inside(projectRoot, source) || !inside(destination, output)) {
     throw new Error(`mapped target path escapes its root: ${sourceItem} -> ${destinationItem}`);
   }
   if (!existsSync(source)) throw new Error(`mapped target source is missing: ${sourceItem}`);
-  copyRegular(source, output, projectRoot);
+  if (!transform) {
+    copyRegular(source, output, projectRoot);
+    return;
+  }
+  const stat = lstatSync(source);
+  if (stat.isSymbolicLink() || !stat.isFile()) throw new Error(`mapped target source must be a regular file: ${sourceItem}`);
+  mkdirSync(dirname(output), { recursive: true });
+  writeFileSync(output, transform(readFileSync(source, "utf8")), { mode: stat.mode & 0o777 });
+  chmodSync(output, stat.mode & 0o777);
+}
+
+function skillDescription(projectRoot, name) {
+  const source = readFileSync(join(projectRoot, "skills", name, "SKILL.md"), "utf8");
+  const document = parseDocument(source.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? "");
+  const description = document.toJS()?.description;
+  if (document.errors.length || typeof description !== "string") throw new Error(`invalid skill metadata: ${name}`);
+  return description;
 }
 
 function files(directory) {
@@ -176,7 +206,9 @@ export function validateBuiltTarget(destination, target, version) {
   for (const name of developmentRoots) if (existsSync(join(destination, name))) throw new Error(`${target} target leaked ${name}`);
   const manifestRelative = target === "agent-plugins"
     ? "plugin.json"
-    : target === "cursor" ? ".cursor-plugin/plugin.json" : ".codex-plugin/plugin.json";
+    : target === "cursor" ? ".cursor-plugin/plugin.json"
+    : target === "codex" ? ".codex-plugin/plugin.json"
+    : ".opencode-plugin/plugin.json";
   const manifestPath = join(destination, manifestRelative);
   if (!existsSync(manifestPath)) throw new Error(`${target} target manifest is missing: ${manifestRelative}`);
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
@@ -193,9 +225,10 @@ export function validateBuiltTarget(destination, target, version) {
   } else if (existsSync(guidancePath)) {
     throw new Error(`${target} target contains Codex-only AGENTS.md guidance`);
   }
+  if (existsSync(join(destination, "CLAUDE.md"))) throw new Error(`${target} target contains CLAUDE.md`);
 
   if (target === "agent-plugins") {
-    for (const path of [".cursor-plugin", ".codex-plugin", "commands", "agents", "rules", "mcp.json"]) {
+    for (const path of [".cursor-plugin", ".codex-plugin", ".opencode-plugin", "commands", "agents", "rules", "mcp.json"]) {
       if (existsSync(join(destination, path))) throw new Error(`agent-plugins target contains non-portable component: ${path}`);
     }
     if ("extensions" in manifest) throw new Error("agent-plugins target must remain extension-free");
@@ -203,14 +236,23 @@ export function validateBuiltTarget(destination, target, version) {
   } else if (target === "cursor") {
     if (existsSync(join(destination, "plugin.json"))) throw new Error(`${target} target contains the portable root manifest`);
     assertSkills(destination, "skills", portableSkills, "Cursor");
-  } else {
+  } else if (target === "codex") {
     if (existsSync(join(destination, "plugin.json"))) throw new Error("codex target contains the portable root manifest");
     assertSkills(destination, "skills", [...portableSkills, codexAdapterSkill], "Codex");
-  }
+  } else if (target === "opencode") {
+    if (existsSync(join(destination, "plugin.json"))) throw new Error("opencode target contains the portable root manifest");
+    assertSkills(destination, "skills", portableSkills, "OpenCode");
+    if (manifest.skills !== "./skills/") throw new Error("OpenCode target skill path drifted from ./skills/");
+    if (manifest.opencodeCompatibility !== OPENCODE_COMPATIBILITY) throw new Error(`OpenCode package must target OpenCode ${OPENCODE_COMPATIBILITY}`);
+  } else throw new Error(`unsupported target: ${target}`);
 
   if (target === "cursor") {
-    if (existsSync(join(destination, ".codex-plugin")) || existsSync(join(destination, "skills", "response-simplicity-setup"))) {
+    if (existsSync(join(destination, ".codex-plugin")) || existsSync(join(destination, ".opencode-plugin")) || existsSync(join(destination, "skills", "response-simplicity-setup"))) {
       throw new Error("Cursor target contains Codex-only components");
+    }
+  } else if (target === "opencode") {
+    for (const path of [".cursor-plugin", ".codex-plugin", "agents", "rules", "skills/response-simplicity-setup"]) {
+      if (existsSync(join(destination, path))) throw new Error(`OpenCode target contains a foreign component: ${path}`);
     }
   } else if (target === "codex") {
     if (existsSync(join(destination, ".cursor-plugin")) || existsSync(join(destination, "commands"))
@@ -225,7 +267,9 @@ export function validateBuiltTarget(destination, target, version) {
   }
   const structuralFailures = target === "agent-plugins"
     ? validateAgentPlugin(destination)
-    : target === "cursor" ? validatePlugin(destination) : validateCodexPlugin(destination);
+    : target === "cursor" ? validatePlugin(destination)
+    : target === "codex" ? validateCodexPlugin(destination)
+    : validateOpenCodePackage(destination);
   if (structuralFailures.length > 0) {
     throw new Error(`${target} target structure is invalid:\n- ${structuralFailures.join("\n- ")}`);
   }
@@ -239,7 +283,7 @@ export function validateBuiltTarget(destination, target, version) {
 export function buildPluginTargets(outputRoot, sourceRoot = defaultRoot) {
   const projectRoot = resolve(sourceRoot);
   const output = validateOutputRoot(outputRoot, projectRoot);
-  const targets = ["agent-plugins", "cursor", "codex"];
+  const targets = ["agent-plugins", "cursor", "codex", "opencode"];
   const destinations = Object.fromEntries(targets.map((target) => [target, join(output, target, plugin)]));
   for (const [target, destination] of Object.entries(destinations)) {
     if (!strictlyInside(output, destination)) throw new Error(`${target} target destination escapes the output root`);
@@ -255,6 +299,16 @@ export function buildPluginTargets(outputRoot, sourceRoot = defaultRoot) {
       copyMapped(projectRoot, destination, codexAdapterSource, `skills/${codexAdapterSkill}`);
       copyMapped(projectRoot, destination, `${codexAdapterSource}/references/response-simplicity.md`, "AGENTS.md");
     }
+    if (target === "opencode") {
+      copyMapped(projectRoot, destination, "targets/opencode/.opencode-plugin", ".opencode-plugin");
+      copyMapped(projectRoot, destination, "targets/opencode/README.md", "README.md", (text) => text.replaceAll("../../docs/", "docs/").replaceAll("../../skills/", "skills/"));
+      for (const name of portableSkills) {
+        const output = resolve(destination, "commands", `${name}.md`);
+        mkdirSync(dirname(output), { recursive: true });
+        writeFileSync(output, openCodeCommand(name, skillDescription(projectRoot, name)), { mode: 0o644 });
+      }
+    }
+    copyPackagedJsoncParser(destination);
     validateBuiltTarget(destination, target, version);
     result[target] = { path: destination, hash: digest(destination), files: files(destination).length };
   }

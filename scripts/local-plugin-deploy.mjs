@@ -20,9 +20,20 @@ import { homedir, tmpdir } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { marketplaceDocument, codexList, codexSourceInstallation, cacheState, installCodex } from "../skills/install-new-release-from-repo/scripts/codex-install.mjs";
+import {
+  applyOpenCodeChanges,
+  assertStandardOpenCodeConfig,
+  commandSourcesFromPackage,
+  openCodePaths,
+  planOpenCodeChanges,
+  rollbackOpenCodeChanges,
+  uninstallOpenCodeDeployment,
+} from "../skills/install-new-release-from-repo/scripts/opencode-config.mjs";
+
+export { uninstallOpenCodeDeployment };
 
 export const RECEIPT_NAME = ".local-deploy.json";
-export const HOSTS = ["cursor", "codex"];
+export const HOSTS = ["cursor", "codex", "opencode"];
 const DEVELOPMENT_ROOTS = new Set([".agents", ".build", ".cursor", ".git", "node_modules", "test", "tests"]);
 const scriptPath = fileURLToPath(import.meta.url);
 const repositoryRoot = dirname(dirname(scriptPath));
@@ -39,6 +50,7 @@ export function isInside(base, candidate) {
 function manifestRelative(host) {
   if (host === "cursor") return ".cursor-plugin/plugin.json";
   if (host === "codex") return ".codex-plugin/plugin.json";
+  if (host === "opencode") return ".opencode-plugin/plugin.json";
   throw new Error(`unsupported plugin host: ${host}`);
 }
 
@@ -182,6 +194,16 @@ export function deploymentPaths(home, plugin) {
     codexHome: join(resolvedHome, ".codex"),
     marketplace: join(resolvedHome, ".agents", "plugins", "marketplace.json"),
     marketplaceSource: `./.codex/plugins/${plugin}`,
+    ...(() => {
+      const opencode = openCodePaths(resolvedHome, plugin);
+      return {
+        opencode: opencode.packageDir,
+        opencodeConfig: opencode.config,
+        opencodeConfigComments: opencode.configComments,
+        opencodeCommands: opencode.commands,
+        opencodeBackups: opencode.backups,
+      };
+    })(),
   };
 }
 
@@ -371,6 +393,7 @@ export function deployPreparedTargets({
   if (selectedHosts.length === 0 || selectedHosts.some((host) => !HOSTS.includes(host))) {
     throw new Error(`deployment hosts must be one or more of: ${HOSTS.join(", ")}`);
   }
+  if (selectedHosts.includes("opencode")) assertStandardOpenCodeConfig(home, env);
   const paths = deploymentPaths(home, plugin);
   for (const host of selectedHosts) assertDestination(paths[host], paths[host], paths.home);
   const metadata = prepareMetadata({ root, plugin, baseVersion, gitHead, gitDirty, deployedAt });
@@ -380,6 +403,19 @@ export function deployPreparedTargets({
   let marketplaceChanged = false;
   let marketplaceName;
   let codexBefore = { current: true, skipped: true };
+  let opencodePlan = null;
+  if (selectedHosts.includes("opencode")) {
+    assertDestination(paths.opencodeConfig, paths.opencodeConfig, paths.home);
+    assertDestination(join(paths.opencodeCommands, "command.md"), join(paths.opencodeCommands, "command.md"), paths.home);
+    assertDestination(join(paths.opencodeBackups, "manifest.json"), join(paths.opencodeBackups, "manifest.json"), paths.home);
+    opencodePlan = planOpenCodeChanges({
+      home,
+      plugin,
+      commandSources: commandSourcesFromPackage(metadata.opencode.path),
+      env,
+      createdAt: deployedAt,
+    });
+  }
   if (selectedHosts.includes("codex")) {
     marketplaceOriginal = lstatExists(paths.marketplace) ? readFileSync(paths.marketplace) : null;
     const marketplace = marketplaceDocument(marketplaceOriginal, paths.marketplaceSource, plugin);
@@ -416,15 +452,28 @@ export function deployPreparedTargets({
     codex: selectedHosts.includes("codex")
       ? { change: !codexBefore.current, cache_path: cachePath(resolve(env.CODEX_HOME || paths.codexHome), marketplaceName, plugin, metadata.codex.localVersion) }
       : null,
+    opencode: selectedHosts.includes("opencode")
+      ? {
+        config: paths.opencodeConfig,
+        skills: opencodePlan.skillsPath,
+        config_change: opencodePlan.config.change,
+        commands: paths.opencodeCommands,
+        command_change: opencodePlan.commands.change,
+        backup_root: paths.opencodeBackups,
+        backup: null,
+      }
+      : null,
   };
   if (dryRun) return plan;
   const codexCurrent = !selectedHosts.includes("codex") || (!marketplaceChanged && codexBefore.current);
-  if (changedHosts.length === 0 && codexCurrent) return { ...plan, no_op: true };
+  const opencodeCurrent = !selectedHosts.includes("opencode") || (!opencodePlan.config.change && !opencodePlan.commands.change);
+  if (changedHosts.length === 0 && codexCurrent && opencodeCurrent) return { ...plan, no_op: true };
 
   const staged = {};
   const swapped = [];
   let marketplaceWritten = false;
   let nativeAttempted = false;
+  const opencodeApplied = { backup: null };
   try {
     for (const host of changedHosts) staged[host] = stageTarget(metadata[host].path, paths[host], metadata[host]);
     if (simulateFailure === "after-stage") throw new Error("simulated failure after stage");
@@ -451,6 +500,16 @@ export function deployPreparedTargets({
       marketplaceWritten = true;
     }
     if (simulateFailure === "after-marketplace") throw new Error("simulated failure after Marketplace update");
+    if (selectedHosts.includes("opencode") && !opencodeCurrent) {
+      applyOpenCodeChanges(opencodePlan, opencodeApplied, {
+        afterConfig() {
+          if (simulateFailure === "after-opencode-config") throw new Error("simulated failure after OpenCode config update");
+        },
+        afterCommands() {
+          if (simulateFailure === "after-opencode-commands") throw new Error("simulated failure after OpenCode command update");
+        },
+      });
+    }
     const codex = selectedHosts.includes("codex")
       ? codexInstaller({
         home,
@@ -469,8 +528,22 @@ export function deployPreparedTargets({
       const state = currentTarget(item.destination, metadata[item.host]);
       if (!state.current) throw new Error(`${item.host} target failed post-swap verification`);
     }
+    if (selectedHosts.includes("opencode")) {
+      const verified = planOpenCodeChanges({
+        home,
+        plugin,
+        commandSources: commandSourcesFromPackage(paths.opencode),
+        env,
+      });
+      if (verified.config.change || verified.commands.change) throw new Error("OpenCode registration failed post-deploy verification");
+    }
     for (const item of swapped) if (item.backup) rmSync(item.backup, { recursive: true, force: true });
-    return { ...plan, no_op: false, codex };
+    return {
+      ...plan,
+      no_op: false,
+      codex,
+      opencode: plan.opencode ? { ...plan.opencode, backup: opencodeApplied.backup ?? null } : null,
+    };
   } catch (error) {
     nativeAttempted ||= error.nativeAttempted === true;
     const recoveryErrors = [];
@@ -487,6 +560,9 @@ export function deployPreparedTargets({
       }
       if (marketplaceOriginal === null) rmSync(paths.marketplace, { force: true });
       else atomicWrite(paths.marketplace, marketplaceOriginal);
+    });
+    if (opencodeApplied.backup) attempt("restore opencode registration", () => {
+      rollbackOpenCodeChanges(opencodeApplied, { home, plugin });
     });
     const message = recoveryErrors.length ? "local plugin deployment recovery incomplete" : "local plugin deployment rolled back";
     throw Object.assign(new Error(`${message}: ${error.message}`, { cause: error }), { result: {
@@ -508,12 +584,14 @@ async function expectedTargetMetadata(root, plugin, baseVersion) {
     const module = await import(`${pathToFileURL(join(root, "scripts", "build-plugin-targets.mjs")).href}?status=${Date.now()}`);
     if (typeof module.buildPluginTargets !== "function") throw new Error("target builder does not export buildPluginTargets");
     const result = module.buildPluginTargets(temp);
-    return Object.fromEntries(HOSTS.map((host) => {
+    const expected = Object.fromEntries(HOSTS.map((host) => {
       const path = result[host]?.path || join(temp, host, plugin);
       validateBundle(path, { plugin, host, allowedVersions: [baseVersion] });
       const hash = contentHash(path, { host, baseVersion });
       return [host, { hash, localVersion: localVersion(baseVersion, host, hash) }];
     }));
+    const opencodeCommands = result.opencode?.path ? commandSourcesFromPackage(result.opencode.path) : null;
+    return { expected, opencodeCommands };
   } finally {
     rmSync(temp, { recursive: true, force: true });
   }
@@ -524,11 +602,12 @@ export async function deploymentStatus({ root = repositoryRoot, home = process.e
   if (selectedHosts.length === 0 || selectedHosts.some((host) => !HOSTS.includes(host))) {
     throw new Error(`status hosts must be one or more of: ${HOSTS.join(", ")}`);
   }
+  if (selectedHosts.includes("opencode")) assertStandardOpenCodeConfig(home, env);
   const packageManifest = readJson(join(root, "package.json"));
   const cursorManifest = readJson(join(root, ".cursor-plugin", "plugin.json"));
   const plugin = cursorManifest.name;
   const baseVersion = packageManifest.version;
-  const expected = await expectedTargetMetadata(root, plugin, baseVersion);
+  const { expected, opencodeCommands } = await expectedTargetMetadata(root, plugin, baseVersion);
   const paths = deploymentPaths(home, plugin);
   const targets = {};
   for (const host of selectedHosts) {
@@ -543,11 +622,26 @@ export async function deploymentStatus({ root = repositoryRoot, home = process.e
   }
   let marketplaceCurrent = true;
   let codex = null;
+  let opencode = null;
   if (selectedHosts.includes("codex")) {
     const marketplace = lstatExists(paths.marketplace) ? readJson(paths.marketplace) : null;
     const entries = marketplace?.plugins?.filter((entry) => entry?.name === plugin) || [];
     marketplaceCurrent = entries.length === 1 && entries[0].source?.source === "local" && entries[0].source.path === paths.marketplaceSource;
     codex = codexInstallationState({ home, plugin, version: expected.codex.localVersion, marketplace: marketplace?.name, codexBinary, env });
+  }
+  if (selectedHosts.includes("opencode")) {
+    const registration = planOpenCodeChanges({
+      home,
+      plugin,
+      commandSources: opencodeCommands,
+      env,
+    });
+    opencode = {
+      registered: registration.config.registered,
+      config_change: registration.config.change,
+      command_change: registration.commands.change,
+      current: targets.opencode.current && !registration.config.change && !registration.commands.change,
+    };
   }
   return {
     plugin,
@@ -560,8 +654,10 @@ export async function deploymentStatus({ root = repositoryRoot, home = process.e
       ? { path: paths.marketplace, expected_source: paths.marketplaceSource, current: marketplaceCurrent }
       : null,
     codex,
+    opencode,
     current: selectedHosts.every((host) => targets[host].current)
-      && (!selectedHosts.includes("codex") || (marketplaceCurrent && codex.current)),
+      && (!selectedHosts.includes("codex") || (marketplaceCurrent && codex.current))
+      && (!selectedHosts.includes("opencode") || Boolean(opencode?.current)),
   };
 }
 
@@ -574,23 +670,29 @@ function npmScript(name, root) {
 }
 
 function selectedHostsFromArguments(args) {
-  const cursorOnly = args.includes("--cursor-only");
-  const codexOnly = args.includes("--codex-only");
-  if (cursorOnly && codexOnly) throw new Error("--cursor-only and --codex-only are mutually exclusive");
-  if (cursorOnly) return ["cursor"];
-  if (codexOnly) return ["codex"];
-  return HOSTS;
+  const selected = [["--cursor-only", "cursor"], ["--codex-only", "codex"], ["--opencode-only", "opencode"]].filter(([flag]) => args.includes(flag));
+  if (selected.length > 1) throw new Error("--cursor-only, --codex-only, and --opencode-only are mutually exclusive");
+  return selected.length === 1 ? [selected[0][1]] : HOSTS;
 }
 
 function parseDeployArguments(args) {
-  const supported = new Set(["--dry-run", "--full", "--cursor-only", "--codex-only"]);
+  const supported = new Set(["--dry-run", "--full", "--cursor-only", "--codex-only", "--opencode-only"]);
   for (const arg of args) if (!supported.has(arg)) throw new Error(`unsupported deploy argument: ${arg}`);
   return { dryRun: args.includes("--dry-run"), full: args.includes("--full"), hosts: selectedHostsFromArguments(args) };
 }
 
 function parseStatusArguments(args) {
-  const supported = new Set(["--cursor-only", "--codex-only"]);
+  const supported = new Set(["--cursor-only", "--codex-only", "--opencode-only"]);
   for (const arg of args) if (!supported.has(arg)) throw new Error(`unsupported status argument: ${arg}`);
+  return selectedHostsFromArguments(args);
+}
+
+function parseUninstallArguments(args) {
+  const supported = new Set(["--cursor-only", "--codex-only", "--opencode-only"]);
+  for (const arg of args) if (!supported.has(arg)) throw new Error(`unsupported uninstall argument: ${arg}`);
+  if (args.includes("--cursor-only") || args.includes("--codex-only")) {
+    throw new Error("uninstall removes only this plugin's OpenCode config entries, commands, and package; use --opencode-only");
+  }
   return selectedHostsFromArguments(args);
 }
 
@@ -603,15 +705,27 @@ async function main() {
     process.stdout.write(`${JSON.stringify(await deploymentStatus({ root: repositoryRoot, home, codexBinary, hosts }), null, 2)}\n`);
     return;
   }
+  if (command === "uninstall") {
+    parseUninstallArguments(args);
+    assertStandardOpenCodeConfig(home, process.env);
+    const cursorManifest = readJson(join(repositoryRoot, ".cursor-plugin", "plugin.json"));
+    const result = uninstallOpenCodeDeployment({ plugin: cursorManifest.name, home, env: process.env });
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+    return;
+  }
   if (command !== "deploy") throw new Error(`unsupported command: ${command}`);
   const { dryRun, full, hosts } = parseDeployArguments(args);
   const packageManifest = readJson(join(repositoryRoot, "package.json"));
   const cursorManifest = readJson(join(repositoryRoot, ".cursor-plugin", "plugin.json"));
   const codexManifest = readJson(join(repositoryRoot, ".codex-plugin", "plugin.json"));
-  if (cursorManifest.name !== codexManifest.name) throw new Error("Cursor and Codex plugin names differ");
-  if (cursorManifest.version !== packageManifest.version || codexManifest.version !== packageManifest.version) {
+  const opencodeManifest = readJson(join(repositoryRoot, "targets", "opencode", ".opencode-plugin", "plugin.json"));
+  if (cursorManifest.name !== codexManifest.name || cursorManifest.name !== opencodeManifest.name) {
+    throw new Error("Cursor, Codex, and OpenCode plugin names differ");
+  }
+  if ([cursorManifest, codexManifest, opencodeManifest].some((manifest) => manifest.version !== packageManifest.version)) {
     throw new Error("repository manifests must keep the regular package product version");
   }
+  if (hosts.includes("opencode")) assertStandardOpenCodeConfig(home, process.env);
   for (const script of preparationScripts(full)) npmScript(script, repositoryRoot);
   const git = repositoryState(repositoryRoot);
   const result = deployPreparedTargets({
@@ -632,6 +746,7 @@ async function main() {
     const nextSteps = [];
     if (hosts.includes("cursor")) nextSteps.push("reload Cursor");
     if (hosts.includes("codex")) nextSteps.push("start a new Codex task");
+    if (hosts.includes("opencode")) nextSteps.push("start a new OpenCode session");
     process.stderr.write(`${nextSteps.join(" and ")}; hosts were not restarted automatically.\n`);
   }
 }

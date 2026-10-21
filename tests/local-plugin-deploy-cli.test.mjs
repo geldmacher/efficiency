@@ -43,6 +43,8 @@ test("local CLI previews, deploys, repairs cache, updates and reports native rol
       npm_config_cache: join(work, "npm-cache") };
     delete env.NODE_TEST_CONTEXT;
     delete env.NODE_NO_WARNINGS;
+    delete env.OPENCODE_CONFIG_DIR;
+    delete env.XDG_CONFIG_HOME;
     const failingTest = join(work, "failure.test.mjs");
     writeFileSync(failingTest, 'import test from "node:test"; test("execution sentinel", () => { throw new Error("expected subprocess test failure"); });\n');
     const failure = spawnSync(process.execPath, ["--test", failingTest], { env, encoding: "utf8" });

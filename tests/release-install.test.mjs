@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import fs, { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { syncBuiltinESMExports } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,6 +10,7 @@ import { downloadLatest, installRelease, marketplaceDocument, verifyRelease } fr
 import { readReleaseArchive } from "../skills/install-new-release-from-repo/scripts/release-archive.mjs";
 import { assetName, sha256 } from "../skills/install-new-release-from-repo/scripts/release-format.mjs";
 import { fixtureRelease, rewriteEvidence, writeCodexDriver } from "./helpers/release-install-fixture.mjs";
+import { openCodeCommand, openCodePaths, openCodeSkillsPath } from "../skills/install-new-release-from-repo/scripts/opencode-config.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const installer = join(root, "skills", "install-new-release-from-repo", "scripts", "install-release.mjs");
@@ -40,6 +42,100 @@ function pathArchive(names) {
   end.writeUInt32LE(0x06054b50); end.writeUInt16LE(names.length, 8); end.writeUInt16LE(names.length, 10); end.writeUInt32LE(table.length, 12); end.writeUInt32LE(offset, 16);
   return Buffer.concat([...local, table, end]);
 }
+
+test("OpenCode install merges shared skills and keeps the original backup", (t) => {
+  const temp = workspace(t);
+  const targetHome = home(temp);
+  const fixture = fixtureRelease(join(temp, "fixture"));
+  const configDir = join(targetHome, ".config", "opencode");
+  mkdirSync(join(configDir, "commands"), { recursive: true });
+  const workflow = join(configDir, "geldmacher-workflow", "skills");
+  const design = "~/.config/opencode/geldmacher-design/skills";
+  const original = `${JSON.stringify({ model: "keep", skills: [workflow, design] }, null, 2)}\n`;
+  writeFileSync(join(configDir, "opencode.json"), original);
+  writeFileSync(join(configDir, "commands", "plan-work.md"), "Load the `plan-work` skill and apply it to the current request.\n");
+  const release = verifyRelease(fixture.directory, "opencode");
+  const installed = installRelease(release, { home: targetHome, env: {} });
+  assert.equal(installed.status, "installed");
+  const backupRoot = join(configDir, ".local-deploy-backups", "geldmacher-efficiency");
+  const backups = readdirSync(backupRoot).filter((name) => !name.startsWith("."));
+  assert.equal(backups.length, 1);
+  assert.equal(readFileSync(join(backupRoot, backups[0], "opencode.json"), "utf8"), original);
+  const merged = JSON.parse(readFileSync(join(configDir, "opencode.json"), "utf8"));
+  assert.equal(merged.model, "keep");
+  assert.ok(merged.skills.includes(workflow));
+  assert.ok(merged.skills.includes(design));
+  assert.equal(merged.skills.filter((entry) => entry.endsWith("/geldmacher-efficiency/skills")).length, 1);
+  assert.match(readFileSync(join(configDir, "commands", "efficiency.md"), "utf8"), /Load the `efficiency` skill/);
+  assert.match(readFileSync(join(configDir, "commands", "plan-work.md"), "utf8"), /plan-work/);
+  assert.equal(installRelease(release, { home: targetHome, env: {} }).no_op, true);
+  assert.deepEqual(readdirSync(backupRoot).filter((name) => !name.startsWith(".")), backups);
+});
+
+test("OpenCode release install refuses shared commands and backup directory symlinks", async (t) => {
+  const temp = workspace(t);
+  const release = verifyRelease(fixtureRelease(join(temp, "fixture")).directory, "opencode");
+  for (const linked of ["commands", ".local-deploy-backups"]) await t.test(linked, (t) => {
+    const work = workspace(t);
+    const targetHome = home(work);
+    const paths = openCodePaths(targetHome, "geldmacher-efficiency");
+    const outside = join(work, "outside-home");
+    mkdirSync(paths.configDir, { recursive: true });
+    mkdirSync(outside);
+    const sentinel = join(outside, "foreign.md");
+    writeFileSync(sentinel, "foreign command\n");
+    symlinkSync(outside, join(paths.configDir, linked), "dir");
+    for (const dryRun of [true, false]) assert.throws(() => installRelease(release, { home: targetHome, env: {}, dryRun }), /symlink/);
+    assert.equal(readFileSync(sentinel, "utf8"), "foreign command\n");
+    assert.deepEqual(readdirSync(outside), ["foreign.md"]);
+    assert.equal(existsSync(paths.packageDir), false);
+    assert.equal(existsSync(paths.config), false);
+  });
+});
+
+test("OpenCode release install restores command-only changes when post-install verification fails", (t) => {
+  const temp = workspace(t);
+  const targetHome = realpathSync(home(temp));
+  const release = verifyRelease(fixtureRelease(join(temp, "fixture")).directory, "opencode");
+  const paths = openCodePaths(targetHome, "geldmacher-efficiency");
+  mkdirSync(paths.commands, { recursive: true });
+  const original = JSON.stringify({ model: "keep", skills: [openCodeSkillsPath(targetHome, "geldmacher-efficiency")] });
+  writeFileSync(paths.config, original);
+  const command = join(paths.commands, "efficiency.md");
+  const previous = openCodeCommand("efficiency", "Previous command description.");
+  writeFileSync(command, previous);
+  const rename = fs.renameSync;
+  const read = fs.readFileSync;
+  let commandWritten = false;
+  const mockedRename = t.mock.method(fs, "renameSync", (source, destination) => {
+    const result = rename(source, destination);
+    if (destination === command) commandWritten = true;
+    return result;
+  });
+  const mockedRead = t.mock.method(fs, "readFileSync", (path, ...args) => {
+    if (commandWritten && path === paths.config) {
+      commandWritten = false;
+      throw Object.assign(new Error("Injected post-install verification error"), { code: "EIO" });
+    }
+    return read(path, ...args);
+  });
+  syncBuiltinESMExports();
+  try {
+    assert.throws(() => installRelease(release, { home: targetHome, env: {} }), (error) => {
+      assert.match(error.message, /Injected post-install verification error/);
+      assert.equal(error.result.source_rollback, "completed_or_not_needed");
+      assert.deepEqual(error.result.recovery_errors, []);
+      return true;
+    });
+  } finally {
+    mockedRename.mock.restore();
+    mockedRead.mock.restore();
+    syncBuiltinESMExports();
+  }
+  assert.equal(readFileSync(command, "utf8"), previous);
+  assert.equal(readFileSync(paths.config, "utf8"), original);
+  assert.equal(existsSync(paths.packageDir), false);
+});
 
 test("actual CLI installs, previews without writes, updates, retains backup, and repeats unchanged", (t) => {
   const temp = workspace(t); const targetHome = home(temp);

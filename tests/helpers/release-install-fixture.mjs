@@ -3,7 +3,9 @@ import { cpSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { buildPluginTargets } from "../../scripts/build-plugin-targets.mjs";
 import { inspectReleaseTarget } from "../../scripts/plugin-github-release.mjs";
-import { PLUGIN_NAME, EXPECTED_REPOSITORY, RELEASE_HOSTS, assetName, canonicalJson, receiptForProvenance, sha256 } from "../../skills/install-new-release-from-repo/scripts/release-format.mjs";
+import { openCodeCommand } from "../../skills/install-new-release-from-repo/scripts/opencode-config.mjs";
+import { PLUGIN_NAME, EXPECTED_REPOSITORY, PROVENANCE_SCHEMA, RELEASE_HOSTS, assetName, canonicalJson, receiptForProvenance, sha256 } from "../../skills/install-new-release-from-repo/scripts/release-format.mjs";
+import { releaseManifestPath } from "../../skills/install-new-release-from-repo/scripts/release-archive.mjs";
 
 export function fixtureRelease(root, version = "3.2.1", { full = false } = {}) {
   mkdirSync(root, { recursive: true });
@@ -16,13 +18,17 @@ export function fixtureRelease(root, version = "3.2.1", { full = false } = {}) {
   for (const host of RELEASE_HOSTS) {
     const source = join(root, host);
     if (built) cpSync(built[host].path, source, { recursive: true });
-    const manifest = join(source, host === "cursor" ? ".cursor-plugin" : ".codex-plugin", "plugin.json");
-    mkdirSync(join(source, host === "cursor" ? ".cursor-plugin" : ".codex-plugin"), { recursive: true });
+    const manifest = join(source, releaseManifestPath(host));
+    mkdirSync(join(manifest, ".."), { recursive: true });
     const metadata = built ? JSON.parse(readFileSync(manifest, "utf8")) : { name: PLUGIN_NAME };
     writeFileSync(manifest, canonicalJson({ ...metadata, version }));
     if (!built) {
       mkdirSync(join(source, "skills", "example"), { recursive: true });
       writeFileSync(join(source, "skills", "example", "SKILL.md"), `---\nname: example\ndescription: Test fixture.\n---\n\n${version}\n`);
+      if (host === "opencode") {
+        mkdirSync(join(source, "commands"), { recursive: true });
+        writeFileSync(join(source, "commands", "efficiency.md"), openCodeCommand("efficiency", "Test fixture."));
+      }
     }
     const gitDirectory = join(root, `${host}.git`);
     execFileSync("git", ["init", "--bare", "--quiet", gitDirectory]);
@@ -33,7 +39,7 @@ export function fixtureRelease(root, version = "3.2.1", { full = false } = {}) {
     targets[host] = { archive, archive_sha256: sha256(readFileSync(join(directory, archive))), ...inspectReleaseTarget(source, host, version), root_directory: PLUGIN_NAME };
   }
   const provenance = {
-    schema: 1, kind: "github-release-provenance", plugin: PLUGIN_NAME, repository: EXPECTED_REPOSITORY,
+    schema: PROVENANCE_SCHEMA, kind: "github-release-provenance", plugin: PLUGIN_NAME, repository: EXPECTED_REPOSITORY,
     version, tag: `v${version}`, source: { clean: true, commit_sha: "a".repeat(40), tree_sha: "b".repeat(40) },
     targets, release_gate: { command: "npm run release-check", result: "passed" },
     release_notes_sha256: sha256(notes), published_assets: [...RELEASE_HOSTS.map((host) => assetName(host, version)), "RELEASE_NOTES.md", "provenance.json", "SHA256SUMS"],

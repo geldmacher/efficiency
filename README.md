@@ -4,7 +4,7 @@
 
 **Help your coding agent do useful work with less unnecessary complexity.**
 
-Efficiency is a plugin for **Cursor and Codex**. It gives your agent guidance to:
+Efficiency is a plugin for **Cursor, Codex, and OpenCode 2.1.2**. It gives your agent guidance to:
 
 - **Keep code easier to maintain:** reuse what your project already provides and avoid abstractions the task does not need.
 - **Keep instructions easier to manage:** find duplicated or misplaced guidance in files such as `AGENTS.md`, rules, and skills.
@@ -49,6 +49,14 @@ Open a project with code changes and ask:
 $geldmacher-efficiency:efficiency Review my current changes for unnecessary complexity.
 ```
 
+**OpenCode:**
+
+```text
+@efficiency Review my current changes for unnecessary complexity.
+```
+
+`/efficiency` sends the same request. OpenCode lists the skill for automatic selection as well.
+
 You get recommendations tied to the requirement and the code; files stay unchanged. For example, Efficiency may suggest reusing an existing date helper instead of adding a configurable formatter. To make a change, request the selected recommendation and its scope. See [review and implementation examples](docs/usage.md#review-or-simplify-code).
 
 ## Recommended everyday use
@@ -67,9 +75,9 @@ The [usage guide](docs/usage.md) has copyable requests for both apps, expected r
 
 ## Install from a release
 
-You need Cursor or Codex with plugin support, **Node.js 22 or newer**, and access to GitHub. You do not need to clone this repository.
+You need Cursor, Codex, or OpenCode 2.1.2 with plugin support, **Node.js 22 or newer**, and access to GitHub. You do not need to clone this repository. OpenCode support is `@opencode/cli` 2.1.2, not the `opencode-ai` 1.x package.
 
-Copy this request into Cursor or Codex:
+Copy this request into Cursor, Codex, or OpenCode:
 
 ```text
 Install the latest stable Efficiency release from
@@ -95,6 +103,12 @@ Use the installed update skill:
 
 ```text
 $geldmacher-efficiency:install-new-release-from-repo Update Efficiency to the latest stable GitHub Release for Codex.
+```
+
+**OpenCode:**
+
+```text
+@install-new-release-from-repo Update Efficiency to the latest stable GitHub Release for OpenCode.
 ```
 
 If the skill is missing, use the installation request above. For manual updates, follow the [backup, replacement, and activation steps](docs/installation.md#manual-update). The [installation guide](docs/installation.md) also covers previews and recovery.
