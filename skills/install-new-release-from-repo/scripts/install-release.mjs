@@ -133,7 +133,7 @@ export function installRelease(release, { home = homedir(), codexHome, codexBina
   let original = null;
   let marketplace;
   let opencodePlan = null;
-  const opencodeApplied = { configWritten: false, configCreated: false, commands: [] };
+  const opencodeApplied = { backup: null };
   try {
     if (!dryRun) {
       mkdirSync(parent, { recursive: true });
@@ -254,7 +254,7 @@ export function installRelease(release, { home = homedir(), codexHome, codexBina
       if (!sameFile(marketplacePath, marketplace.bytes)) throw new Error("Concurrent marketplace change preserved; restore manually");
       if (original) atomicWrite(marketplacePath, original); else rmSync(marketplacePath);
     });
-    if (opencodeApplied.configWritten || opencodeApplied.commands.length > 0) attempt("restore opencode registration", () => {
+    if (opencodeApplied.backup) attempt("restore opencode registration", () => {
       rollbackOpenCodeChanges(opencodeApplied, { home, plugin: PLUGIN_NAME });
     });
     const result = {

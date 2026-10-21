@@ -473,7 +473,7 @@ export function deployPreparedTargets({
   const swapped = [];
   let marketplaceWritten = false;
   let nativeAttempted = false;
-  const opencodeApplied = { backup: null, configWritten: false, commands: [] };
+  const opencodeApplied = { backup: null };
   try {
     for (const host of changedHosts) staged[host] = stageTarget(metadata[host].path, paths[host], metadata[host]);
     if (simulateFailure === "after-stage") throw new Error("simulated failure after stage");
