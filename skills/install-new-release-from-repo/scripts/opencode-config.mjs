@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
+import { parse as parseJsonc } from "jsonc-parser";
 
 export const OPENCODE_COMPATIBILITY = "2.1.2";
 export const SHARED_OPENCODE_CONFIG_RULE = "OpenCode config (opencode.json, commands/) is shared with Workflow and Design: merge only, always write a persistent backup before changing anything, touch only your own entries, rollback/uninstall removes only your own entries.";
@@ -55,7 +56,7 @@ export function openCodeSkillsPath(home, plugin) {
   return slash(resolve(openCodePaths(home, plugin).packageDir, "skills"));
 }
 
-export function assertStandardOpenCodeConfig(home, env = {}) {
+export function assertStandardOpenCodeConfig(home, env = process.env) {
   const supported = resolve(home, ".config", "opencode");
   const configured = resolve(env.OPENCODE_CONFIG_DIR ?? join(env.XDG_CONFIG_HOME || join(resolve(home), ".config"), "opencode"));
   if (configured !== supported) {
@@ -70,46 +71,11 @@ export function expandOpenCodePath(entry, home) {
   return expanded;
 }
 
-export function parseJsonc(text, label = "OpenCode config") {
-  const source = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
-  let out = "";
-  let inString = false;
-  for (let i = 0; i < source.length; i += 1) {
-    const char = source[i];
-    const next = source[i + 1];
-    if (inString) {
-      out += char;
-      if (char === "\\") {
-        out += next ?? "";
-        i += 1;
-      } else if (char === "\"") inString = false;
-      continue;
-    }
-    if (char === "\"") {
-      inString = true;
-      out += char;
-      continue;
-    }
-    if (char === "/" && next === "/") {
-      i += 1;
-      while (i + 1 < source.length && source[i + 1] !== "\n") i += 1;
-      continue;
-    }
-    if (char === "/" && next === "*") {
-      i += 2;
-      while (i < source.length && !(source[i] === "*" && source[i + 1] === "/")) i += 1;
-      i += 1;
-      continue;
-    }
-    out += char;
-  }
-  if (inString) throw new Error(`invalid OpenCode JSONC: ${label}`);
-  const json = out.replace(/,(\s*[}\]])/g, "$1");
-  try {
-    return JSON.parse(json);
-  } catch (error) {
-    throw new Error(`invalid OpenCode JSONC: ${label}`);
-  }
+export function parseOpenCodeJsonc(text, label = "OpenCode config") {
+  const errors = [];
+  const document = parseJsonc(text, errors, { allowTrailingComma: true });
+  if (errors.length > 0) throw new Error(`invalid OpenCode JSONC: ${label}`);
+  return document;
 }
 
 function readJsonDocument(path) {
@@ -132,7 +98,7 @@ function readJsoncDocument(path) {
   assertRegular(path, "OpenCode JSONC");
   if (!lstatExists(path)) return { present: false, bytes: null, document: null };
   const bytes = readFileSync(path);
-  const document = parseJsonc(bytes.toString("utf8"), path);
+  const document = parseOpenCodeJsonc(bytes.toString("utf8"), path);
   if (!document || typeof document !== "object" || Array.isArray(document)) {
     throw new Error(`OpenCode config must be a JSON object: ${path}`);
   }
@@ -261,7 +227,7 @@ export function commandSourcesFromEntries(entries) {
     .sort((left, right) => left.name.localeCompare(right.name));
 }
 
-export function planOpenCodeChanges({ home, plugin, commandSources, env = {}, createdAt } = {}) {
+export function planOpenCodeChanges({ home, plugin, commandSources, env = process.env, createdAt } = {}) {
   assertStandardOpenCodeConfig(home, env);
   if (!Array.isArray(commandSources) || commandSources.length === 0) throw new Error("OpenCode package is missing commands");
   const paths = openCodePaths(home, plugin);

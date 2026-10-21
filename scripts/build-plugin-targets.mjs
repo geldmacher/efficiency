@@ -130,6 +130,15 @@ function copyRegular(source, destination, projectRoot) {
   chmodSync(destination, stat.mode & 0o777);
 }
 
+function copyPackagedJsoncParser(destination) {
+  const source = join(defaultRoot, "node_modules", "jsonc-parser");
+  const manifestPath = join(source, "package.json");
+  if (!existsSync(manifestPath)) throw new Error("jsonc-parser is not installed; run npm ci before building packages");
+  const version = JSON.parse(readFileSync(manifestPath, "utf8")).version;
+  if (version !== "3.3.1") throw new Error(`packaged OpenCode parser requires jsonc-parser 3.3.1, found ${version}`);
+  copyRegular(source, join(destination, "skills", "install-new-release-from-repo", "scripts", "node_modules", "jsonc-parser"), defaultRoot);
+}
+
 function copyAllowed(projectRoot, destination, item) {
   const source = resolve(projectRoot, item);
   const output = resolve(destination, item);
@@ -299,6 +308,7 @@ export function buildPluginTargets(outputRoot, sourceRoot = defaultRoot) {
         writeFileSync(output, openCodeCommand(name, skillDescription(projectRoot, name)), { mode: 0o644 });
       }
     }
+    copyPackagedJsoncParser(destination);
     validateBuiltTarget(destination, target, version);
     result[target] = { path: destination, hash: digest(destination), files: files(destination).length };
   }

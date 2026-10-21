@@ -12,6 +12,7 @@ All notable changes to this project are documented in this file.
 ### Changed
 
 - New releases use provenance schema 2 with targets `cursor`, `codex`, and `opencode`. Schema 1 documents that list only Cursor and Codex remain valid.
+- Parse OpenCode JSONC with `jsonc-parser` 3.3.1. A parse error aborts before the shared config is changed.
 
 ## 3.10.0 - 2026-10-14
 
