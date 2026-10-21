@@ -15,6 +15,7 @@ import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 import { parseDocument } from "yaml";
 
+import { OPENCODE_COMPATIBILITY, openCodeCommand } from "../skills/install-new-release-from-repo/scripts/opencode-config.mjs";
 import { portableSkills, codexAdapterSkill } from "./plugin-components.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
@@ -616,6 +617,45 @@ export function validateCodexPlugin(root = defaultRoot) {
   return normalizedFailures(rootPath, failures);
 }
 
+export function validateOpenCodePackage(root) {
+  const failures = [];
+  const rootPath = resolve(root);
+  if (!existsSync(rootPath)) return [`plugin root does not exist: ${rootPath}`];
+  const manifestPath = join(rootPath, ".opencode-plugin", "plugin.json");
+  if (!existsSync(manifestPath)) return [".opencode-plugin/plugin.json is missing"];
+  const manifest = readJson(manifestPath, ".opencode-plugin/plugin.json", failures);
+  if (!manifest) return normalizedFailures(rootPath, failures);
+  if (manifest.skills !== "./skills/") failures.push("OpenCode package must discover ./skills/");
+  if (manifest.opencodeCompatibility !== OPENCODE_COMPATIBILITY) failures.push(`OpenCode package must target OpenCode ${OPENCODE_COMPATIBILITY}`);
+  const entries = readdirSync(join(rootPath, ".opencode-plugin")).sort();
+  if (JSON.stringify(entries) !== JSON.stringify(["plugin.json"])) failures.push(".opencode-plugin must contain only plugin.json");
+  if (existsSync(join(rootPath, "CLAUDE.md"))) failures.push("OpenCode package must not add CLAUDE.md");
+  const commandsDir = join(rootPath, "commands");
+  if (!existsSync(commandsDir)) failures.push("OpenCode commands directory is missing");
+  else {
+    const commands = readdirSync(commandsDir).sort();
+    const expected = portableSkills.map((name) => `${name}.md`).sort();
+    if (JSON.stringify(commands) !== JSON.stringify(expected)) failures.push(`OpenCode command inventory differs: ${commands.join(", ")}`);
+    for (const name of portableSkills) {
+      const skillPath = join(rootPath, "skills", name, "SKILL.md");
+      if (!existsSync(skillPath)) {
+        failures.push(`${name}: missing OpenCode skill`);
+        continue;
+      }
+      const text = readFileSync(skillPath, "utf8");
+      if (/opencode\/autoinvoke|disable-model-invocation|opencode\/slash/.test(text)) {
+        failures.push(`${name}: OpenCode skill must stay auto-invocable and must not use removed slash metadata`);
+      }
+      const document = parseDocument(text.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? "");
+      const description = document.toJS()?.description;
+      if (typeof description === "string" && readFileSync(join(commandsDir, `${name}.md`), "utf8") !== openCodeCommand(name, description)) {
+        failures.push(`${name}: OpenCode command must load the skill by id`);
+      }
+    }
+  }
+  return normalizedFailures(rootPath, failures);
+}
+
 export function validateRepositoryPolicy(root = defaultRoot) {
   const failures = [];
   const rootPath = resolve(root);
@@ -688,6 +728,18 @@ export function validateRepositoryPolicy(root = defaultRoot) {
     if (JSON.stringify(codexAdapterSkills) !== JSON.stringify([codexAdapterSkill])) {
       failures.push("Codex adapter must contain only response-simplicity-setup");
     }
+    const opencodeManifestPath = join(rootPath, "targets", "opencode", ".opencode-plugin", "plugin.json");
+    if (!existsSync(opencodeManifestPath)) failures.push("targets/opencode/.opencode-plugin/plugin.json is missing");
+    else {
+      const opencodeManifest = readJson(opencodeManifestPath, "OpenCode manifest", failures);
+      if (opencodeManifest) {
+        if (opencodeManifest.name !== portableManifest.name) failures.push("OpenCode manifest name does not match the portable plugin");
+        if (opencodeManifest.version !== portableManifest.version) failures.push("OpenCode manifest version does not match the portable plugin");
+        if (opencodeManifest.repository !== portableManifest.repository) failures.push("OpenCode manifest repository does not match the portable plugin");
+        if (opencodeManifest.skills !== "./skills/") failures.push("OpenCode manifest must declare ./skills/");
+        if (opencodeManifest.opencodeCompatibility !== OPENCODE_COMPATIBILITY) failures.push(`OpenCode manifest must target OpenCode ${OPENCODE_COMPATIBILITY}`);
+      }
+    }
   }
   if (codexManifest.skills !== "./skills/") {
     failures.push("Codex plugin must declare the root ./skills/ path");
@@ -741,7 +793,7 @@ function runCli() {
     process.exitCode = 1;
     return;
   }
-  console.log("Plugin validation passed (Agent Plugins, Cursor, Codex, and repository policy).");
+  console.log("Plugin validation passed (Agent Plugins, Cursor, Codex, OpenCode, and repository policy).");
 }
 
 if (resolve(process.argv[1]) === fileURLToPath(import.meta.url)) runCli();

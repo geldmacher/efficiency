@@ -32,6 +32,7 @@ import {
   releaseNotesFromChangelog,
   verifyPreparedRelease,
 } from "../scripts/plugin-github-release.mjs";
+import { validateProvenance } from "../skills/install-new-release-from-repo/scripts/release-format.mjs";
 
 const version = "1.2.3";
 
@@ -53,6 +54,7 @@ function repositoryFixture() {
   const common = { name: PLUGIN_NAME, version, repository: "https://github.com/geldmacher/efficiency" };
   writeJson(join(repository, ".cursor-plugin", "plugin.json"), common);
   writeJson(join(repository, ".codex-plugin", "plugin.json"), common);
+  writeJson(join(repository, "targets", "opencode", ".opencode-plugin", "plugin.json"), { ...common, opencodeCompatibility: "2.1.2", skills: "./skills/" });
   writeJson(join(repository, "plugin.json"), common);
   writeFileSync(join(repository, "CHANGELOG.md"), `# Changelog\n\n## Unreleased\n\n## ${version}\n\n- Added deterministic release fixtures.\n`);
   writeFileSync(join(repository, ".gitignore"), ".build/\n");
@@ -104,9 +106,9 @@ function productionSnapshotFixture() {
 
 function targetBuilder(outputRoot) {
   const result = { version };
-  for (const host of ["cursor", "codex"]) {
+  for (const host of ["cursor", "codex", "opencode"]) {
     const directory = join(outputRoot, host, PLUGIN_NAME);
-    const manifest = host === "cursor" ? ".cursor-plugin" : ".codex-plugin";
+    const manifest = host === "cursor" ? ".cursor-plugin" : host === "codex" ? ".codex-plugin" : ".opencode-plugin";
     writeJson(join(directory, manifest, "plugin.json"), { name: PLUGIN_NAME, version });
     mkdirSync(join(directory, "docs"));
     writeFileSync(join(directory, "README.md"), `# ${host}\n\n[Install](docs/installation.md)\n`);
@@ -114,6 +116,10 @@ function targetBuilder(outputRoot) {
     mkdirSync(join(directory, "scripts"));
     writeFileSync(join(directory, "scripts", "validate-artifact.mjs"), "#!/usr/bin/env node\n");
     chmodSync(join(directory, "scripts", "validate-artifact.mjs"), 0o755);
+    if (host === "opencode") {
+      mkdirSync(join(directory, "commands"));
+      writeFileSync(join(directory, "commands", "efficiency.md"), "---\ndescription: \"Review.\"\n---\n\nLoad the `efficiency` skill and apply it to the current request.\n\n$ARGUMENTS\n");
+    }
     result[host] = { path: directory };
   }
   return result;
@@ -873,6 +879,7 @@ test("independent preparations produce byte-identical closed Cursor and Codex re
       "SHA256SUMS",
       `geldmacher-efficiency-codex-v${version}.zip`,
       `geldmacher-efficiency-cursor-v${version}.zip`,
+      `geldmacher-efficiency-opencode-v${version}.zip`,
       "provenance.json",
     ]);
     for (const name of readdirSync(first.directory)) {
@@ -882,11 +889,13 @@ test("independent preparations produce byte-identical closed Cursor and Codex re
     assert.equal(verified.provenance.source.commit_sha, git(item.repository, "rev-parse", "HEAD"));
     assert.equal(verified.provenance.source.tree_sha, git(item.repository, "rev-parse", "HEAD^{tree}"));
     assert.equal(verified.provenance.release_gate.result, "passed");
-    for (const host of ["cursor", "codex"]) {
+    assert.equal(verified.provenance.schema, 2);
+    for (const host of ["cursor", "codex", "opencode"]) {
       const entries = zipEntries(join(first.directory, first.provenance.targets[host].archive));
       assert.ok(entries.every((entry) => entry.name === `${PLUGIN_NAME}/` || entry.name.startsWith(`${PLUGIN_NAME}/`)));
       assert.equal(entries.some((entry) => entry.name.includes(`/${PLUGIN_NAME}/`)), false, "archive must not be double nested");
-      assert.ok(entries.some((entry) => entry.name === `${PLUGIN_NAME}/${host === "cursor" ? ".cursor-plugin" : ".codex-plugin"}/plugin.json`));
+      const manifest = host === "cursor" ? ".cursor-plugin" : host === "codex" ? ".codex-plugin" : ".opencode-plugin";
+      assert.ok(entries.some((entry) => entry.name === `${PLUGIN_NAME}/${manifest}/plugin.json`));
       assert.ok(entries.some((entry) => entry.name === `${PLUGIN_NAME}/docs/installation.md`));
       const executable = entries.find((entry) => entry.name === `${PLUGIN_NAME}/scripts/validate-artifact.mjs`);
       assert.equal(executable.mode & 0o111, 0o111, "executable mode must survive the archive");
@@ -914,13 +923,22 @@ test("two production-target preparations from one clean release-cut snapshot are
     assert.equal(first.provenance.version, item.version);
     assert.ok(first.provenance.targets.cursor.file_count > 30);
     assert.ok(first.provenance.targets.codex.file_count > 25);
+    assert.ok(first.provenance.targets.opencode.file_count > 25);
+    assert.equal(first.provenance.schema, 2);
     for (const name of first.provenance.published_assets) {
       assert.deepEqual(readFileSync(join(first.directory, name)), readFileSync(join(second.directory, name)), name);
     }
-    for (const host of ["cursor", "codex"]) {
+    for (const host of ["cursor", "codex", "opencode"]) {
       const archivePath = join(first.directory, first.provenance.targets[host].archive);
       const entries = zipEntries(archivePath);
       assert.ok(entries.some((entry) => entry.name === `${PLUGIN_NAME}/docs/installation.md`));
+      if (host === "opencode") {
+        const command = zipEntryText(archivePath, `${PLUGIN_NAME}/commands/efficiency.md`);
+        assert.match(command, /Load the `efficiency` skill/);
+        assert.doesNotMatch(command, /opencode\/autoinvoke|opencode\/slash|disable-model-invocation/);
+        assert.equal(entries.some((entry) => entry.name === `${PLUGIN_NAME}/CLAUDE.md`), false);
+        assert.equal(entries.some((entry) => entry.name.includes("response-simplicity-setup")), false);
+      }
       assert.ok(entries.every((entry) => !entry.name.startsWith(`${PLUGIN_NAME}/.agents/`)));
       assert.ok(entries.every((entry) => !entry.name.startsWith(`${PLUGIN_NAME}/.cursor/`)));
       assert.match(zipEntryText(archivePath, `${PLUGIN_NAME}/docs/installation.md`), new RegExp(item.marker));
@@ -928,6 +946,54 @@ test("two production-target preparations from one clean release-cut snapshot are
   } finally {
     rmSync(item.fixtureRoot, { recursive: true, force: true });
   }
+});
+
+test("schema 1 provenance accepts only Cursor and Codex targets", () => {
+  const releaseVersion = "3.10.0";
+  const target = (host) => ({
+    archive: `geldmacher-efficiency-${host}-v${releaseVersion}.zip`,
+    archive_sha256: "a".repeat(64),
+    content_sha256: "b".repeat(64),
+    file_count: 2,
+    root_directory: PLUGIN_NAME,
+  });
+  const provenance = {
+    schema: 1,
+    kind: "github-release-provenance",
+    plugin: PLUGIN_NAME,
+    version: releaseVersion,
+    tag: `v${releaseVersion}`,
+    repository: "geldmacher/efficiency",
+    source: { clean: true, commit_sha: "c".repeat(40), tree_sha: "d".repeat(40) },
+    release_gate: { command: "npm run release-check", result: "passed" },
+    release_notes_sha256: "e".repeat(64),
+    receipt_sha256: "f".repeat(64),
+    targets: { cursor: target("cursor"), codex: target("codex") },
+    published_assets: [
+      `geldmacher-efficiency-cursor-v${releaseVersion}.zip`,
+      `geldmacher-efficiency-codex-v${releaseVersion}.zip`,
+      "RELEASE_NOTES.md",
+      "provenance.json",
+      "SHA256SUMS",
+    ],
+  };
+  assert.doesNotThrow(() => validateProvenance(provenance));
+  const extraHost = structuredClone(provenance);
+  extraHost.targets.opencode = target("opencode");
+  assert.throws(() => validateProvenance(extraHost), /provenance targets fields differ/);
+  const schema2 = structuredClone(provenance);
+  schema2.schema = 2;
+  assert.throws(() => validateProvenance(schema2), /provenance targets fields differ/);
+  schema2.targets.opencode = target("opencode");
+  schema2.published_assets = [
+    `geldmacher-efficiency-cursor-v${releaseVersion}.zip`,
+    `geldmacher-efficiency-codex-v${releaseVersion}.zip`,
+    `geldmacher-efficiency-opencode-v${releaseVersion}.zip`,
+    "RELEASE_NOTES.md",
+    "provenance.json",
+    "SHA256SUMS",
+  ];
+  assert.doesNotThrow(() => validateProvenance(schema2));
 });
 
 test("preparation is idempotent for identical bytes and refuses a conflicting derived set", () => {

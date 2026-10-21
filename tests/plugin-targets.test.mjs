@@ -29,7 +29,7 @@ test("packages contain only user documentation, required artwork and target sche
     });
     writeFileSync(join(source, "docs", "future-guide.md"), "Additional documentation sentinel\n");
     const built = buildPluginTargets(join(temporary, "targets"), source);
-    for (const target of ["agent-plugins", "cursor", "codex"]) {
+    for (const target of ["agent-plugins", "cursor", "codex", "opencode"]) {
       const snapshot = directorySnapshot(built[target].path);
       assert.deepEqual(Object.keys(snapshot).filter((path) => path.startsWith("docs/")).sort(), [
         "docs/installation.md", "docs/usage.md",
@@ -61,7 +61,7 @@ test("deterministic allowlists isolate Agent Plugins, Cursor, and Codex bundles"
   try {
     const first = buildPluginTargets(join(output, "first"));
     const second = buildPluginTargets(join(output, "second"));
-    for (const target of ["agent-plugins", "cursor", "codex"]) {
+    for (const target of ["agent-plugins", "cursor", "codex", "opencode"]) {
       assert.equal(first[target].hash, second[target].hash);
       for (const asset of ["scripts/rtk-lifecycle.mjs", "references/lifecycle.md", "references/integration.md", "references/source-maintenance.md", "references/codex.md", "references/cursor.md"]) {
         assert.ok(existsSync(join(first[target].path, "skills/rtk-setup", asset)), `${target} missing RTK lifecycle asset: ${asset}`);
@@ -98,11 +98,14 @@ test("deterministic allowlists isolate Agent Plugins, Cursor, and Codex bundles"
       assert.equal(existsSync(join(first["agent-plugins"].path, "skills", name, "SKILL.md")), true);
       assert.equal(existsSync(join(first.cursor.path, "skills", name, "SKILL.md")), true);
       assert.equal(existsSync(join(first.codex.path, "skills", name, "SKILL.md")), true);
+      assert.equal(existsSync(join(first.opencode.path, "skills", name, "SKILL.md")), true);
       const portableSnapshot = directorySnapshot(join(first["agent-plugins"].path, "skills", name));
       assert.deepEqual(directorySnapshot(join(first.cursor.path, "skills", name)), portableSnapshot,
         `${name} differs between Agent Plugins and Cursor`);
       assert.deepEqual(directorySnapshot(join(first.codex.path, "skills", name)), portableSnapshot,
         `${name} differs between Agent Plugins and Codex`);
+      assert.deepEqual(directorySnapshot(join(first.opencode.path, "skills", name)), portableSnapshot,
+        `${name} differs between Agent Plugins and OpenCode`);
     }
     assert.deepEqual(readdirSync(join(first.cursor.path, "commands")).sort(), [
       "context-optimization.md",
@@ -112,8 +115,27 @@ test("deterministic allowlists isolate Agent Plugins, Cursor, and Codex bundles"
       "rtk-setup.md",
       "rtk-update.md",
     ]);
+    assert.deepEqual(readdirSync(join(first.opencode.path, "commands")).sort(), [
+      "context-optimization.md",
+      "efficiency.md",
+      "install-new-release-from-repo.md",
+      "rtk-filter-design.md",
+      "rtk-setup.md",
+      "rtk-update.md",
+    ]);
+    const opencodeManifest = JSON.parse(readFileSync(join(first.opencode.path, ".opencode-plugin", "plugin.json"), "utf8"));
+    assert.equal(opencodeManifest.opencodeCompatibility, "2.1.2");
+    assert.equal(opencodeManifest.skills, "./skills/");
+    const opencodeCommand = readFileSync(join(first.opencode.path, "commands", "efficiency.md"), "utf8");
+    assert.match(opencodeCommand, /Load the `efficiency` skill/);
+    assert.doesNotMatch(opencodeCommand, /opencode\/autoinvoke|disable-model-invocation|opencode\/slash/);
+    assert.equal(existsSync(join(first.opencode.path, "CLAUDE.md")), false);
+    assert.equal(existsSync(join(first.opencode.path, "AGENTS.md")), false);
+    assert.equal(existsSync(join(first.opencode.path, "agents")), false);
+    assert.equal(existsSync(join(first.opencode.path, "rules")), false);
+    assert.equal(existsSync(join(first.opencode.path, "skills", "response-simplicity-setup")), false);
     for (const reference of ["human-communication.md", "change-communication.md"]) {
-      for (const target of [first["agent-plugins"].path, first.cursor.path, first.codex.path]) {
+      for (const target of [first["agent-plugins"].path, first.cursor.path, first.codex.path, first.opencode.path]) {
         assert.equal(
           existsSync(join(target, "skills", "efficiency", "references", reference)),
           true,
@@ -139,7 +161,7 @@ test("deterministic allowlists isolate Agent Plugins, Cursor, and Codex bundles"
       .replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "").trim();
     assert.equal(responseGuidance.trim(), cursorRuleBody);
 
-    for (const target of [first["agent-plugins"].path, first.cursor.path, first.codex.path]) {
+    for (const target of [first["agent-plugins"].path, first.cursor.path, first.codex.path, first.opencode.path]) {
       for (const developmentRoot of [".agents", ".build", ".cursor", ".git", "adapters", "node_modules", "tests"]) {
         assert.equal(existsSync(join(target, developmentRoot)), false, `${developmentRoot} leaked into ${target}`);
       }
@@ -164,9 +186,9 @@ test("built target validation rejects missing, changed or leaked Codex response 
     assert.throws(() => validateBuiltTarget(built.codex.path, "codex", built.version), /differs from canonical/);
     writeFileSync(guidance, original);
     assert.doesNotThrow(() => validateBuiltTarget(built.codex.path, "codex", built.version));
-    for (const target of ["cursor", "agent-plugins"]) {
+    for (const target of ["cursor", "agent-plugins", "opencode"]) {
       writeFileSync(join(built[target].path, "AGENTS.md"), original);
-      assert.throws(() => validateBuiltTarget(built[target].path, target, built.version), /Codex-only AGENTS.md/);
+      assert.throws(() => validateBuiltTarget(built[target].path, target, built.version), /AGENTS.md/);
     }
   } finally { rmSync(output, { recursive: true, force: true }); }
 });
@@ -212,7 +234,7 @@ test("target builder resets only owned plugin destinations", () => {
     writeFileSync(rootSentinel, "root sentinel\n");
     mkdirSync(join(output, "cursor", "another-plugin"), { recursive: true });
     writeFileSync(adjacentSentinel, "adjacent plugin sentinel\n");
-    for (const target of ["agent-plugins", "cursor", "codex"]) {
+    for (const target of ["agent-plugins", "cursor", "codex", "opencode"]) {
       const owned = join(output, target, "geldmacher-efficiency");
       mkdirSync(owned, { recursive: true });
       writeFileSync(join(owned, "stale.txt"), "stale\n");
@@ -221,7 +243,7 @@ test("target builder resets only owned plugin destinations", () => {
     const built = buildPluginTargets(output);
     assert.equal(readFileSync(rootSentinel, "utf8"), "root sentinel\n");
     assert.equal(readFileSync(adjacentSentinel, "utf8"), "adjacent plugin sentinel\n");
-    for (const target of ["agent-plugins", "cursor", "codex"]) {
+    for (const target of ["agent-plugins", "cursor", "codex", "opencode"]) {
       assert.equal(existsSync(join(built[target].path, "stale.txt")), false);
     }
   } finally {

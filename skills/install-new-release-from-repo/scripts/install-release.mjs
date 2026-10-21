@@ -5,17 +5,23 @@ import { homedir, tmpdir } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PLUGIN_NAME, EXPECTED_REPOSITORY, RELEASE_HOSTS, assetName, canonicalJson, receiptForProvenance, sha256, validateProvenance } from "./release-format.mjs";
-import { verifyArchive } from "./release-archive.mjs";
+import { releaseManifestPath, verifyArchive } from "./release-archive.mjs";
+import { applyOpenCodeChanges, commandSourcesFromEntries, planOpenCodeChanges, rollbackOpenCodeChanges } from "./opencode-config.mjs";
 import { assertPath, present, sameTree, marketplaceDocument, defaultRunner, codexList, cacheState, installCodex } from "./codex-install.mjs";
 export { marketplaceDocument } from "./codex-install.mjs";
 
 const stableVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
-const manifestPath = (host) => `${host === "cursor" ? ".cursor-plugin" : ".codex-plugin"}/plugin.json`;
+const manifestPath = releaseManifestPath;
 const json = (path) => JSON.parse(readFileSync(path, "utf8"));
 
+function destinationFor(home, host) {
+  if (host === "cursor") return join(home, ".cursor", "plugins", "local", PLUGIN_NAME);
+  if (host === "codex") return join(home, ".codex", "plugins", PLUGIN_NAME);
+  return join(home, ".config", "opencode", PLUGIN_NAME);
+}
 
 function assertHost(host) {
-  if (!RELEASE_HOSTS.includes(host)) throw new Error("Choose the invoking harness explicitly: --host cursor or --host codex");
+  if (!RELEASE_HOSTS.includes(host)) throw new Error("Choose the invoking harness explicitly: --host cursor, --host codex, or --host opencode");
 }
 
 function regularFile(path) {
@@ -96,7 +102,7 @@ function newer(installed, selected) {
   return false;
 }
 
-export function installRelease(release, { home = homedir(), codexHome, codexBinary = "codex", dryRun = false, replaceExisting = false, runner = defaultRunner } = {}) {
+export function installRelease(release, { home = homedir(), codexHome, codexBinary = "codex", dryRun = false, replaceExisting = false, runner = defaultRunner, env = process.env } = {}) {
   const { host, provenance, entries } = release;
   assertHost(host);
   home = realpathSync(home);
@@ -108,7 +114,7 @@ export function installRelease(release, { home = homedir(), codexHome, codexBina
     assertPath(home, codexBinary);
     if (!regularFile(codexBinary)) throw new Error("Missing isolated Codex driver");
   }
-  const destination = host === "cursor" ? join(home, ".cursor", "plugins", "local", PLUGIN_NAME) : join(home, ".codex", "plugins", PLUGIN_NAME);
+  const destination = destinationFor(home, host);
   const parent = dirname(destination);
   const state = join(parent, `.${PLUGIN_NAME}.release`);
   const lock = join(parent, `.${PLUGIN_NAME}.install-lock`);
@@ -126,6 +132,8 @@ export function installRelease(release, { home = homedir(), codexHome, codexBina
   let nativeAttempted = false;
   let original = null;
   let marketplace;
+  let opencodePlan = null;
+  const opencodeApplied = { configWritten: false, configCreated: false, commands: [] };
   try {
     if (!dryRun) {
       mkdirSync(parent, { recursive: true });
@@ -160,17 +168,23 @@ export function installRelease(release, { home = homedir(), codexHome, codexBina
       if (installed) cache = cacheState(installed, marketplace.name, destination, codexHome, { version: provenance.version, entries });
     }
     const marketplaceChange = marketplace && !sameFile(marketplacePath, marketplace.bytes);
+    if (host === "opencode") {
+      opencodePlan = planOpenCodeChanges({ home, plugin: PLUGIN_NAME, commandSources: commandSourcesFromEntries(entries), env });
+    }
+    const opencodeChange = Boolean(opencodePlan && (opencodePlan.config.change || opencodePlan.commands.change));
     const report = {
       plugin: PLUGIN_NAME, host, version: provenance.version, previous_version: previousVersion, tag: provenance.tag,
       repository: EXPECTED_REPOSITORY, destination, dry_run: dryRun,
       source_changed: !matches, marketplace_changed: Boolean(marketplaceChange),
-      native_installation: host === "cursor" ? "not_applicable" : cache?.current ? "verified" : "pending",
+      opencode_config_changed: Boolean(opencodePlan?.config.change),
+      opencode_commands_changed: Boolean(opencodePlan?.commands.change),
+      native_installation: host === "codex" ? cache?.current ? "verified" : "pending" : "not_applicable",
       activation: "unverified", backup: null, replacement_requires_approval: replacementReason,
     };
     if (dryRun) return { ...report, status: "preview", next_step: replacementReason
       ? "Ask the user to approve replacing this installation before adding --replace-existing. The previous directory will be retained."
       : "Run the same command without --dry-run after resolving any reported prerequisites." };
-    if (!matches || marketplaceChange) {
+    if (!matches || marketplaceChange || opencodeChange) {
       stage = mkdtempSync(join(parent, `.${PLUGIN_NAME}.stage-`));
       const payload = join(stage, "plugin");
       mkdirSync(payload);
@@ -202,14 +216,19 @@ export function installRelease(release, { home = homedir(), codexHome, codexBina
         atomicWrite(marketplacePath, marketplace.bytes); marketplaceWritten = true;
       }
     }
+    if (opencodeChange) applyOpenCodeChanges(opencodePlan, opencodeApplied);
     if (host === "codex" && installed && (!cache.current || marketplaceChange)) {
       cache = installCodex({ binary: codexBinary, runner, marketplace: marketplace.name, home, source: destination, codexHome, version: provenance.version, entries });
       nativeAttempted = true;
     }
     if (!sameTree(destination, entries)) throw new Error("Installed files differ from release");
     if (marketplace && !sameFile(marketplacePath, marketplace.bytes)) throw new Error("Marketplace changed during installation");
+    if (host === "opencode") {
+      const verified = planOpenCodeChanges({ home, plugin: PLUGIN_NAME, commandSources: commandSourcesFromEntries(entries), env });
+      if (verified.config.change || verified.commands.change) throw new Error("OpenCode registration failed post-install verification");
+    }
     const status = host === "codex" && !cache?.current ? "prepared" : "installed";
-    const noOp = matches && !marketplaceChange && (host === "cursor" || Boolean(cache?.current && !nativeAttempted));
+    const noOp = matches && !marketplaceChange && !opencodeChange && (host !== "codex" || Boolean(cache?.current && !nativeAttempted));
     return {
       ...report, status, no_op: noOp,
       native_installation: host === "codex" ? cache?.current ? "verified" : "manual_action_required" : "not_applicable",
@@ -217,7 +236,9 @@ export function installRelease(release, { home = homedir(), codexHome, codexBina
       next_step: noOp ? "No installation files changed. No additional reload is needed for this run; live activation remains unverified until observed."
         : host === "cursor"
         ? "Reload Cursor, then confirm the skill in Customize. Local imports must be allowed and a same-name marketplace install must not take precedence."
-        : cache?.current
+        : host === "opencode"
+          ? "Start a new OpenCode session and confirm @efficiency and /efficiency load the skill."
+          : cache?.current
           ? "Restart the desktop app if needed, confirm the plugin is enabled, and start a new Codex task to verify skill discovery."
           : "Codex CLI is unavailable. Fully restart the desktop app, open Plugins Directory, select your marketplace, install or refresh Efficiency, verify the installed cache version, then start a new task.",
     };
@@ -232,6 +253,9 @@ export function installRelease(release, { home = homedir(), codexHome, codexBina
     if (marketplaceWritten) attempt("restore marketplace", () => {
       if (!sameFile(marketplacePath, marketplace.bytes)) throw new Error("Concurrent marketplace change preserved; restore manually");
       if (original) atomicWrite(marketplacePath, original); else rmSync(marketplacePath);
+    });
+    if (opencodeApplied.configWritten || opencodeApplied.commands.length > 0) attempt("restore opencode registration", () => {
+      rollbackOpenCodeChanges(opencodeApplied, { home, plugin: PLUGIN_NAME });
     });
     const result = {
       status: "failed", error: error.message,
@@ -255,7 +279,7 @@ export async function main(args) {
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg === "--help") {
-      process.stdout.write("Usage: node install-release.mjs --host cursor|codex [--dry-run] [--release-dir DIR] [--replace-existing]\nDownload and verify only: --host cursor|codex --download-dir NEW_DIR\nIsolation: --home DIR [--codex-bin /absolute/path/inside/home/driver.mjs]\nRequires Node.js >=22. Default: latest stable geldmacher/efficiency release. No Git or npm install required.\n");
+      process.stdout.write("Usage: node install-release.mjs --host cursor|codex|opencode [--dry-run] [--release-dir DIR] [--replace-existing]\nDownload and verify only: --host cursor|codex|opencode --download-dir NEW_DIR\nIsolation: --home DIR [--codex-bin /absolute/path/inside/home/driver.mjs]\nRequires Node.js >=22. Default: latest stable geldmacher/efficiency release. No Git or npm install required.\n");
       return;
     }
     if (arg === "--dry-run") options.dryRun = true;

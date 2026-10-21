@@ -2,7 +2,22 @@ import { createHash } from "node:crypto";
 
 export const PLUGIN_NAME = "geldmacher-efficiency";
 export const EXPECTED_REPOSITORY = "geldmacher/efficiency";
-export const RELEASE_HOSTS = Object.freeze(["cursor", "codex"]);
+export const RELEASE_HOSTS = Object.freeze(["cursor", "codex", "opencode"]);
+export const PROVENANCE_SCHEMA = 2;
+const PROVENANCE_HOSTS = Object.freeze({
+  1: Object.freeze(["cursor", "codex"]),
+  2: RELEASE_HOSTS,
+});
+
+export function provenanceHosts(provenance) {
+  const hosts = PROVENANCE_HOSTS[provenance?.schema];
+  if (!hosts) throw new Error("provenance.json identity is invalid");
+  return hosts;
+}
+
+export function publishedAssetNames(version, hosts = RELEASE_HOSTS) {
+  return [...hosts.map((host) => assetName(host, version)), "RELEASE_NOTES.md", "provenance.json", "SHA256SUMS"];
+}
 
 export function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
@@ -65,7 +80,7 @@ export function validateProvenance(provenance) {
     "kind", "plugin", "published_assets", "receipt_sha256", "release_gate", "release_notes_sha256",
     "repository", "schema", "source", "tag", "targets", "version",
   ], "provenance.json");
-  if (provenance.schema !== 1 || provenance.kind !== "github-release-provenance" || provenance.plugin !== PLUGIN_NAME) {
+  if (!Object.hasOwn(PROVENANCE_HOSTS, provenance.schema) || provenance.kind !== "github-release-provenance" || provenance.plugin !== PLUGIN_NAME) {
     throw new Error("provenance.json identity is invalid");
   }
   if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(provenance.version ?? "") || provenance.tag !== `v${provenance.version}`) {
@@ -82,8 +97,9 @@ export function validateProvenance(provenance) {
   }
   shaField(provenance.release_notes_sha256, "release notes hash");
   shaField(provenance.receipt_sha256, "release receipt");
-  exactKeys(provenance.targets, RELEASE_HOSTS, "provenance targets");
-  for (const host of RELEASE_HOSTS) {
+  const hosts = provenanceHosts(provenance);
+  exactKeys(provenance.targets, hosts, "provenance targets");
+  for (const host of hosts) {
     const target = provenance.targets[host];
     exactKeys(target, ["archive", "archive_sha256", "content_sha256", "file_count", "root_directory"], `${host} provenance target`);
     if (target.archive !== assetName(host, provenance.version) || target.root_directory !== PLUGIN_NAME) {
@@ -93,13 +109,7 @@ export function validateProvenance(provenance) {
     shaField(target.content_sha256, `${host} content hash`);
     if (!Number.isSafeInteger(target.file_count) || target.file_count < 1) throw new Error(`${host} file count is invalid`);
   }
-  const expectedAssets = [
-    assetName("cursor", provenance.version),
-    assetName("codex", provenance.version),
-    "RELEASE_NOTES.md",
-    "provenance.json",
-    "SHA256SUMS",
-  ];
+  const expectedAssets = publishedAssetNames(provenance.version, hosts);
   if (!Array.isArray(provenance.published_assets) || provenance.published_assets.join("\n") !== expectedAssets.join("\n")) {
     throw new Error("provenance published asset set is invalid");
   }

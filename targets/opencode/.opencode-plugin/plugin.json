@@ -1,0 +1,30 @@
+{
+  "name": "geldmacher-efficiency",
+  "version": "3.10.0",
+  "description": "Helps coding agents choose simpler solutions, keep context lean, and communicate clearly. For OpenCode 2.1.2.",
+  "author": {
+    "name": "Dennis Geldmacher",
+    "email": "geldmacher.dennis@outlook.de",
+    "url": "https://github.com/geldmacher"
+  },
+  "homepage": "https://github.com/geldmacher/efficiency",
+  "repository": "https://github.com/geldmacher/efficiency",
+  "license": "MIT",
+  "keywords": [
+    "simplicity",
+    "coding-agents",
+    "cursor",
+    "codex",
+    "opencode",
+    "context",
+    "refactoring",
+    "review",
+    "over-engineering",
+    "yagni",
+    "kiss",
+    "dry",
+    "rtk"
+  ],
+  "skills": "./skills/",
+  "opencodeCompatibility": "2.1.2"
+}

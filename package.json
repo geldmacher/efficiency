@@ -2,7 +2,7 @@
   "name": "geldmacher-efficiency-plugin-development",
   "version": "3.10.0",
   "private": true,
-  "description": "Development validation for the Geldmacher Efficiency Agent Plugins, Cursor, and Codex targets.",
+  "description": "Development validation for the Geldmacher Efficiency Agent Plugins, Cursor, Codex, and OpenCode targets.",
   "engines": {
     "node": ">=22"
   },
@@ -12,6 +12,7 @@
     "deploy:prepare": "npm run build:targets && npm run validate",
     "deploy:status": "node scripts/local-plugin-deploy.mjs status",
     "deploy:local": "node scripts/local-plugin-deploy.mjs deploy",
+    "deploy:uninstall": "node scripts/local-plugin-deploy.mjs uninstall --opencode-only",
     "release:plugin": "node scripts/plugin-github-release.mjs",
     "validate": "node scripts/validate-plugin.mjs",
     "check:links": "node scripts/check-links.mjs",

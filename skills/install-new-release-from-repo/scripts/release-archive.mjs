@@ -81,9 +81,16 @@ export function readReleaseArchive(zip) {
   return entries;
 }
 
+export function releaseManifestPath(host) {
+  if (host === "cursor") return ".cursor-plugin/plugin.json";
+  if (host === "codex") return ".codex-plugin/plugin.json";
+  if (host === "opencode") return ".opencode-plugin/plugin.json";
+  throw new Error(`unsupported release host: ${host}`);
+}
+
 export function verifyArchive(zip, provenance, host) {
   const entries = readReleaseArchive(zip);
-  const manifestName = host === "cursor" ? ".cursor-plugin/plugin.json" : ".codex-plugin/plugin.json";
+  const manifestName = releaseManifestPath(host);
   const manifestEntry = entries.find(({ relativePath }) => relativePath === manifestName);
   if (!manifestEntry) throw new Error(`Release is missing ${manifestName}`);
   const manifest = JSON.parse(manifestEntry.bytes.toString("utf8"));
@@ -91,9 +98,13 @@ export function verifyArchive(zip, provenance, host) {
   const summary = contentSummary(entries);
   if (summary.content_sha256 !== provenance.targets[host].content_sha256
     || summary.file_count !== provenance.targets[host].file_count) throw new Error("Release content differs from provenance");
-  const forbidden = new Set([".git", ".agents", ".cursor", ".build", "node_modules", "test", "tests", "plugin.json",
-    host === "cursor" ? ".codex-plugin" : ".cursor-plugin"]);
+  const forbidden = new Set([".git", ".agents", ".cursor", ".build", "node_modules", "test", "tests", "plugin.json", "CLAUDE.md"]);
+  if (host !== "cursor") forbidden.add(".cursor-plugin");
+  if (host !== "codex") forbidden.add(".codex-plugin");
+  if (host !== "opencode") forbidden.add(".opencode-plugin");
+  if (host !== "codex") forbidden.add("AGENTS.md");
   if (host === "codex") for (const name of ["commands", "agents", "rules"]) forbidden.add(name);
+  if (host === "opencode") for (const name of ["agents", "rules"]) forbidden.add(name);
   if (entries.some(({ relativePath }) => forbidden.has(relativePath.split("/")[0]))) throw new Error("Release contains a foreign or development component");
   return entries;
 }

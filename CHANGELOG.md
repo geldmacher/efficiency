@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Add an OpenCode 2.1.2 package next to Cursor and Codex, including `geldmacher-efficiency-opencode-vX.zip`, skill discovery through the global `skills` array, and one command per skill so it can be called as `/name` or `@name`. Suggested release: **3.11.0**.
+- `npm run deploy:local` accepts `--opencode-only`. It merges Efficiency into the shared OpenCode config used by Workflow and Design. Before every write that changes `opencode.json` or an Efficiency command, it saves a timestamped backup under `~/.config/opencode/.local-deploy-backups/geldmacher-efficiency/` and leaves it on disk. A failed deploy restores those files from that backup. `npm run deploy:uninstall` removes only Efficiency's entries, and a second unchanged deploy does not write.
+
+### Changed
+
+- New releases use provenance schema 2 with targets `cursor`, `codex`, and `opencode`. Schema 1 documents that list only Cursor and Codex remain valid.
+
 ## 3.10.0 - 2026-10-14
 
 ### Changed

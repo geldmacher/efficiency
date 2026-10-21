@@ -41,6 +41,35 @@ function pathArchive(names) {
   return Buffer.concat([...local, table, end]);
 }
 
+test("OpenCode install merges shared skills and keeps the original backup", (t) => {
+  const temp = workspace(t);
+  const targetHome = home(temp);
+  const fixture = fixtureRelease(join(temp, "fixture"));
+  const configDir = join(targetHome, ".config", "opencode");
+  mkdirSync(join(configDir, "commands"), { recursive: true });
+  const workflow = join(configDir, "geldmacher-workflow", "skills");
+  const design = "~/.config/opencode/geldmacher-design/skills";
+  const original = `${JSON.stringify({ model: "keep", skills: [workflow, design] }, null, 2)}\n`;
+  writeFileSync(join(configDir, "opencode.json"), original);
+  writeFileSync(join(configDir, "commands", "plan-work.md"), "Load the `plan-work` skill and apply it to the current request.\n");
+  const release = verifyRelease(fixture.directory, "opencode");
+  const installed = installRelease(release, { home: targetHome, env: {} });
+  assert.equal(installed.status, "installed");
+  const backupRoot = join(configDir, ".local-deploy-backups", "geldmacher-efficiency");
+  const backups = readdirSync(backupRoot).filter((name) => !name.startsWith("."));
+  assert.equal(backups.length, 1);
+  assert.equal(readFileSync(join(backupRoot, backups[0], "opencode.json"), "utf8"), original);
+  const merged = JSON.parse(readFileSync(join(configDir, "opencode.json"), "utf8"));
+  assert.equal(merged.model, "keep");
+  assert.ok(merged.skills.includes(workflow));
+  assert.ok(merged.skills.includes(design));
+  assert.equal(merged.skills.filter((entry) => entry.endsWith("/geldmacher-efficiency/skills")).length, 1);
+  assert.match(readFileSync(join(configDir, "commands", "efficiency.md"), "utf8"), /Load the `efficiency` skill/);
+  assert.match(readFileSync(join(configDir, "commands", "plan-work.md"), "utf8"), /plan-work/);
+  assert.equal(installRelease(release, { home: targetHome, env: {} }).no_op, true);
+  assert.deepEqual(readdirSync(backupRoot).filter((name) => !name.startsWith(".")), backups);
+});
+
 test("actual CLI installs, previews without writes, updates, retains backup, and repeats unchanged", (t) => {
   const temp = workspace(t); const targetHome = home(temp);
   const first = fixtureRelease(join(temp, "first"), "3.2.0");

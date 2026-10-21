@@ -16,7 +16,8 @@ import {
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { PLUGIN_NAME, EXPECTED_REPOSITORY, RELEASE_HOSTS, sha256, canonicalJson, assetName, receiptForProvenance, validateProvenance, exactKeys, shaField, contentSummary } from "../skills/install-new-release-from-repo/scripts/release-format.mjs";
+import { PLUGIN_NAME, EXPECTED_REPOSITORY, PROVENANCE_SCHEMA, RELEASE_HOSTS, provenanceHosts, publishedAssetNames, sha256, canonicalJson, assetName, receiptForProvenance, validateProvenance, exactKeys, shaField, contentSummary } from "../skills/install-new-release-from-repo/scripts/release-format.mjs";
+import { releaseManifestPath } from "../skills/install-new-release-from-repo/scripts/release-archive.mjs";
 import { buildPluginTargets } from "./build-plugin-targets.mjs";
 
 const scriptPath = fileURLToPath(import.meta.url);
@@ -105,6 +106,7 @@ function normalizeRepository(value) {
   const normalized = value.trim()
     .replace(/^git@github\.com:/, "https://github.com/")
     .replace(/^ssh:\/\/git@github\.com\//, "https://github.com/")
+    .replace(/^https:\/\/[^/\s@]+@github\.com\//, "https://github.com/")
     .replace(/\.git$/, "")
     .replace(/\/$/, "");
   const match = normalized.match(/^https:\/\/github\.com\/([^/]+\/[^/]+)$/i);
@@ -174,6 +176,7 @@ function sourceState(root, runner, { requireClean = false, requireReleaseCut = f
   const manifests = {
     cursor: readJson(join(root, ".cursor-plugin", "plugin.json"), "Cursor manifest"),
     codex: readJson(join(root, ".codex-plugin", "plugin.json"), "Codex manifest"),
+    opencode: readJson(join(root, "targets", "opencode", ".opencode-plugin", "plugin.json"), "OpenCode manifest"),
     agent_plugins: readJson(join(root, "plugin.json"), "Agent Plugins manifest"),
   };
   for (const [target, manifest] of Object.entries(manifests)) {
@@ -252,7 +255,7 @@ function materializeGitTree(root, commit, destination, runner) {
 }
 
 function targetManifest(host) {
-  return host === "cursor" ? ".cursor-plugin/plugin.json" : ".codex-plugin/plugin.json";
+  return releaseManifestPath(host);
 }
 
 export function inspectReleaseTarget(directory, host, version) {
@@ -306,13 +309,11 @@ function releaseDirectory(base, version) {
 }
 
 function expectedReleasePaths(directory, provenance) {
-  return [
-    provenance.targets.cursor.archive,
-    provenance.targets.codex.archive,
-    "RELEASE_NOTES.md",
-    "provenance.json",
-    "SHA256SUMS",
-  ].map((name) => join(directory, name));
+  return provenance.published_assets.map((name) => join(directory, name));
+}
+
+function checksumNames(provenance) {
+  return [...provenanceHosts(provenance).map((host) => provenance.targets[host].archive), "RELEASE_NOTES.md", "provenance.json"];
 }
 
 function checksumDocument(directory, names) {
@@ -346,7 +347,7 @@ export function verifyPreparedRelease(directory, expectedReceipt) {
   const expectedNames = expectedReleasePaths(directory, provenance).map((path) => basename(path)).sort();
   const actualNames = readdirSync(directory).sort();
   if (actualNames.join("\n") !== expectedNames.join("\n")) throw new Error(`prepared release files differ: ${actualNames.join(", ")}`);
-  for (const host of RELEASE_HOSTS) {
+  for (const host of provenanceHosts(provenance)) {
     const target = provenance.targets?.[host];
     const archivePath = join(directory, target?.archive ?? "");
     if (!target || !existsSync(archivePath) || fileSha256(archivePath) !== target.archive_sha256) {
@@ -356,8 +357,7 @@ export function verifyPreparedRelease(directory, expectedReceipt) {
   if (fileSha256(join(directory, "RELEASE_NOTES.md")) !== provenance.release_notes_sha256) {
     throw new Error("RELEASE_NOTES.md differs from provenance.json");
   }
-  const checksumNames = [provenance.targets.cursor.archive, provenance.targets.codex.archive, "RELEASE_NOTES.md", "provenance.json"];
-  if (readFileSync(join(directory, "SHA256SUMS"), "utf8") !== checksumDocument(directory, checksumNames)) {
+  if (readFileSync(join(directory, "SHA256SUMS"), "utf8") !== checksumDocument(directory, checksumNames(provenance))) {
     throw new Error("SHA256SUMS differs from the prepared release files");
   }
   return { provenance, receipt: computedReceipt, paths: expectedReleasePaths(directory, provenance) };
@@ -432,7 +432,7 @@ export function prepareRelease({
     }
     writeFileSync(join(staged, "RELEASE_NOTES.md"), snapshotNotes);
     const provenance = {
-      schema: 1,
+      schema: PROVENANCE_SCHEMA,
       kind: "github-release-provenance",
       plugin: PLUGIN_NAME,
       version: source.version,
@@ -449,11 +449,11 @@ export function prepareRelease({
       },
       release_notes_sha256: fileSha256(join(staged, "RELEASE_NOTES.md")),
       targets,
-      published_assets: [targets.cursor.archive, targets.codex.archive, "RELEASE_NOTES.md", "provenance.json", "SHA256SUMS"],
+      published_assets: publishedAssetNames(source.version, RELEASE_HOSTS),
     };
     provenance.receipt_sha256 = receiptForProvenance(provenance);
     writeJson(join(staged, "provenance.json"), provenance);
-    writeFileSync(join(staged, "SHA256SUMS"), checksumDocument(staged, [targets.cursor.archive, targets.codex.archive, "RELEASE_NOTES.md", "provenance.json"]));
+    writeFileSync(join(staged, "SHA256SUMS"), checksumDocument(staged, checksumNames(provenance)));
     verifyPreparedRelease(staged, provenance.receipt_sha256);
     const finalSource = sourceState(resolve(root), runner, { requireClean: true, requireReleaseCut: true });
     assertSameSource(source, finalSource, "repository drifted while building release assets");
