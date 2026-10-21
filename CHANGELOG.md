@@ -4,15 +4,22 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 3.11.0 - 2026-10-21
+
 ### Added
 
-- Add an OpenCode 2.1.2 package next to Cursor and Codex, including `geldmacher-efficiency-opencode-vX.zip`, skill discovery through the global `skills` array, and one command per skill so it can be called as `/name` or `@name`. Suggested release: **3.11.0**.
+- Add an OpenCode 2.1.2 package next to Cursor and Codex, including `geldmacher-efficiency-opencode-vX.zip`, skill discovery through the global `skills` array, and one command per skill so it can be called as `/name` or `@name`.
 - `npm run deploy:local` accepts `--opencode-only`. It merges Efficiency into the shared OpenCode config used by Workflow and Design. Before every write that changes `opencode.json` or an Efficiency command, it saves a timestamped backup under `~/.config/opencode/.local-deploy-backups/geldmacher-efficiency/` and leaves it on disk. A failed deploy restores those files from that backup. `npm run deploy:uninstall` removes only Efficiency's entries, and a second unchanged deploy does not write.
+- Before a backup, overwrite, or rollback of `opencode.json` or an Efficiency command, a concurrent-change check compares the current bytes and, except on Windows, the permission mode with the snapshot from planning or from the write being undone. If either differs, the current file is left in place. Writes preserve the existing permission mode.
 
 ### Changed
 
 - New releases use provenance schema 2 with targets `cursor`, `codex`, and `opencode`. Schema 1 documents that list only Cursor and Codex remain valid.
 - Parse OpenCode JSONC with `jsonc-parser` 3.3.1. A parse error aborts before the shared config is changed.
+
+### Upgrade
+
+Installations of 3.10.0 need a one-time manual upgrade using the [installation guide from the v3.11.0 release tag](https://github.com/geldmacher/efficiency/blob/v3.11.0/docs/installation.md), because the 3.10.0 update helper only understands provenance schema 1.
 
 ## 3.10.0 - 2026-10-14
 
