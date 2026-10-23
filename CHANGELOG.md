@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Before adding complexity for a speculative or vanishingly unlikely race, concurrency, or security edge case, explain the concrete failure mode, its likelihood, and the complexity cost to the user and get their buy-in. Evidence-backed security, correctness, or data-loss risks, stated requirements, and existing protections need no extra buy-in. Adapted from OpenCode's `AGENTS.md`.
+
 ## 3.11.0 - 2026-10-21
 
 ### Added

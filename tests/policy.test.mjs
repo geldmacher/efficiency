@@ -113,6 +113,18 @@ test("advisory branches do not independently authorize execution", () => {
   }
 });
 
+test("speculative race and security guards require buy-in without a second copy", () => {
+  const design = read("skills/efficiency/references/design-and-code-simplicity.md");
+  const yagniEnd = design.indexOf("**KISS:**");
+  const yagni = design.slice(design.indexOf("**YAGNI:**"), yagniEnd);
+  assert.ok(yagniEnd > 0, "YAGNI must stay ahead of KISS");
+  assert.match(yagni, /Before adding complexity for a speculative or vanishingly unlikely race, concurrency, or security edge case, explain the concrete failure mode, its likelihood, and the complexity cost to the user and get their buy-in/);
+  assert.match(yagni, /Evidence-backed security, correctness, or data-loss risks, requirements the user stated, and existing protections need no extra buy-in/);
+  assert.equal([...design.matchAll(/vanishingly unlikely/g)].length, 1);
+  assert.doesNotMatch(read("skills/efficiency/references/auditor.md"), /vanishingly unlikely|extra buy-in/);
+  assert.doesNotMatch(read("skills/efficiency/references/task-economy.md"), /vanishingly unlikely|extra buy-in/);
+});
+
 test("shared RTK integration and filtering retain distinct host paths and native trust", () => {
   const entrypoint = read("skills/rtk-setup/SKILL.md");
   const integration = read("skills/rtk-setup/references/integration.md");
