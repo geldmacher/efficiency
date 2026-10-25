@@ -202,7 +202,7 @@ Each Efficiency GitHub Release contains separate packages for Cursor, Codex, and
 On macOS or Linux, replace the example version and host when necessary, then verify exactly the two downloaded files that are covered by `SHA256SUMS`:
 
 ```sh
-archive="geldmacher-efficiency-cursor-v3.12.0.zip"
+archive="geldmacher-efficiency-cursor-v3.13.0.zip"
 
 verify_release_file() {
   file="$1"
@@ -224,7 +224,7 @@ verify_release_file "provenance.json" || exit 1
 On Windows PowerShell, the equivalent check selects the exact two entries before comparing their hashes:
 
 ```powershell
-$archive = "geldmacher-efficiency-cursor-v3.12.0.zip"
+$archive = "geldmacher-efficiency-cursor-v3.13.0.zip"
 $files = @($archive, "provenance.json")
 $checksumLines = Get-Content -LiteralPath .\SHA256SUMS
 

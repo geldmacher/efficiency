@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 3.13.0 - 2026-10-25
+
 ### Changed
 
 - Add a test-surface cue for tests whose assertions still hold when the implementation under test returns nothing or an empty or default value. It complements assertion-free coverage probes and stays a mental check, with no mutation tool, score, or coverage gate. Idea from [ub-mode](https://github.com/unclebob/ub-mode).
