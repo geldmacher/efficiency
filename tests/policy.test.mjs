@@ -125,6 +125,19 @@ test("speculative race and security guards require buy-in without a second copy"
   assert.doesNotMatch(read("skills/efficiency/references/task-economy.md"), /vanishingly unlikely|extra buy-in/);
 });
 
+test("test-surface cues catch assertions an empty or default return would satisfy", () => {
+  const design = read("skills/efficiency/references/design-and-code-simplicity.md");
+  const start = design.indexOf("### Test surface");
+  assert.ok(start >= 0, "Test surface section must exist");
+  const surface = design.slice(start);
+  const lines = surface.split("\n");
+  const cue = "- tests whose assertions still hold when the implementation under test returns nothing or an empty or default value";
+  assert.equal(lines.filter((line) => line === "- assertion-free coverage probes").length, 1);
+  assert.equal(lines.filter((line) => line === cue).length, 1);
+  assert.equal([...design.matchAll(/returns nothing or an empty or default value/g)].length, 1);
+  assert.doesNotMatch(surface, /mutation score|mutator|CRAP|Halstead/);
+});
+
 test("shared RTK integration and filtering retain distinct host paths and native trust", () => {
   const entrypoint = read("skills/rtk-setup/SKILL.md");
   const integration = read("skills/rtk-setup/references/integration.md");
