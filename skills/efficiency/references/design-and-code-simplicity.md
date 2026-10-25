@@ -80,6 +80,7 @@ Before adding or changing a test, answer four questions. A missing answer means 
 These patterns are evidence cues. A match still needs a concrete location; the pattern alone does not prove the test should be removed:
 
 - assertion-free coverage probes
+- tests whose assertions still hold when the implementation under test returns nothing or an empty or default value
 - self-comparisons and identity copies
 - exact source, import, or string searches of the implementation
 - private predicate or call-shape tests duplicated at a real boundary
