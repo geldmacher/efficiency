@@ -114,15 +114,16 @@ test("local CLI previews, deploys, repairs cache, updates and reports native rol
     writeFileSync(skill, readFileSync(skill, "utf8") + "\nFixture update.\n");
     writeFileSync(join(home, "fail-add"), "after");
     const failed = drive(["deploy"], 1);
-    assert.equal(failed.source_rollback, "completed_or_not_needed");
+    assert.equal(failed.previous_install_retained, false);
     assert.equal(failed.native_installation, "unverified_after_failure");
-    for (const host of ["cursor", "codex"]) assert.equal(receipt(host), old[host]);
+    assert.match(failed.next_step, /older GitHub release/);
+    for (const host of ["cursor", "codex"]) assert.notEqual(receipt(host), old[host]);
     assert.equal(readFileSync(marketplacePath, "utf8"), marketplaceBefore);
     const nativeAfterFailure = JSON.parse(readFileSync(join(home, "native.json"))).installed[0];
-    assert.notEqual(nativeAfterFailure.version, JSON.parse(old.codex).local_version, "native side effect remains distinct from restored source");
+    assert.notEqual(nativeAfterFailure.version, JSON.parse(old.codex).local_version, "native side effect remains distinct from the previous source");
     rmSync(join(home, "fail-add"));
     const update = drive(["deploy"]);
-    assert.equal(update.no_op, false);
+    assert.equal(update.no_op, true, "the failed run already left the new source and native cache in place");
     assert.equal(drive(["status"]).current, true);
 
     writeFileSync(join(cache(update.targets.codex.local_version), "unexpected.txt"), "corrupt");
@@ -162,16 +163,17 @@ test("local CLI previews, deploys, repairs cache, updates and reports native rol
     }
     writeFileSync(join(home, "fail-add"), "after");
     const migrationFailure = drive(["deploy"], 1);
-    assert.equal(migrationFailure.source_rollback, "completed_or_not_needed");
+    assert.equal(migrationFailure.previous_install_retained, false);
     assert.equal(migrationFailure.native_installation, "unverified_after_failure");
+    assert.match(migrationFailure.next_step, /older GitHub release/);
     for (const host of ["cursor", "codex"]) {
-      assert.equal(readlinkSync(source(host)), legacy[host]);
+      assert.equal(lstatSync(source(host)).isSymbolicLink(), false);
       assert.deepEqual(snapshot(legacy[host]), snapshots[host]);
     }
     assert.deepEqual(snapshot(dependencies), dependencySnapshot);
     rmSync(join(home, "fail-add"));
     const migrated = drive(["deploy"]);
-    assert.equal(migrated.no_op, false);
+    assert.equal(migrated.no_op, true, "the failed run already replaced the links with the new physical copy");
     for (const host of ["cursor", "codex"]) {
       assert.equal(lstatSync(source(host)).isSymbolicLink(), false);
       assert.deepEqual(snapshot(legacy[host]), snapshots[host]);
@@ -181,5 +183,14 @@ test("local CLI previews, deploys, repairs cache, updates and reports native rol
     assert.deepEqual(snapshot(dependencies), dependencySnapshot);
     assert.equal(drive(["status"]).current, true);
     assert.equal(drive(["deploy"]).no_op, true);
+    const backupNames = [];
+    const walk = (dir) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        if (entry.name.includes(".backup-") || entry.name === ".local-deploy-backups" || entry.name === ".geldmacher-release-backups" || entry.name === "recovery.json" || entry.name === "marketplace.before.json") backupNames.push(join(dir, entry.name));
+        if (entry.isDirectory() && !entry.isSymbolicLink()) walk(join(dir, entry.name));
+      }
+    };
+    walk(home);
+    assert.deepEqual(backupNames, []);
   } finally { rmSync(work, { recursive: true, force: true }); }
 });

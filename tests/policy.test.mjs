@@ -12,7 +12,7 @@ const entries = (path, extension) => readdirSync(join(defaultRoot, path)).filter
 const body = (text) => text.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "").trim();
 
 test("OpenCode shared-config rule is fixed in deploy and release instructions", () => {
-  const rule = "OpenCode config (opencode.json, commands/) is shared with Workflow and Design: merge only, always write a persistent backup before changing anything, touch only your own entries, rollback/uninstall removes only your own entries.";
+  const rule = "OpenCode config (opencode.json, commands/) is shared with Workflow and Design: merge only, touch only your own entries, never write backups; uninstall removes only your own entries; rollback means installing an older GitHub release.";
   for (const path of [
     "AGENTS.md",
     ".agents/skills/deploy-local-plugin/SKILL.md",

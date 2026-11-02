@@ -1,9 +1,21 @@
 import assert from "node:assert/strict";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { applyOpenCodeChanges, openCodeCommand, openCodePaths, planOpenCodeChanges, rollbackOpenCodeChanges, uninstallOpenCodeDeployment } from "../skills/install-new-release-from-repo/scripts/opencode-config.mjs";
+
+function assertNoInstallBackups(root) {
+  const hits = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === ".local-deploy-backups" || entry.name === ".geldmacher-release-backups" || entry.name.includes(".backup-") || entry.name === "recovery.json" || entry.name === "marketplace.before.json") hits.push(join(dir, entry.name));
+      if (entry.isDirectory() && !entry.isSymbolicLink()) walk(join(dir, entry.name));
+    }
+  };
+  if (existsSync(root)) walk(root);
+  assert.deepEqual(hits, []);
+}
 
 const plugin = "geldmacher-efficiency";
 const command = openCodeCommand("efficiency", "Review changes.");
@@ -23,7 +35,7 @@ function fixture(t) {
   return { root, home, paths, original, commandPath, plan };
 }
 
-test("OpenCode refuses shared files changed since planning before backing up or writing", async (t) => {
+test("OpenCode refuses shared files changed since planning before writing", async (t) => {
   for (const target of ["config", "command"]) await t.test(target, (t) => {
     const item = fixture(t);
     const destination = target === "config" ? item.paths.config : item.commandPath;
@@ -36,20 +48,21 @@ test("OpenCode refuses shared files changed since planning before backing up or 
     rollbackOpenCodeChanges(applied, item);
     assert.equal(readFileSync(destination, "utf8"), foreign);
     assert.equal(readFileSync(target === "config" ? item.commandPath : item.paths.config, "utf8"), target === "config" ? previousCommand : item.original);
-    assert.equal(existsSync(item.paths.backups), false);
+    assertNoInstallBackups(item.root);
   });
 });
 
 test("OpenCode rollback leaves a concurrent command replacement intact after its config write", (t) => {
   const item = fixture(t);
   const applied = {};
-  const foreign = "User command written after backup\n";
+  const foreign = "User command written after planning\n";
   assert.throws(() => applyOpenCodeChanges(item.plan, applied, {
     afterConfig() { writeFileSync(item.commandPath, foreign); },
   }), /changed concurrently/);
   rollbackOpenCodeChanges(applied, { home: item.home, plugin });
   assert.equal(readFileSync(item.paths.config, "utf8"), item.original);
   assert.equal(readFileSync(item.commandPath, "utf8"), foreign);
+  assertNoInstallBackups(item.root);
 });
 
 test("OpenCode rollback reports a conflict instead of overwriting later config changes", (t) => {
@@ -60,6 +73,7 @@ test("OpenCode rollback reports a conflict instead of overwriting later config c
   writeFileSync(item.paths.config, foreign);
   assert.throws(() => rollbackOpenCodeChanges(applied, { home: item.home, plugin }), /changed concurrently/);
   assert.equal(readFileSync(item.paths.config, "utf8"), foreign);
+  assertNoInstallBackups(item.root);
 });
 
 test("OpenCode rechecks parent symlinks introduced after planning", (t) => {
@@ -95,4 +109,5 @@ test("OpenCode retains shared file permissions through deploy, rollback and unin
   uninstallOpenCodeDeployment({ home: item.home, plugin, env: {} });
   assert.equal(mode(item.paths.config), 0o600);
   assert.equal(existsSync(item.commandPath), false);
+  assertNoInstallBackups(item.root);
 });

@@ -123,17 +123,15 @@ export function installRelease(release, { home = homedir(), codexHome, codexBina
   if (present(lock)) throw new Error(`Another installation or interrupted run owns ${lock}; inspect it before retrying`);
   let locked = false;
   let stage;
-  let backup;
-  let movedSource = false;
-  let placedSource = false;
-  let movedState = false;
-  let placedState = false;
+  let sourceReplaced = false;
+  let previousPluginRemoved = false;
+  let evidenceReplaced = false;
   let marketplaceWritten = false;
   let nativeAttempted = false;
   let original = null;
   let marketplace;
   let opencodePlan = null;
-  const opencodeApplied = { backup: null };
+  const opencodeApplied = {};
   try {
     if (!dryRun) {
       mkdirSync(parent, { recursive: true });
@@ -179,10 +177,10 @@ export function installRelease(release, { home = homedir(), codexHome, codexBina
       opencode_config_changed: Boolean(opencodePlan?.config.change),
       opencode_commands_changed: Boolean(opencodePlan?.commands.change),
       native_installation: host === "codex" ? cache?.current ? "verified" : "pending" : "not_applicable",
-      activation: "unverified", backup: null, replacement_requires_approval: replacementReason,
+      activation: "unverified", replacement_requires_approval: replacementReason,
     };
     if (dryRun) return { ...report, status: "preview", next_step: replacementReason
-      ? "Ask the user to approve replacing this installation before adding --replace-existing. The previous directory will be retained."
+      ? "Ask the user to approve replacing this installation before adding --replace-existing. The previous directory is removed and is not retained; roll back by installing an older GitHub release."
       : "Run the same command without --dry-run after resolving any reported prerequisites." };
     if (!matches || marketplaceChange || opencodeChange) {
       stage = mkdtempSync(join(parent, `.${PLUGIN_NAME}.stage-`));
@@ -199,16 +197,11 @@ export function installRelease(release, { home = homedir(), codexHome, codexBina
       mkdirSync(evidence);
       for (const name of [release.archive, "SHA256SUMS", "provenance.json"]) cpSync(join(release.directory, name), join(evidence, name), { errorOnExist: true, force: false });
       verifyRelease(evidence, host, provenance.version);
-      backup = join(parent, `.${PLUGIN_NAME}.backup-${randomUUID()}`);
-      mkdirSync(backup);
-      report.backup = backup;
-      writeFileSync(join(backup, "recovery.json"), canonicalJson({ destination, state, marketplace: host === "codex" ? marketplacePath : null, previous_marketplace_existed: original !== null, selected_version: provenance.version }));
-      if (original) writeFileSync(join(backup, "marketplace.before.json"), original);
       if (!matches) {
-        if (exists) { renameSync(destination, join(backup, "plugin")); movedSource = true; }
-        renameSync(payload, destination); placedSource = true;
-        if (present(state)) { renameSync(state, join(backup, "release")); movedState = true; }
-        renameSync(evidence, state); placedState = true;
+        if (exists) { rmSync(destination, { recursive: true, force: true }); previousPluginRemoved = true; }
+        renameSync(payload, destination); sourceReplaced = true;
+        if (present(state)) rmSync(state, { recursive: true, force: true });
+        renameSync(evidence, state); evidenceReplaced = true;
       }
       if (marketplaceChange) {
         if (!sameFile(marketplacePath, original)) throw new Error("Marketplace changed concurrently");
@@ -246,23 +239,27 @@ export function installRelease(release, { home = homedir(), codexHome, codexBina
     nativeAttempted ||= error.nativeAttempted === true;
     const recovery = [];
     const attempt = (label, fn) => { try { fn(); } catch (failure) { recovery.push(`${label}: ${failure.message}`); } };
-    if (placedSource) attempt("retain attempted source", () => renameSync(destination, join(backup, "attempted-plugin")));
-    if (movedSource) attempt("restore previous source", () => renameSync(join(backup, "plugin"), destination));
-    if (placedState) attempt("retain attempted release", () => renameSync(state, join(backup, "attempted-release")));
-    if (movedState) attempt("restore previous evidence", () => renameSync(join(backup, "release"), state));
-    if (marketplaceWritten) attempt("restore marketplace", () => {
+    if (marketplaceWritten) attempt("restore marketplace from memory", () => {
       if (!sameFile(marketplacePath, marketplace.bytes)) throw new Error("Concurrent marketplace change preserved; restore manually");
       if (original) atomicWrite(marketplacePath, original); else rmSync(marketplacePath);
     });
-    if (opencodeApplied.backup) attempt("restore opencode registration", () => {
+    if (opencodeApplied.writes?.length) attempt("restore opencode registration from memory", () => {
       rollbackOpenCodeChanges(opencodeApplied, { home, plugin: PLUGIN_NAME });
     });
+    const directoryChanged = previousPluginRemoved || sourceReplaced || evidenceReplaced;
     const result = {
       status: "failed", error: error.message,
-      source_rollback: recovery.length ? "incomplete" : "completed_or_not_needed",
-      recovery_errors: recovery, backup: backup ?? null,
+      plugin_directory_replaced: sourceReplaced,
+      previous_plugin_removed: previousPluginRemoved,
+      release_evidence_replaced: evidenceReplaced,
+      previous_install_retained: !directoryChanged,
+      recovery_errors: recovery,
       native_installation: nativeAttempted ? "unverified_after_failure" : "not_changed",
-      next_step: nativeAttempted ? "Inspect the retained backup. Reinstall the restored source through the native host; for a failed first install inspect/remove only this plugin through the host. Do not delete caches manually." : "Resolve the reported conflict or prerequisite before retrying.",
+      next_step: directoryChanged
+        ? `The plugin directory was replaced and the previous copy was not retained. Reinstall an older GitHub release to recover it.${nativeAttempted ? " Native installation is unverified; reinstall through the native host and verify its cache. Do not delete caches manually." : ""}`
+        : nativeAttempted
+          ? "The previous installation was left in place. Native installation is unverified. Reinstall an older GitHub release if that cache must change, and do not delete caches manually."
+          : "The previous installation was left in place. Resolve the reported conflict or prerequisite before retrying.",
     };
     throw Object.assign(new Error(error.message), { result });
   } finally {

@@ -117,15 +117,17 @@ test("rollback preserves a concurrent marketplace edit and reports incomplete re
         writeFileSync(item.marketplace, concurrent);
         throw Object.assign(new Error("native failure"), { nativeAttempted: true });
       } }), (error) => {
-      assert.equal(error.result.source_rollback, "incomplete");
+      assert.equal(error.result.previous_install_retained, false);
       assert.equal(error.result.native_installation, "unverified_after_failure");
       assert.match(error.result.recovery_errors[0], /Concurrent marketplace change preserved/);
+      assert.match(error.result.next_step, /older GitHub release/);
       return true;
     });
     assert.equal(readFileSync(item.marketplace, "utf8"), concurrent);
     const paths = deploymentPaths(item.home, plugin);
-    assert.equal(existsSync(paths.cursor), false);
-    assert.equal(existsSync(paths.codex), false);
+    assert.equal(existsSync(paths.cursor), true);
+    assert.equal(existsSync(paths.codex), true);
+    assert.equal(existsSync(join(item.home, ".config", "opencode", ".local-deploy-backups")), false);
   } finally { rmSync(item.root, { recursive: true, force: true }); }
 });
 
@@ -306,7 +308,7 @@ test("changed bundles replace both targets", () => {
   }
 });
 
-test("a failure after both swaps restores both targets and Marketplace", () => {
+test("a failure after both swaps leaves the new targets and restores Marketplace from memory", () => {
   const item = fixture();
   try {
     const options = {
@@ -328,16 +330,27 @@ test("a failure after both swaps restores both targets and Marketplace", () => {
       deployedAt: "2026-08-10T12:02:00.000Z",
       simulateFailure: "after-codex-add",
     }), (error) => {
-      assert.match(error.message, /deployment rolled back/);
-      assert.equal(error.result.source_rollback, "completed_or_not_needed");
+      assert.match(error.message, /local plugin deployment stopped/);
+      assert.equal(error.result.previous_install_retained, false);
+      assert.equal(error.result.previous_plugin_removed, true);
       assert.equal(error.result.native_installation, "unverified_after_failure");
+      assert.match(error.result.next_step, /older GitHub release/);
       return true;
     });
-    assert.equal(readFileSync(join(paths.cursor, ".local-deploy.json"), "utf8"), oldCursor);
-    assert.equal(readFileSync(join(paths.codex, ".local-deploy.json"), "utf8"), oldCodex);
+    assert.notEqual(readFileSync(join(paths.cursor, ".local-deploy.json"), "utf8"), oldCursor);
+    assert.notEqual(readFileSync(join(paths.codex, ".local-deploy.json"), "utf8"), oldCodex);
     assert.equal(readFileSync(item.marketplace, "utf8"), oldMarketplace);
-    assert.equal(readFileSync(join(paths.cursor, "payload.txt"), "utf8"), "first\n");
-    assert.equal(readFileSync(join(paths.codex, "payload.txt"), "utf8"), "first\n");
+    assert.equal(readFileSync(join(paths.cursor, "payload.txt"), "utf8"), "rollback-candidate\n");
+    assert.equal(readFileSync(join(paths.codex, "payload.txt"), "utf8"), "rollback-candidate\n");
+    const backupNames = [];
+    const walk = (dir) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        if (entry.name.includes(".backup-") || entry.name === ".local-deploy-backups" || entry.name === ".geldmacher-release-backups") backupNames.push(entry.name);
+        if (entry.isDirectory() && !entry.isSymbolicLink()) walk(join(dir, entry.name));
+      }
+    };
+    walk(item.home);
+    assert.deepEqual(backupNames, []);
   } finally {
     rmSync(item.root, { recursive: true, force: true });
   }
@@ -367,17 +380,14 @@ function isolatedOpenCodeEnv(home) {
   return { XDG_CONFIG_HOME: join(home, ".config") };
 }
 
-function backupDirectories(root) {
-  return readdirSync(root).filter((name) => !name.startsWith(".")).sort();
-}
-
-test("OpenCode deploy merges a shared config under an isolated XDG_CONFIG_HOME, backs it up, and uninstalls only its entries", () => {
+test("OpenCode deploy merges a shared config under an isolated XDG_CONFIG_HOME and uninstalls only its entries", () => {
   const item = fixture();
   try {
     const env = isolatedOpenCodeEnv(item.home);
     const paths = deploymentPaths(item.home, plugin);
     const skillsPath = openCodeSkillsPath(item.home, plugin);
     const leaked = join(homedir(), ".config", "opencode", ".local-deploy-backups", plugin);
+    const backupRoot = join(item.home, ".config", "opencode", ".local-deploy-backups");
     assert.equal(existsSync(leaked), false);
     const foreignSkills = ["./workflow/skills", "~/.config/opencode/design/skills"];
     const originalDocument = { model: "keep-me", plugin: ["workflow"], skills: [...foreignSkills] };
@@ -415,14 +425,8 @@ test("OpenCode deploy merges a shared config under an isolated XDG_CONFIG_HOME, 
     assert.equal(readFileSync(join(paths.opencodeCommands, "plan-work.md"), "utf8"), foreignCommand);
     assert.match(readFileSync(join(paths.opencodeCommands, "efficiency.md"), "utf8"), /Load the `efficiency` skill/);
     assert.equal(readFileSync(paths.opencodeConfigComments, "utf8"), jsonc);
-    const backups = backupDirectories(paths.opencodeBackups);
-    assert.equal(backups.length, 1);
-    assert.equal(isInside(item.home, join(paths.opencodeBackups, backups[0])), true);
-    const deployBackup = JSON.parse(readFileSync(join(paths.opencodeBackups, backups[0], "manifest.json"), "utf8"));
-    assert.equal(deployBackup.plugin, plugin);
-    assert.equal(deployBackup.reason, "deploy");
-    assert.equal(readFileSync(join(paths.opencodeBackups, backups[0], "opencode.json"), "utf8"), original);
-    assert.equal(first.opencode.backup, join(paths.opencodeBackups, backups[0]));
+    assert.equal(existsSync(backupRoot), false);
+    assert.equal(Object.hasOwn(first.opencode, "backup"), false);
 
     const installedBytes = readFileSync(paths.opencodeConfig);
     const second = deployPreparedTargets({
@@ -433,9 +437,9 @@ test("OpenCode deploy merges a shared config under an isolated XDG_CONFIG_HOME, 
       deployedAt: "2026-08-10T12:05:00.000Z",
     });
     assert.equal(second.no_op, true);
-    assert.equal(second.opencode.backup, null);
+    assert.equal(Object.hasOwn(second.opencode, "backup"), false);
     assert.ok(readFileSync(paths.opencodeConfig).equals(installedBytes));
-    assert.deepEqual(backupDirectories(paths.opencodeBackups), backups);
+    assert.equal(existsSync(backupRoot), false);
     assert.equal(readFileSync(join(paths.opencodeCommands, "plan-work.md"), "utf8"), foreignCommand);
 
     installed.skills.push(skillsPath);
@@ -456,18 +460,13 @@ test("OpenCode deploy merges a shared config under an isolated XDG_CONFIG_HOME, 
     assert.equal(readFileSync(join(paths.opencodeCommands, "plan-work.md"), "utf8"), foreignCommand);
     assert.equal(existsSync(paths.opencode), false);
     assert.equal(readFileSync(paths.opencodeConfigComments, "utf8"), jsonc);
-    const afterBackups = backupDirectories(paths.opencodeBackups);
-    assert.equal(afterBackups.length, 2);
-    const uninstallBackup = afterBackups.find((name) => name !== backups[0]);
-    const uninstallManifest = JSON.parse(readFileSync(join(paths.opencodeBackups, uninstallBackup, "manifest.json"), "utf8"));
-    assert.equal(uninstallManifest.reason, "uninstall");
-    assert.ok(JSON.parse(readFileSync(join(paths.opencodeBackups, uninstallBackup, "opencode.json"), "utf8")).skills.includes(skillsPath));
+    assert.equal(existsSync(backupRoot), false);
     const afterBytes = readFileSync(paths.opencodeConfig);
     const again = uninstallOpenCodeDeployment({ plugin, home: item.home, env, deployedAt: "2026-08-10T14:00:00.000Z" });
     assert.equal(again.no_op, true);
-    assert.equal(again.backup, null);
+    assert.equal(Object.hasOwn(again, "backup"), false);
     assert.ok(readFileSync(paths.opencodeConfig).equals(afterBytes));
-    assert.deepEqual(backupDirectories(paths.opencodeBackups), afterBackups);
+    assert.equal(existsSync(backupRoot), false);
     assert.equal(existsSync(leaked), false);
   } finally { rmSync(item.root, { recursive: true, force: true }); }
 });
@@ -488,11 +487,11 @@ test("OpenCode deploy preserves JSONC and refuses an unrelated command", () => {
     assert.equal(readFileSync(paths.opencodeConfigComments, "utf8"), jsonc);
     assert.equal(existsSync(paths.opencodeConfig), false);
     assert.equal(existsSync(paths.opencode), false);
-    assert.equal(existsSync(paths.opencodeBackups), false);
+    assert.equal(existsSync(join(item.home, ".config", "opencode", ".local-deploy-backups")), false);
   } finally { rmSync(item.root, { recursive: true, force: true }); }
 });
 
-test("failed OpenCode deploy restores the shared config from its persistent backup", () => {
+test("failed OpenCode deploy restores the shared config from memory and creates no backup", () => {
   const item = fixture();
   try {
     const env = isolatedOpenCodeEnv(item.home);
@@ -511,17 +510,12 @@ test("failed OpenCode deploy restores the shared config from its persistent back
       env,
       deployedAt: "2026-08-10T12:00:00.000Z",
       simulateFailure: "after-opencode-commands",
-    }), /deployment rolled back/);
+    }), /local plugin deployment stopped/);
     assert.equal(readFileSync(paths.opencodeConfig, "utf8"), original);
     assert.equal(readFileSync(join(paths.opencodeCommands, "efficiency.md"), "utf8"), previousCommand);
     assert.equal(readFileSync(join(paths.opencodeCommands, "plan-work.md"), "utf8"), foreignCommand);
-    assert.equal(existsSync(paths.opencode), false);
-    const backups = backupDirectories(paths.opencodeBackups);
-    assert.equal(backups.length, 1);
-    assert.equal(readFileSync(join(paths.opencodeBackups, backups[0], "opencode.json"), "utf8"), original);
-    const manifest = JSON.parse(readFileSync(join(paths.opencodeBackups, backups[0], "manifest.json"), "utf8"));
-    assert.equal(manifest.files.find((file) => file.kind === "opencode-command" && file.path.endsWith("efficiency.md")).existed, true);
-    assert.equal(readFileSync(join(paths.opencodeBackups, backups[0], "commands", "efficiency.md"), "utf8"), previousCommand);
+    assert.equal(existsSync(paths.opencode), true);
+    assert.equal(existsSync(join(item.home, ".config", "opencode", ".local-deploy-backups")), false);
   } finally { rmSync(item.root, { recursive: true, force: true }); }
 });
 
@@ -566,11 +560,11 @@ test("OpenCode uninstall CLI removes only this plugin under an isolated XDG_CONF
     assert.equal(readFileSync(join(paths.opencodeCommands, "plan-work.md"), "utf8"), "leave me\n");
     assert.match(readFileSync(join(paths.opencodeCommands, "context-optimization.md"), "utf8"), /Load the `context-optimization` skill/);
     assert.equal(existsSync(paths.opencode), false);
-    assert.equal(backupDirectories(paths.opencodeBackups).length, 1);
+    assert.equal(existsSync(join(home, ".config", "opencode", ".local-deploy-backups")), false);
     const again = spawnSync(process.execPath, [alias, "uninstall"], { env, encoding: "utf8" });
     assert.equal(again.status, 0, again.stderr);
     assert.equal(JSON.parse(again.stdout).no_op, true);
-    assert.equal(backupDirectories(paths.opencodeBackups).length, 1);
+    assert.equal(existsSync(join(home, ".config", "opencode", ".local-deploy-backups")), false);
     assert.equal(existsSync(leaked), leakedBefore);
   } finally { rmSync(parent, { recursive: true, force: true }); }
 });

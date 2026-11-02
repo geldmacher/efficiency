@@ -201,7 +201,6 @@ export function deploymentPaths(home, plugin) {
         opencodeConfig: opencode.config,
         opencodeConfigComments: opencode.configComments,
         opencodeCommands: opencode.commands,
-        opencodeBackups: opencode.backups,
       };
     })(),
   };
@@ -305,10 +304,6 @@ function stageTarget(source, destination, metadata) {
   return { stageRoot, payload };
 }
 
-function backupPath(destination) {
-  return join(dirname(destination), `.${basename(destination)}.backup-${process.pid}-${randomUUID()}`);
-}
-
 function cachePath(codexHome, marketplace, plugin, version) {
   return join(codexHome, "plugins", "cache", marketplace, plugin, version);
 }
@@ -407,7 +402,6 @@ export function deployPreparedTargets({
   if (selectedHosts.includes("opencode")) {
     assertDestination(paths.opencodeConfig, paths.opencodeConfig, paths.home);
     assertDestination(join(paths.opencodeCommands, "command.md"), join(paths.opencodeCommands, "command.md"), paths.home);
-    assertDestination(join(paths.opencodeBackups, "manifest.json"), join(paths.opencodeBackups, "manifest.json"), paths.home);
     opencodePlan = planOpenCodeChanges({
       home,
       plugin,
@@ -459,8 +453,6 @@ export function deployPreparedTargets({
         config_change: opencodePlan.config.change,
         commands: paths.opencodeCommands,
         command_change: opencodePlan.commands.change,
-        backup_root: paths.opencodeBackups,
-        backup: null,
       }
       : null,
   };
@@ -473,22 +465,21 @@ export function deployPreparedTargets({
   const swapped = [];
   let marketplaceWritten = false;
   let nativeAttempted = false;
-  const opencodeApplied = { backup: null };
+  const opencodeApplied = {};
   try {
     for (const host of changedHosts) staged[host] = stageTarget(metadata[host].path, paths[host], metadata[host]);
     if (simulateFailure === "after-stage") throw new Error("simulated failure after stage");
     for (const host of changedHosts) {
       const destination = paths[host];
       const previous = existingBundle(destination, { plugin, host });
-      const backup = previous ? backupPath(destination) : null;
-      if (backup) renameSync(destination, backup);
-      try {
-        renameSync(staged[host].payload, destination);
-      } catch (error) {
-        if (backup && !lstatExists(destination)) renameSync(backup, destination);
-        throw error;
+      const entry = { host, destination, previousRemoved: false, placed: false };
+      swapped.push(entry);
+      if (previous) {
+        rmSync(destination, { recursive: true, force: true });
+        entry.previousRemoved = true;
       }
-      swapped.push({ host, destination, backup });
+      renameSync(staged[host].payload, destination);
+      entry.placed = true;
       if (simulateFailure === `after-${host}-swap`) throw new Error(`simulated failure after ${host} swap`);
     }
     if (selectedHosts.includes("codex") && marketplaceChanged) {
@@ -537,12 +528,11 @@ export function deployPreparedTargets({
       });
       if (verified.config.change || verified.commands.change) throw new Error("OpenCode registration failed post-deploy verification");
     }
-    for (const item of swapped) if (item.backup) rmSync(item.backup, { recursive: true, force: true });
     return {
       ...plan,
       no_op: false,
       codex,
-      opencode: plan.opencode ? { ...plan.opencode, backup: opencodeApplied.backup ?? null } : null,
+      opencode: plan.opencode,
     };
   } catch (error) {
     nativeAttempted ||= error.nativeAttempted === true;
@@ -550,28 +540,30 @@ export function deployPreparedTargets({
     const attempt = (label, action) => {
       try { action(); } catch (failure) { recoveryErrors.push(`${label}: ${failure.message}`); }
     };
-    for (const item of [...swapped].reverse()) attempt(`restore ${item.host}`, () => {
-      if (lstatExists(item.destination)) rmSync(item.destination, { recursive: true, force: true });
-      if (item.backup) renameSync(item.backup, item.destination);
-    });
-    if (marketplaceWritten) attempt("restore marketplace", () => {
+    if (marketplaceWritten) attempt("restore marketplace from memory", () => {
       if (!lstatExists(paths.marketplace) || !readFileSync(paths.marketplace).equals(marketplaceBytes)) {
         throw new Error("Concurrent marketplace change preserved; restore manually");
       }
       if (marketplaceOriginal === null) rmSync(paths.marketplace, { force: true });
       else atomicWrite(paths.marketplace, marketplaceOriginal);
     });
-    if (opencodeApplied.backup) attempt("restore opencode registration", () => {
+    if (opencodeApplied.writes?.length) attempt("restore opencode registration from memory", () => {
       rollbackOpenCodeChanges(opencodeApplied, { home, plugin });
     });
-    const message = recoveryErrors.length ? "local plugin deployment recovery incomplete" : "local plugin deployment rolled back";
+    const directoryChanged = swapped.some((item) => item.previousRemoved || item.placed);
+    const message = recoveryErrors.length
+      ? "local plugin deployment stopped with incomplete in-memory recovery"
+      : "local plugin deployment stopped";
     throw Object.assign(new Error(`${message}: ${error.message}`, { cause: error }), { result: {
       status: "failed", error: error.message,
-      source_rollback: recoveryErrors.length ? "incomplete" : "completed_or_not_needed",
+      plugin_directories_replaced: swapped.filter((item) => item.placed).map((item) => item.host),
+      previous_plugin_removed: swapped.some((item) => item.previousRemoved),
+      previous_install_retained: !directoryChanged,
       recovery_errors: recoveryErrors,
-      backups: swapped.filter((item) => item.backup && lstatExists(item.backup)).map((item) => item.backup),
       native_installation: nativeAttempted ? "unverified_after_failure" : "not_changed",
-      next_step: nativeAttempted ? "Inspect recovery, then reinstall the restored source through Codex and verify its cache. Do not delete caches manually." : "Resolve the reported conflict before retrying.",
+      next_step: directoryChanged
+        ? `Plugin directories were replaced and the previous copies were not retained. Reinstall an older GitHub release to recover the previous plugin.${nativeAttempted ? " Native installation is unverified; do not delete Codex caches manually." : ""}`
+        : "The previous installation was left in place. Resolve the reported conflict before retrying.",
     } });
   } finally {
     for (const stage of Object.values(staged)) if (lstatExists(stage.stageRoot)) rmSync(stage.stageRoot, { recursive: true, force: true });
