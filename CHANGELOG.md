@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 3.14.0 - 2026-11-02
+
 ### Changed
 
 - Install and local deploy no longer write copies of `opencode.json`, command files, or old plugin directories. They do not create `.backup-*` directories, `~/.geldmacher-release-backups`, or `~/.config/opencode/.local-deploy-backups`. A failed shared OpenCode write in the same run is restored from the bytes kept in memory. Any other failure stops and reports what changed. Rollback means installing an older GitHub release.
