@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
-import { parse as parseJsonc } from "jsonc-parser";
 import { assertPath } from "./codex-install.mjs";
 
 export const OPENCODE_COMPATIBILITY = "2.1.2";
@@ -91,11 +90,68 @@ export function expandOpenCodePath(entry, home) {
   return expanded;
 }
 
+function stripJsonc(text) {
+  const output = [];
+  let pendingComma = -1;
+  let index = 0;
+  while (index < text.length) {
+    const character = text[index];
+    if (character === '"') {
+      pendingComma = -1;
+      let end = index + 1;
+      while (end < text.length) {
+        if (text[end] === "\\") {
+          end += 2;
+          continue;
+        }
+        if (text[end] === '"') {
+          end += 1;
+          break;
+        }
+        end += 1;
+      }
+      output.push(text.slice(index, end));
+      index = end;
+      continue;
+    }
+    if (character === "/" && text[index + 1] === "/") {
+      while (index < text.length && text[index] !== "\n") index += 1;
+      continue;
+    }
+    if (character === "/" && text[index + 1] === "*") {
+      const close = text.indexOf("*/", index + 2);
+      if (close === -1) throw new Error("unclosed comment");
+      index = close + 2;
+      continue;
+    }
+    if (character === ",") {
+      pendingComma = output.length;
+      output.push(character);
+      index += 1;
+      continue;
+    }
+    if (character === "}" || character === "]") {
+      if (pendingComma !== -1) {
+        output[pendingComma] = " ";
+        pendingComma = -1;
+      }
+      output.push(character);
+      index += 1;
+      continue;
+    }
+    if (character !== " " && character !== "\t" && character !== "\r" && character !== "\n") pendingComma = -1;
+    output.push(character);
+    index += 1;
+  }
+  return output.join("");
+}
+
 export function parseOpenCodeJsonc(text, label = "OpenCode config") {
-  const errors = [];
-  const document = parseJsonc(text, errors, { allowTrailingComma: true });
-  if (errors.length > 0) throw new Error(`invalid OpenCode JSONC: ${label}`);
-  return document;
+  try {
+    return JSON.parse(stripJsonc(String(text)));
+  } catch {
+    throw new Error(`invalid OpenCode JSONC: ${label}`);
+  }
 }
 
 function readJsonDocument(home, path) {
