@@ -8,7 +8,7 @@ Install and update Efficiency from the latest stable [GitHub Release](https://gi
 - Update Efficiency: [manually](#manual-update) or [with the update skill](#update-with-your-agent)
 - [Finish installation or find a missing skill](#finish-installation)
 - [Set up optional Codex response guidance](#optional-codex-response-guidance)
-- [Resolve a conflict or roll back](#conflicts-backups-and-recovery)
+- [Resolve a conflict or roll back](#conflicts-and-recovery)
 - Reference: [download verification](#manual-verified-download), [agent bootstrap procedure](#first-installation-without-the-skill), and [direct helper usage](#installed-skill-and-direct-helper-usage)
 
 ## Before you start
@@ -41,7 +41,7 @@ section "First installation without the skill".
 Verify the release before installing and tell me whether a reload or new task is needed.
 ```
 
-Your agent identifies the app, downloads and verifies one release, previews the installation, and applies it under your request. It reports the installed version, any backup, and the next activation step. If the existing installation contains local changes or a newer version, it asks before replacing that specific installation.
+Your agent identifies the app, downloads and verifies one release, previews the installation, and applies it under your request. It reports the installed version and the next activation step. If the existing installation contains local changes or a newer version, it asks before replacing that specific installation. Replacement removes the previous plugin directory and does not retain a copy.
 
 You do not need to run the technical steps later in this guide yourself when the agent completes them for you. Continue with [Finish installation](#finish-installation).
 
@@ -50,11 +50,11 @@ You do not need to run the technical steps later in this guide yourself when the
 ### Manual update
 
 1. Download the latest stable package for your app, `SHA256SUMS`, and `provenance.json` together, then [verify the download](#manual-verified-download).
-2. Keep the current complete plugin directory and its matching release files as a backup before replacing it. Preserve any local changes you want to keep separately.
+2. Preserve any local changes you want to keep separately. Replacing the plugin directory removes the previous directory and does not retain a copy.
 3. Extract the new archive into a temporary directory. Replace the installed source with its complete `geldmacher-efficiency` directory at the same path; do not merge files from different versions.
 4. Finish the update for your app: [reload Cursor](#cursor), or [refresh/reinstall Efficiency in Codex](#codex) and verify the refreshed cache version before starting a new task. For Codex, preserve the existing Marketplace entry and its source path.
 
-If an update fails, follow [recovery and rollback](#conflicts-backups-and-recovery). To have download checks, backups, and installation handled for you, use the update skill below.
+If an update fails, follow [recovery and rollback](#conflicts-and-recovery). To have download checks and installation handled for you, use the update skill below.
 
 ### Update with your agent
 
@@ -80,11 +80,11 @@ $geldmacher-efficiency:install-new-release-from-repo Update Efficiency to the la
 
 `/install-new-release-from-repo` sends the same request.
 
-The skill downloads and verifies the selected release, previews the update, applies it under your request, and retains a backup when replacing an installation. It reports any remaining activation step.
+The skill downloads and verifies the selected release, previews the update, and applies it under your request. It reports any remaining activation step. Replacing an installation removes the previous plugin directory and does not retain a copy.
 
 For an older installation or a missing update skill, use the [installation prompt](#installation-prompt) instead.
 
-To inspect an update without installing it, replace the request with “Preview the latest stable Efficiency update for this app. Preview only.” The preview may download temporary files, but it does not change your plugin, marketplace, cache, or retained backup. A normal update request authorizes the ordinary installation after preview; app permission prompts still apply.
+To inspect an update without installing it, replace the request with “Preview the latest stable Efficiency update for this app. Preview only.” The preview may download temporary files, but it does not change your plugin, marketplace, or cache. A normal update request authorizes the ordinary installation after preview; app permission prompts still apply.
 
 ## Finish installation
 
@@ -134,35 +134,35 @@ After approval, the skill removes only its recognized managed block and preserve
 
 Disabling the plugin does not remove this global block. If you no longer want the guidance, remove it separately; deleting the plugin first can leave a broken link.
 
-## Conflicts, backups, and recovery
+## Conflicts and recovery
 
 ### When replacement needs a decision
 
-The preview reports `previous_version`, the selected version, and `replacement_requires_approval` when the existing installation is newer, locally modified, or cannot be matched to retained release evidence.
+The preview reports `previous_version`, the selected version, and `replacement_requires_approval` when the existing installation is newer, locally modified, or cannot be matched to the current release evidence.
 
 **Example:** Your installed copy has edits that are not in the selected release. The agent must identify that copy and explain that replacement would remove those edits from the active installation. Only your explicit decision to replace it permits `--replace-existing`.
 
-That flag retains the previous directory. It cannot bypass a wrong plugin identity, unsafe paths, a conflicting marketplace source, or failed release checks.
+That flag removes the previous directory and does not retain a copy. It cannot bypass a wrong plugin identity, unsafe paths, a conflicting marketplace source, or failed release checks.
 
-### Keep the backup and release evidence
+### Keep the current release evidence
 
-A successful update retains the previous complete plugin in the reported backup directory, along with its release files when available, `marketplace.before.json` when applicable, and `recovery.json`.
-
-The adjacent `.geldmacher-efficiency.release` directory holds evidence for the current installation. Keep it so future updates can recognize local modifications.
+The adjacent `.geldmacher-efficiency.release` directory holds evidence for the current installation. Keep it so future updates can recognize local modifications. Install and deploy do not copy the previous plugin directory, shared OpenCode files, or Marketplace bytes to disk.
 
 ### Recover after a failed install
 
-The helper attempts to restore its previous source and marketplace changes after an ordinary failure. Read its error report before retrying.
+Read the error report before retrying. It says what changed.
 
-If a native Codex operation failed, the report may say `native_installation: unverified_after_failure`. The cache may differ even if source restoration succeeded. Inspect the retained evidence, reinstall the restored source through Codex, and verify its installed cache. For a failed first installation, inspect and, if necessary, remove only this plugin through the app. Never clear the cache directory manually.
+A failure before the plugin directory is replaced leaves the previous installation in place. A failure after that replacement stops. The new directory stays, and the previous directory is not retained. Shared OpenCode files that this same run already wrote are rewritten from the bytes kept in memory. The personal Marketplace is handled the same way when this run changed it. Neither rewrite copies those files to a second location.
+
+If a native Codex operation failed, the report may say `native_installation: unverified_after_failure`. The cache may differ from the plugin directory. Reinstall the selected release through Codex and verify its installed cache. Never clear the cache directory manually.
 
 An interrupted process may leave an `.install-lock` directory. Inspect its owner and recorded paths; remove only an abandoned lock after confirming that no installation is running.
 
 ### Roll back to a previous version
 
-With retained release files, use the prior release directory with `--release-dir`, preview the downgrade, approve replacement of the identified installation, and apply with `--replace-existing`. See [direct helper usage](#installed-skill-and-direct-helper-usage).
+Rollback means installing an older GitHub release. Download that release, or reuse its directory, and run the helper with `--release-dir` or `--download-dir`. Preview the downgrade, approve replacement of the identified installation, and apply with `--replace-existing`. See [direct helper usage](#installed-skill-and-direct-helper-usage).
 
-For a backup made before the installer was used, restore the complete saved source using the manual [Cursor](#cursor) or [Codex](#codex) procedure. Never merge files from different versions. In Codex, also refresh the native installation and verify the cache before treating rollback as complete.
+For a manual install, place the complete older package with the [Cursor](#cursor) or [Codex](#codex) procedure. Never merge files from different versions. In Codex, also refresh the native installation and verify the cache before treating rollback as complete.
 
 ## First installation without the skill
 
@@ -177,7 +177,7 @@ The receiving agent performs these steps without requiring a development checkou
 3. Verify exactly the selected ZIP and `provenance.json` using the checksum recipes below. Confirm provenance identifies `geldmacher-efficiency`, `geldmacher/efficiency`, the selected version/tag, and that selected archive. These checks establish consistency with assets obtained from the expected GitHub repository; they are not independent release signatures.
 4. Inspect the ZIP with the agent's available archive inspection tools before extraction. Require one `geldmacher-efficiency/` root, regular files/directories only, and reject links, absolute paths, `..`, duplicate paths, backslashes, Windows drive/device paths, and double nesting. Extract only into another newly created temporary directory, never directly into an installed plugin. If safe archive inspection is unavailable, stop with that prerequisite rather than executing an unchecked installer.
 5. Locate `geldmacher-efficiency/skills/install-new-release-from-repo/scripts/install-release.mjs` inside the verified extracted package. Invoke it with the selected host and `--release-dir` pointing at the downloaded ZIP/checksum/provenance directory, first with `--dry-run`. It revalidates the archive structure, receipt, manifest, file count and content hash before any installation. If the selected release predates the helper, follow the manual host procedure below instead.
-6. Apply with the same helper, host and `--release-dir`, omitting `--dry-run`, under the user's installation request. Follow the helper's conflict and native permission messages. Retain reported backups and recovery evidence, then clean up only the temporary download/extraction directories from this invocation. Finish with the reported host activation step.
+6. Apply with the same helper, host and `--release-dir`, omitting `--dry-run`, under the user's installation request. Follow the helper's conflict and native permission messages, then clean up only the temporary download/extraction directories from this invocation. Finish with the reported host activation step. Roll back by installing an older GitHub release.
 
 ## Installed skill and direct helper usage
 
@@ -189,7 +189,7 @@ node "/absolute/path/to/skill/scripts/install-release.mjs" --host cursor --relea
 node "/absolute/path/to/skill/scripts/install-release.mjs" --host cursor --release-dir "/new/temporary/release-directory"
 ```
 
-Substitute `codex` for Codex or `opencode` for OpenCode. These commands also work in PowerShell with actual absolute paths. `--download-dir` creates a new directory and performs only download/verification. `--release-dir` pins already downloaded assets and requires no network. A direct invocation without either option resolves and installs latest in one run. A dry run may download temporary files and inspect the native CLI, but changes no plugin, marketplace, cache, or retained backup.
+Substitute `codex` for Codex or `opencode` for OpenCode. These commands also work in PowerShell with actual absolute paths. `--download-dir` creates a new directory and performs only download/verification. `--release-dir` pins already downloaded assets and requires no network. A direct invocation without either option resolves and installs latest in one run. A dry run may download temporary files and inspect the native CLI, but changes no plugin, marketplace, or cache.
 
 For Codex, the helper preserves the personal marketplace's existing name, interface and unrelated entries; an existing Efficiency entry must already point at the documented local source. It checks `codex plugin marketplace list --json` resolves the name to the intended personal root before calling `codex plugin add <plugin>@<actual-marketplace-name> --json`, then verifies `codex plugin list --json` plus the selected cache bytes. It respects the current `CODEX_HOME` for cache inspection. It does not manually create or delete cache copies. If the CLI is missing, `status: prepared` reports the exact desktop installation steps still needed. Other CLI errors stop the run.
 
@@ -260,9 +260,9 @@ Install the contents at the local Cursor plugin path:
 - macOS/Linux: `~/.cursor/plugins/local/geldmacher-efficiency`
 - Windows: `%USERPROFILE%\.cursor\plugins\local\geldmacher-efficiency`
 
-For a first installation, extract the archive to a temporary directory and move its single `geldmacher-efficiency` directory to that destination. For an update, keep the current directory as a backup, place the new complete directory at the same path, and do not merge old and new files. Then reload Cursor. Installation on disk and live plugin discovery are separate checks.
+For a first installation, extract the archive to a temporary directory and move its single `geldmacher-efficiency` directory to that destination. For an update, remove the current directory, place the new complete directory at the same path, and do not merge old and new files. Then reload Cursor. Installation on disk and live plugin discovery are separate checks.
 
-To roll back, move the current directory aside, restore the previously retained complete directory, and reload Cursor. Keep the matching old archive, `SHA256SUMS`, and `provenance.json` so the restored bytes remain verifiable.
+To roll back, install an older GitHub release at the same path and reload Cursor. Keep that release's archive, `SHA256SUMS`, and `provenance.json` so the installed bytes remain verifiable.
 
 ## Codex
 
@@ -312,9 +312,9 @@ Source placement is not installation or activation. After creating or changing t
 
 These Marketplace, cache, restart, Plugins Directory, and new-task boundaries follow the [official OpenAI plugin documentation](https://developers.openai.com/plugins/build/plugins).
 
-For an update, retain the current source directory and its matching release files as a backup, replace the source with the complete verified directory from the new archive, keep the Marketplace entry pointed at the same path, and repeat all four activation steps above. Verify the manifest version in the refreshed cache copy before starting the new task.
+For an update, replace the source with the complete verified directory from the new archive, keep the Marketplace entry pointed at the same path, and repeat all four activation steps above. The previous source directory is not retained. Verify the manifest version in the refreshed cache copy before starting the new task.
 
-For rollback, restore the retained complete old source directory and its verified release files, keep the Marketplace entry unchanged, and repeat the same restart, Plugins Directory refresh or reinstall, cache-version check, and new-task steps. Do not combine files from different versions and do not treat restored source bytes as proof that the cached installed copy changed.
+For rollback, install an older GitHub release at the same source path, keep the Marketplace entry unchanged, and repeat the same restart, Plugins Directory refresh or reinstall, cache-version check, and new-task steps. Do not combine files from different versions and do not treat the source bytes as proof that the cached installed copy changed.
 
 ## OpenCode
 
@@ -323,17 +323,17 @@ Install the package at:
 - macOS/Linux: `~/.config/opencode/geldmacher-efficiency`
 - Windows: `%USERPROFILE%\.config\opencode\geldmacher-efficiency`
 
-OpenCode config (opencode.json, commands/) is shared with Workflow and Design: merge only, always write a persistent backup before changing anything, touch only your own entries, rollback/uninstall removes only your own entries.
+OpenCode config (opencode.json, commands/) is shared with Workflow and Design: merge only, touch only your own entries, never write backups; uninstall removes only your own entries; rollback means installing an older GitHub release.
 
-OpenCode 2.1.2 discovers skills from directories listed in the `skills` array of `opencode.json` or `opencode.jsonc`. Register this package's `skills/` directory with an absolute path. Relative paths in `skills` are resolved from the working directory, not from the config file, so do not use a relative entry. Leave `opencode.jsonc` unchanged. If `opencode.json` already contains Workflow or Design entries, keep those entries and every other key. Add the absolute `skills/` path only when that path is absent. Before every write that changes `opencode.json` or one of Efficiency's command files, save a timestamped backup under `~/.config/opencode/.local-deploy-backups/geldmacher-efficiency/` and leave it on disk. A failed change restores those shared files from that backup. A second run that changes nothing does not write.
+OpenCode 2.1.2 discovers skills from directories listed in the `skills` array of `opencode.json` or `opencode.jsonc`. Register this package's `skills/` directory with an absolute path. Relative paths in `skills` are resolved from the working directory, not from the config file, so do not use a relative entry. Leave `opencode.jsonc` unchanged. If `opencode.json` already contains Workflow or Design entries, keep those entries and every other key. Add the absolute `skills/` path only when that path is absent. The helper keeps the original bytes of `opencode.json` and Efficiency command files in memory only. If a write in the same run fails, it rewrites those files from that memory and does not copy them to disk. A second run that changes nothing does not write.
 
 Skill ids are the directory names. Model auto-invocation stays enabled. `@efficiency` loads the skill. `/efficiency` runs the command that loads the same skill. The same pair works for every packaged skill. Commands live in the package and are installed to `~/.config/opencode/commands/<name>.md`. If a destination file exists and does not load that Efficiency skill, stop. Do not edit Workflow or Design command files.
 
 The manifest's `opencodeCompatibility` value is `2.1.2`. Do not add `CLAUDE.md`, `opencode/slash`, or `opencode/autoinvoke: false`. Do not install this package into `~/.agents/skills` or `~/.claude/skills`.
 
-For an update, back up the complete package directory. Replace the whole package directory. Keep the skills path. Replace only Efficiency command files. Start a new session and check `@efficiency` and `/efficiency`.
+For an update, replace the whole package directory. Keep the skills path. Replace only Efficiency command files. Start a new session and check `@efficiency` and `/efficiency`.
 
-To uninstall, run `npm run deploy:uninstall` from a development checkout, or remove only Efficiency's skills entries, Efficiency command files whose text loads that skill, and `~/.config/opencode/geldmacher-efficiency`. Leave Workflow and Design entries, unrelated commands, `opencode.jsonc`, and the timestamped backups in place.
+To uninstall, run `npm run deploy:uninstall` from a development checkout, or remove only Efficiency's skills entries, Efficiency command files whose text loads that skill, and `~/.config/opencode/geldmacher-efficiency`. Leave Workflow and Design entries, unrelated commands, and `opencode.jsonc` in place.
 
 ## Verify the installed layout
 

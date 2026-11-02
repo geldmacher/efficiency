@@ -111,7 +111,7 @@ $geldmacher-efficiency:install-new-release-from-repo Update Efficiency to the la
 @install-new-release-from-repo Update Efficiency to the latest stable GitHub Release for OpenCode.
 ```
 
-If the skill is missing, use the installation request above. For manual updates, follow the [backup, replacement, and activation steps](docs/installation.md#manual-update). The [installation guide](docs/installation.md) also covers previews and recovery.
+If the skill is missing, use the installation request above. For manual updates, follow the [replacement and activation steps](docs/installation.md#manual-update). The [installation guide](docs/installation.md) also covers previews and recovery.
 
 ## Learn more
 

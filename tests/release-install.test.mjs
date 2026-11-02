@@ -25,6 +25,17 @@ function cli(args) {
   const result = spawnSync(process.execPath, [installer, ...args], { encoding: "utf8", cwd: tmpdir() });
   return { ...result, report: JSON.parse(result.status === 0 ? result.stdout : result.stderr) };
 }
+function assertNoInstallBackups(root) {
+  const hits = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === ".local-deploy-backups" || entry.name === ".geldmacher-release-backups" || entry.name.includes(".backup-") || entry.name === "recovery.json" || entry.name === "marketplace.before.json") hits.push(join(dir, entry.name));
+      if (entry.isDirectory() && !entry.isSymbolicLink()) walk(join(dir, entry.name));
+    }
+  };
+  if (existsSync(root)) walk(root);
+  assert.deepEqual(hits, []);
+}
 
 function pathArchive(names) {
   const local = []; const central = []; let offset = 0;
@@ -43,7 +54,7 @@ function pathArchive(names) {
   return Buffer.concat([...local, table, end]);
 }
 
-test("OpenCode install merges shared skills and keeps the original backup", (t) => {
+test("OpenCode install merges shared skills and creates no backup", (t) => {
   const temp = workspace(t);
   const targetHome = home(temp);
   const fixture = fixtureRelease(join(temp, "fixture"));
@@ -57,10 +68,7 @@ test("OpenCode install merges shared skills and keeps the original backup", (t) 
   const release = verifyRelease(fixture.directory, "opencode");
   const installed = installRelease(release, { home: targetHome, env: {} });
   assert.equal(installed.status, "installed");
-  const backupRoot = join(configDir, ".local-deploy-backups", "geldmacher-efficiency");
-  const backups = readdirSync(backupRoot).filter((name) => !name.startsWith("."));
-  assert.equal(backups.length, 1);
-  assert.equal(readFileSync(join(backupRoot, backups[0], "opencode.json"), "utf8"), original);
+  assert.equal(existsSync(join(configDir, ".local-deploy-backups")), false);
   const merged = JSON.parse(readFileSync(join(configDir, "opencode.json"), "utf8"));
   assert.equal(merged.model, "keep");
   assert.ok(merged.skills.includes(workflow));
@@ -69,13 +77,13 @@ test("OpenCode install merges shared skills and keeps the original backup", (t) 
   assert.match(readFileSync(join(configDir, "commands", "efficiency.md"), "utf8"), /Load the `efficiency` skill/);
   assert.match(readFileSync(join(configDir, "commands", "plan-work.md"), "utf8"), /plan-work/);
   assert.equal(installRelease(release, { home: targetHome, env: {} }).no_op, true);
-  assert.deepEqual(readdirSync(backupRoot).filter((name) => !name.startsWith(".")), backups);
+  assertNoInstallBackups(targetHome);
 });
 
-test("OpenCode release install refuses shared commands and backup directory symlinks", async (t) => {
+test("OpenCode release install refuses a shared commands symlink and ignores a backup-directory symlink", async (t) => {
   const temp = workspace(t);
   const release = verifyRelease(fixtureRelease(join(temp, "fixture")).directory, "opencode");
-  for (const linked of ["commands", ".local-deploy-backups"]) await t.test(linked, (t) => {
+  await t.test("commands", (t) => {
     const work = workspace(t);
     const targetHome = home(work);
     const paths = openCodePaths(targetHome, "geldmacher-efficiency");
@@ -84,12 +92,28 @@ test("OpenCode release install refuses shared commands and backup directory syml
     mkdirSync(outside);
     const sentinel = join(outside, "foreign.md");
     writeFileSync(sentinel, "foreign command\n");
-    symlinkSync(outside, join(paths.configDir, linked), "dir");
+    symlinkSync(outside, paths.commands, "dir");
     for (const dryRun of [true, false]) assert.throws(() => installRelease(release, { home: targetHome, env: {}, dryRun }), /symlink/);
     assert.equal(readFileSync(sentinel, "utf8"), "foreign command\n");
     assert.deepEqual(readdirSync(outside), ["foreign.md"]);
     assert.equal(existsSync(paths.packageDir), false);
     assert.equal(existsSync(paths.config), false);
+  });
+  await t.test(".local-deploy-backups", (t) => {
+    const work = workspace(t);
+    const targetHome = home(work);
+    const paths = openCodePaths(targetHome, "geldmacher-efficiency");
+    const outside = join(work, "outside-home");
+    mkdirSync(paths.configDir, { recursive: true });
+    mkdirSync(outside);
+    const sentinel = join(outside, "foreign.md");
+    writeFileSync(sentinel, "foreign command\n");
+    symlinkSync(outside, join(paths.configDir, ".local-deploy-backups"), "dir");
+    const installed = installRelease(release, { home: targetHome, env: {} });
+    assert.equal(installed.status, "installed");
+    assert.equal(readFileSync(sentinel, "utf8"), "foreign command\n");
+    assert.deepEqual(readdirSync(outside), ["foreign.md"]);
+    assert.equal(existsSync(paths.packageDir), true);
   });
 });
 
@@ -123,8 +147,10 @@ test("OpenCode release install restores command-only changes when post-install v
   try {
     assert.throws(() => installRelease(release, { home: targetHome, env: {} }), (error) => {
       assert.match(error.message, /Injected post-install verification error/);
-      assert.equal(error.result.source_rollback, "completed_or_not_needed");
+      assert.equal(error.result.plugin_directory_replaced, true);
+      assert.equal(error.result.previous_install_retained, false);
       assert.deepEqual(error.result.recovery_errors, []);
+      assert.match(error.result.next_step, /older GitHub release/);
       return true;
     });
   } finally {
@@ -134,10 +160,11 @@ test("OpenCode release install restores command-only changes when post-install v
   }
   assert.equal(readFileSync(command, "utf8"), previous);
   assert.equal(readFileSync(paths.config, "utf8"), original);
-  assert.equal(existsSync(paths.packageDir), false);
+  assert.equal(existsSync(paths.packageDir), true);
+  assertNoInstallBackups(targetHome);
 });
 
-test("actual CLI installs, previews without writes, updates, retains backup, and repeats unchanged", (t) => {
+test("actual CLI installs, previews without writes, updates, and repeats unchanged", (t) => {
   const temp = workspace(t); const targetHome = home(temp);
   const first = fixtureRelease(join(temp, "first"), "3.2.0");
   const second = fixtureRelease(join(temp, "second"));
@@ -149,13 +176,13 @@ test("actual CLI installs, previews without writes, updates, retains backup, and
   assert.equal(installed.status, 0, installed.stderr); assert.equal(installed.report.activation, "unverified");
   assert.equal(manifest(installed.report.destination, "cursor").version, "3.2.0");
   const repeated = cli(args);
-  assert.equal(repeated.report.no_op, true); assert.equal(repeated.report.backup, null);
+  assert.equal(repeated.report.no_op, true); assert.equal(Object.hasOwn(repeated.report, "backup"), false);
   const update = cli(["--host", "cursor", "--home", targetHome, "--release-dir", second.directory]);
   assert.equal(update.status, 0, update.stderr);
   assert.equal(manifest(update.report.destination, "cursor").version, "3.2.1");
-  assert.equal(manifest(join(update.report.backup, "plugin"), "cursor").version, "3.2.0");
-  assert.equal(verifyRelease(join(update.report.backup, "release"), "cursor").provenance.version, "3.2.0");
+  assert.equal(verifyRelease(join(dirname(update.report.destination), ".geldmacher-efficiency.release"), "cursor").provenance.version, "3.2.1");
   assert.equal(existsSync(join(targetHome, ".codex")), false);
+  assertNoInstallBackups(targetHome);
 });
 
 test("checksum, duplicate checksum, receipt, repository, and host identity failures stop before installation", (t) => {
@@ -220,7 +247,9 @@ test("local modifications and downgrade require a concrete replacement decision 
   assert.throws(() => installRelease(release, { home: targetHome }), /modified/);
   assert.equal(readFileSync(join(original.destination, "local.txt"), "utf8"), "colleague's work");
   const replaced = installRelease(release, { home: targetHome, replaceExisting: true });
-  assert.equal(readFileSync(join(replaced.backup, "plugin", "local.txt"), "utf8"), "colleague's work");
+  assert.equal(existsSync(join(replaced.destination, "local.txt")), false);
+  assert.equal(manifest(replaced.destination, "cursor").version, "3.2.1");
+  assertNoInstallBackups(targetHome);
   assert.throws(() => installRelease(verifyRelease(older.directory, "cursor"), { home: targetHome }), /newer/);
 });
 
@@ -285,12 +314,15 @@ test("Codex CLI verifies native cache and preserves a named marketplace through 
   assertGlobalPreserved();
   writeFileSync(join(targetHome, "fail-add"), "after");
   const failed = cli([...args, second.directory]);
-  assert.equal(failed.status, 1); assert.equal(failed.report.source_rollback, "completed_or_not_needed");
+  assert.equal(failed.status, 1); assert.equal(failed.report.previous_install_retained, false);
+  assert.equal(failed.report.plugin_directory_replaced, true);
   assert.equal(failed.report.native_installation, "unverified_after_failure");
+  assert.match(failed.report.next_step, /older GitHub release/);
   assertGlobalPreserved();
-  assert.equal(manifest(installed.report.destination, "codex").version, "3.2.0");
+  assert.equal(manifest(installed.report.destination, "codex").version, "3.2.1");
   assert.deepEqual(readFileSync(marketplacePath), marketplace);
-  assert.equal(verifyRelease(join(failed.report.backup, "attempted-release"), "codex").provenance.version, "3.2.1");
+  assert.equal(verifyRelease(join(dirname(installed.report.destination), ".geldmacher-efficiency.release"), "codex").provenance.version, "3.2.1");
+  assertNoInstallBackups(targetHome);
   assert.equal(existsSync(join(targetHome, ".cursor")), false);
 });
 
@@ -304,8 +336,11 @@ test("Codex first-install failure restores original marketplace bytes and does n
   const failed = cli(["--host", "codex", "--home", targetHome, "--codex-bin", binary, "--release-dir", fixture.directory]);
   assert.equal(failed.status, 1); assert.match(failed.report.error, /cache differs/);
   assert.equal(readFileSync(marketplacePath, "utf8"), original);
-  assert.equal(existsSync(join(targetHome, ".codex", "plugins", "geldmacher-efficiency")), false);
+  assert.equal(existsSync(join(targetHome, ".codex", "plugins", "geldmacher-efficiency")), true);
+  assert.equal(failed.report.plugin_directory_replaced, true);
+  assert.match(failed.report.next_step, /older GitHub release/);
   assert.equal(failed.report.native_installation, "unverified_after_failure");
+  assertNoInstallBackups(targetHome);
 });
 
 test("a marketplace resolving to another root is stopped before native installation", (t) => {
@@ -315,9 +350,13 @@ test("a marketplace resolving to another root is stopped before native installat
   const result = cli(["--host", "codex", "--home", targetHome, "--codex-bin", binary, "--release-dir", fixture.directory]);
   assert.equal(result.status, 1); assert.match(result.report.error, /intended home/);
   assert.equal(result.report.native_installation, "not_changed");
+  assert.equal(result.report.plugin_directory_replaced, true);
+  assert.equal(result.report.previous_install_retained, false);
+  assert.match(result.report.next_step, /older GitHub release/);
   assert.equal(existsSync(join(targetHome, "native.json")), false);
   assert.equal(existsSync(join(targetHome, ".agents", "plugins", "marketplace.json")), false);
-  assert.equal(existsSync(join(targetHome, ".codex", "plugins", "geldmacher-efficiency")), false);
+  assert.equal(existsSync(join(targetHome, ".codex", "plugins", "geldmacher-efficiency")), true);
+  assertNoInstallBackups(targetHome);
 });
 
 test("missing Codex CLI produces a prepared source with an explicit manual activation path", (t) => {

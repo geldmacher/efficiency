@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Install and local deploy no longer write copies of `opencode.json`, command files, or old plugin directories. They do not create `.backup-*` directories, `~/.geldmacher-release-backups`, or `~/.config/opencode/.local-deploy-backups`. A failed shared OpenCode write in the same run is restored from the bytes kept in memory. Any other failure stops and reports what changed. Rollback means installing an older GitHub release.
+- The release installer reads OpenCode JSONC with a small in-repo reader and no runtime dependency. It starts from a repository checkout with Node.js 22 or newer and does not need `npm ci`. `jsonc-parser` remains a development dependency used to compare that reader. Thanks to @bfs2021 for the JSONC reader edge cases from #13.
+- CI runs the installer with `--help` and `--dry-run` from a clean checkout before `npm ci`.
+
 ## 3.13.0 - 2026-10-25
 
 ### Changed

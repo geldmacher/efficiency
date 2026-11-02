@@ -26,6 +26,17 @@ function drive(args, expectedExit = 0) {
   return JSON.parse(expectedExit === 0 ? result.stdout : result.stderr);
 }
 const manifest = (path, host) => JSON.parse(readFileSync(join(path, host === "cursor" ? ".cursor-plugin" : ".codex-plugin", "plugin.json"), "utf8"));
+function assertNoInstallBackups(root) {
+  const hits = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === ".local-deploy-backups" || entry.name === ".geldmacher-release-backups" || entry.name.includes(".backup-") || entry.name === "recovery.json" || entry.name === "marketplace.before.json") hits.push(join(dir, entry.name));
+      if (entry.isDirectory() && !entry.isSymbolicLink()) walk(join(dir, entry.name));
+    }
+  };
+  if (existsSync(root)) walk(root);
+  assert.deepEqual(hits, []);
+}
 function driveRtk(tools, args, expectedExit = 0) {
   const command = [process.execPath, lifecycle, ...args, "--release-metadata", tools.metadata];
   const result = spawnSync(command[0], command.slice(1), { cwd: work, env: tools.env, encoding: "utf8", timeout: 60000 });
@@ -66,10 +77,15 @@ try {
   checks.push("Cursor preview and first install");
   const update = drive([...cursor, current.directory]);
   assert.equal(manifest(update.destination, "cursor").version, version);
-  assert.equal(manifest(join(update.backup, "plugin"), "cursor").version, previousVersion);
-  assert.equal(verifyRelease(join(update.backup, "release"), "cursor").provenance.version, previousVersion);
+  assert.equal(verifyRelease(join(dirname(update.destination), ".geldmacher-efficiency.release"), "cursor").provenance.version, version);
   assert.equal(drive([...cursor, current.directory]).no_op, true);
-  checks.push("Cursor update, retained release, and unchanged repeat");
+  assertNoInstallBackups(cursorHome);
+  const rolledBack = drive([...cursor, previous.directory, "--replace-existing"]);
+  assert.equal(manifest(rolledBack.destination, "cursor").version, previousVersion);
+  assert.equal(verifyRelease(join(dirname(rolledBack.destination), ".geldmacher-efficiency.release"), "cursor").provenance.version, previousVersion);
+  assertNoInstallBackups(cursorHome);
+  assert.equal(manifest(drive([...cursor, current.directory]).destination, "cursor").version, version);
+  checks.push("Cursor update, older-release rollback, and unchanged repeat");
   const rtkRoot = join(work, "rtk-tools");
   let tools = writeRtkTools(rtkRoot);
   const absent = driveRtk(tools, ["inspect"]);
@@ -160,12 +176,14 @@ try {
   checks.push("Codex first install and preserved custom marketplace");
   writeFileSync(join(codexHome, "fail-add"), "after");
   const failed = drive([...codex, current.directory], 1);
-  assert.equal(failed.source_rollback, "completed_or_not_needed");
+  assert.equal(failed.previous_install_retained, false);
   assert.equal(failed.native_installation, "unverified_after_failure");
-  assert.equal(manifest(initial.destination, "codex").version, previousVersion);
+  assert.match(failed.next_step, /older GitHub release/);
+  assert.equal(manifest(initial.destination, "codex").version, version);
   assert.deepEqual(readFileSync(marketplace), before);
-  assert.equal(verifyRelease(join(failed.backup, "attempted-release"), "codex").provenance.version, version);
-  checks.push("Post-native failure restores source and preserves native recovery uncertainty");
+  assert.equal(verifyRelease(join(dirname(initial.destination), ".geldmacher-efficiency.release"), "codex").provenance.version, version);
+  assertNoInstallBackups(codexHome);
+  checks.push("Post-native failure leaves the new source in place and restores marketplace bytes from memory");
   rmSync(join(codexHome, "fail-add"));
   const updated = drive([...codex, current.directory]);
   assert.equal(updated.native_installation, "verified");
