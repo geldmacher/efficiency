@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 4.0.0
+
+- Use `/efficiency-install-release` or `@efficiency-install-release` to update in OpenCode. Give commands an ownership marker and preserve unrelated files during deploy and uninstall.
+- Describe shared OpenCode configuration without naming other plugins.
+
 ## 3.14.0 - 2026-11-02
 
 ### Changed

@@ -2,7 +2,7 @@
 
 Use the complete `npm run release-check` gate for manifest validation, discovery, host isolation, schema hashes, links, deterministic packages, instruction boundaries, and executable regression tests. Review its actual result and `git diff --check`; do not recheck these contracts manually.
 
-OpenCode config (opencode.json, commands/) is shared with Workflow and Design: merge only, touch only your own entries, never write backups; uninstall removes only your own entries; rollback means installing an older GitHub release.
+Check that OpenCode install and uninstall preserve unrelated settings and commands. See the [OpenCode installation procedure](installation.md#opencode).
 
 ## Release decisions
 

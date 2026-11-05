@@ -7,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import test from "node:test";
 import { parse as parseJsonc } from "jsonc-parser";
 import { buildPluginTargets } from "../scripts/build-plugin-targets.mjs";
+import { openCodeReleaseInstallerSkill } from "../scripts/plugin-components.mjs";
 import { parseOpenCodeJsonc } from "../skills/install-new-release-from-repo/scripts/opencode-config.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -71,7 +72,7 @@ test("a built package parses OpenCode JSONC without a vendored parser", () => {
   const output = mkdtempSync(join(tmpdir(), "efficiency-jsonc-package-"));
   try {
     const built = buildPluginTargets(output);
-    const scripts = join(built.opencode.path, "skills", "install-new-release-from-repo", "scripts");
+    const scripts = join(built.opencode.path, "skills", openCodeReleaseInstallerSkill, "scripts");
     assert.equal(existsSync(join(scripts, "node_modules")), false);
     const script = join(scripts, "opencode-config.mjs");
     const result = spawnSync(process.execPath, ["--input-type=module", "-e", `

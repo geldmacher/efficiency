@@ -2,9 +2,9 @@ import { randomUUID } from "node:crypto";
 import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { assertPath } from "./codex-install.mjs";
+import { PLUGIN_NAME } from "./release-format.mjs";
 
 export const OPENCODE_COMPATIBILITY = "2.1.2";
-export const SHARED_OPENCODE_CONFIG_RULE = "OpenCode config (opencode.json, commands/) is shared with Workflow and Design: merge only, touch only your own entries, never write backups; uninstall removes only your own entries; rollback means installing an older GitHub release.";
 
 function slash(path) {
   return path.split(sep).join("/");
@@ -118,13 +118,21 @@ export function parseOpenCodeJsonc(text, label = "OpenCode config") {
   }
 }
 
+const commandOwner = `<!-- ${PLUGIN_NAME}:opencode-command -->`;
+
 export function openCodeCommand(name, description) {
-  return `---\ndescription: ${JSON.stringify(description)}\n---\n\nLoad the \`${name}\` skill and apply it to the current request.\n\n$ARGUMENTS\n`;
+  return `---\ndescription: ${JSON.stringify(description)}\n---\n\n${commandOwner}\n\nLoad the \`${name}\` skill and apply it to the current request.\n\n$ARGUMENTS\n`;
 }
 
-export function isOwnOpenCodeCommand(name, text) {
-  const skill = name.endsWith(".md") ? name.slice(0, -3) : name;
-  return text.includes(`Load the \`${skill}\` skill and apply it to the current request.`);
+function isOwnOpenCodeCommand(name, bytes, home, packageRoot, installedNames) {
+  const text = bytes.toString("utf8");
+  const headerEnd = text.indexOf("\n---\n", 4);
+  if (text.startsWith("---\n") && headerEnd !== -1
+    && text.startsWith(`\n---\n\n${commandOwner}\n\n`, headerEnd)) return true;
+  // Older packages have no marker. An exact match to an installed command proves ownership.
+  if (!installedNames.includes(name)) return false;
+  const installed = readSharedFile(home, join(packageRoot, "commands", name)).bytes;
+  return installed !== null && installed.equals(bytes);
 }
 
 export function openCodePaths(home, plugin) {
@@ -247,12 +255,16 @@ export function planOpenCodeChanges({ home, plugin, commandSources, env = proces
   const jsonc = readJsoncDocument(home, paths.configComments);
   const registered = openCodeSkillRegistered(json.document, skillsPath, home) || openCodeSkillRegistered(jsonc.document, skillsPath, home);
   const bytes = registered ? null : jsonBytes(updateOpenCodeDocument(json.document, skillsPath, home));
+  let installedNames;
   const files = commandSources.map((source) => {
     const destination = join(paths.commands, source.name);
     const { bytes: currentBytes, mode } = readSharedFile(home, destination);
     const current = currentBytes === null ? null : currentBytes.toString("utf8");
-    if (current !== null && current !== source.text && !isOwnOpenCodeCommand(source.name, current)) {
-      throw new Error(`OpenCode command ${source.name} already exists and is not an Efficiency command`);
+    if (current !== null && current !== source.text) {
+      installedNames ??= ownedOpenCodeCommands(paths.packageDir, plugin).names;
+      if (!isOwnOpenCodeCommand(source.name, currentBytes, home, paths.packageDir, installedNames)) {
+        throw new Error(`OpenCode command ${source.name} already exists and is not an Efficiency command`);
+      }
     }
     return { name: source.name, destination, source: source.text, currentBytes, mode, change: current !== source.text };
   });
@@ -373,7 +385,7 @@ export function uninstallOpenCodeDeployment({ plugin, home, env = process.env } 
     const destination = join(paths.commands, name);
     const { bytes, mode } = readSharedFile(home, destination);
     if (bytes === null) continue;
-    if (!isOwnOpenCodeCommand(name, bytes.toString("utf8"))) continue;
+    if (!isOwnOpenCodeCommand(name, bytes, home, paths.packageDir, owned.names)) continue;
     commands.push({ name, destination, bytes, mode });
   }
   const files = [];

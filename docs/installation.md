@@ -75,10 +75,10 @@ $geldmacher-efficiency:install-new-release-from-repo Update Efficiency to the la
 **OpenCode:**
 
 ```text
-@install-new-release-from-repo Update Efficiency to the latest stable GitHub Release for OpenCode.
+@efficiency-install-release Update Efficiency to the latest stable GitHub Release for OpenCode.
 ```
 
-`/install-new-release-from-repo` sends the same request.
+`/efficiency-install-release` sends the same request.
 
 The skill downloads and verifies the selected release, previews the update, and applies it under your request. It reports any remaining activation step. Replacing an installation removes the previous plugin directory and does not retain a copy.
 
@@ -176,7 +176,7 @@ The receiving agent performs these steps without requiring a development checkou
 2. Download the matching `geldmacher-efficiency-<host>-v<version>.zip`, `SHA256SUMS`, and `provenance.json` from that release into a new temporary directory. The archive URL must be under `https://github.com/geldmacher/efficiency/releases/download/<tag>/`. Do not run downloaded code yet.
 3. Verify exactly the selected ZIP and `provenance.json` using the checksum recipes below. Confirm provenance identifies `geldmacher-efficiency`, `geldmacher/efficiency`, the selected version/tag, and that selected archive. These checks establish consistency with assets obtained from the expected GitHub repository; they are not independent release signatures.
 4. Inspect the ZIP with the agent's available archive inspection tools before extraction. Require one `geldmacher-efficiency/` root, regular files/directories only, and reject links, absolute paths, `..`, duplicate paths, backslashes, Windows drive/device paths, and double nesting. Extract only into another newly created temporary directory, never directly into an installed plugin. If safe archive inspection is unavailable, stop with that prerequisite rather than executing an unchecked installer.
-5. Locate `geldmacher-efficiency/skills/install-new-release-from-repo/scripts/install-release.mjs` inside the verified extracted package. Invoke it with the selected host and `--release-dir` pointing at the downloaded ZIP/checksum/provenance directory, first with `--dry-run`. It revalidates the archive structure, receipt, manifest, file count and content hash before any installation. If the selected release predates the helper, follow the manual host procedure below instead.
+5. Locate `skills/install-new-release-from-repo/scripts/install-release.mjs` inside the verified plugin directory for Cursor and Codex. For OpenCode, use `skills/efficiency-install-release/scripts/install-release.mjs`, or the original path in older archives. Invoke it with the selected host and `--release-dir` pointing at the downloaded ZIP/checksum/provenance directory, first with `--dry-run`. It revalidates the archive structure, receipt, manifest, file count and content hash before any installation. If the selected release predates the helper, follow the manual host procedure below instead.
 6. Apply with the same helper, host and `--release-dir`, omitting `--dry-run`, under the user's installation request. Follow the helper's conflict and native permission messages, then clean up only the temporary download/extraction directories from this invocation. Finish with the reported host activation step. Roll back by installing an older GitHub release.
 
 ## Installed skill and direct helper usage
@@ -202,7 +202,7 @@ Each Efficiency GitHub Release contains separate packages for Cursor, Codex, and
 On macOS or Linux, replace the example version and host when necessary, then verify exactly the two downloaded files that are covered by `SHA256SUMS`:
 
 ```sh
-archive="geldmacher-efficiency-cursor-v3.14.0.zip"
+archive="geldmacher-efficiency-cursor-v4.0.0.zip"
 
 verify_release_file() {
   file="$1"
@@ -224,7 +224,7 @@ verify_release_file "provenance.json" || exit 1
 On Windows PowerShell, the equivalent check selects the exact two entries before comparing their hashes:
 
 ```powershell
-$archive = "geldmacher-efficiency-cursor-v3.14.0.zip"
+$archive = "geldmacher-efficiency-cursor-v4.0.0.zip"
 $files = @($archive, "provenance.json")
 $checksumLines = Get-Content -LiteralPath .\SHA256SUMS
 
@@ -323,17 +323,17 @@ Install the package at:
 - macOS/Linux: `~/.config/opencode/geldmacher-efficiency`
 - Windows: `%USERPROFILE%\.config\opencode\geldmacher-efficiency`
 
-OpenCode config (opencode.json, commands/) is shared with Workflow and Design: merge only, touch only your own entries, never write backups; uninstall removes only your own entries; rollback means installing an older GitHub release.
+OpenCode configuration and commands are shared. Merge only this plugin's entries and preserve all unrelated settings, skill paths, and commands. Keep originals in memory and create no backups. Roll back by installing an older GitHub release.
 
-OpenCode 2.1.2 discovers skills from directories listed in the `skills` array of `opencode.json` or `opencode.jsonc`. Register this package's `skills/` directory with an absolute path. Relative paths in `skills` are resolved from the working directory, not from the config file, so do not use a relative entry. Leave `opencode.jsonc` unchanged. If `opencode.json` already contains Workflow or Design entries, keep those entries and every other key. Add the absolute `skills/` path only when that path is absent. The helper keeps the original bytes of `opencode.json` and Efficiency command files in memory only. If a write in the same run fails, it rewrites those files from that memory and does not copy them to disk. A second run that changes nothing does not write.
+OpenCode 2.1.2 discovers skills from directories listed in the `skills` array of `opencode.json` or `opencode.jsonc`. Register this package's `skills/` directory with an absolute path. Relative paths in `skills` are resolved from the working directory, not from the config file, so do not use a relative entry. Leave `opencode.jsonc` unchanged. Preserve all existing keys and skill entries. Add the absolute `skills/` path only when that path is absent. The helper keeps the original bytes of `opencode.json` and Efficiency command files in memory only. If a write in the same run fails, it rewrites those files from that memory and does not copy them to disk. A second run that changes nothing does not write.
 
-Skill ids are the directory names. Model auto-invocation stays enabled. `@efficiency` loads the skill. `/efficiency` runs the command that loads the same skill. The same pair works for every packaged skill. Commands live in the package and are installed to `~/.config/opencode/commands/<name>.md`. If a destination file exists and does not load that Efficiency skill, stop. Do not edit Workflow or Design command files.
+Skill ids are the directory names. Model auto-invocation stays enabled. `@efficiency` loads the skill. `/efficiency` runs the command that loads the same skill. The same pair works for every packaged skill. Commands live in the package and are installed to `~/.config/opencode/commands/<name>.md`. Stop if a destination file exists and its ownership cannot be verified. A skill name alone does not establish ownership.
 
 The manifest's `opencodeCompatibility` value is `2.1.2`. Do not add `CLAUDE.md`, `opencode/slash`, or `opencode/autoinvoke: false`. Do not install this package into `~/.agents/skills` or `~/.claude/skills`.
 
-For an update, replace the whole package directory. Keep the skills path. Replace only Efficiency command files. Start a new session and check `@efficiency` and `/efficiency`.
+For an update, replace the whole package directory. Keep the skills path. Replace only Efficiency command files. Use `/efficiency-install-release` or `@efficiency-install-release` to update from OpenCode. A leftover `/install-new-release-from-repo` from an older release is shared by name and may belong to another installation. Leave it in place unless you can identify its owner and no longer need it. Start a new session and check `@efficiency` and `/efficiency`.
 
-To uninstall, run `npm run deploy:uninstall` from a development checkout, or remove only Efficiency's skills entries, Efficiency command files whose text loads that skill, and `~/.config/opencode/geldmacher-efficiency`. Leave Workflow and Design entries, unrelated commands, and `opencode.jsonc` in place.
+To uninstall, run `npm run deploy:uninstall` from a development checkout, or remove only Efficiency's skills entries, Efficiency command files whose ownership can be verified, and `~/.config/opencode/geldmacher-efficiency`. Preserve all unrelated entries and commands and leave `opencode.jsonc` in place.
 
 ## Verify the installed layout
 

@@ -19,6 +19,7 @@ import { checkLinks } from "../scripts/check-links.mjs";
 import { defaultRoot } from "../scripts/validate-plugin.mjs";
 
 import { portableSkills } from "./helpers/plugin-surface.mjs";
+import { openCodePortableSkills, openCodeReleaseInstallerSkill, releaseInstallerSkill } from "../scripts/plugin-components.mjs";
 
 test("packages contain only user documentation, required artwork and target schemas", () => {
   const temporary = mkdtempSync(join(tmpdir(), "efficiency-doc-boundary-"));
@@ -36,7 +37,8 @@ test("packages contain only user documentation, required artwork and target sche
       ]);
       assert.deepEqual(Object.keys(snapshot).filter((path) => path.startsWith("assets/")), ["assets/logo.svg"]);
       assert.equal(Object.keys(snapshot).some((path) => path.startsWith("schemas/")), target === "agent-plugins");
-      assert.ok(Object.hasOwn(snapshot, "skills/install-new-release-from-repo/scripts/codex-install.mjs"));
+      const installer = target === "opencode" ? openCodeReleaseInstallerSkill : releaseInstallerSkill;
+      assert.ok(Object.hasOwn(snapshot, `skills/${installer}/scripts/codex-install.mjs`));
       assert.deepEqual(checkLinks(built[target].path), []);
     }
   } finally { rmSync(temporary, { recursive: true, force: true }); }
@@ -98,14 +100,22 @@ test("deterministic allowlists isolate Agent Plugins, Cursor, and Codex bundles"
       assert.equal(existsSync(join(first["agent-plugins"].path, "skills", name, "SKILL.md")), true);
       assert.equal(existsSync(join(first.cursor.path, "skills", name, "SKILL.md")), true);
       assert.equal(existsSync(join(first.codex.path, "skills", name, "SKILL.md")), true);
-      assert.equal(existsSync(join(first.opencode.path, "skills", name, "SKILL.md")), true);
+
       const portableSnapshot = directorySnapshot(join(first["agent-plugins"].path, "skills", name));
       assert.deepEqual(directorySnapshot(join(first.cursor.path, "skills", name)), portableSnapshot,
         `${name} differs between Agent Plugins and Cursor`);
       assert.deepEqual(directorySnapshot(join(first.codex.path, "skills", name)), portableSnapshot,
         `${name} differs between Agent Plugins and Codex`);
-      assert.deepEqual(directorySnapshot(join(first.opencode.path, "skills", name)), portableSnapshot,
-        `${name} differs between Agent Plugins and OpenCode`);
+      const openCodeName = name === releaseInstallerSkill ? openCodeReleaseInstallerSkill : name;
+      const openCodeSnapshot = directorySnapshot(join(first.opencode.path, "skills", openCodeName));
+      if (name === releaseInstallerSkill) {
+        assert.equal(existsSync(join(first.opencode.path, "skills", name)), false);
+        assert.match(openCodeSnapshot["SKILL.md"].toString(), new RegExp(`^name: ${openCodeName}$`, "m"));
+        portableSnapshot["SKILL.md"] = Buffer.from(portableSnapshot["SKILL.md"].toString().replace(
+          `\nname: ${name}\n`, `\nname: ${openCodeName}\n`,
+        ));
+      }
+      assert.deepEqual(openCodeSnapshot, portableSnapshot, `${openCodeName} differs in OpenCode`);
     }
     assert.deepEqual(readdirSync(join(first.cursor.path, "commands")).sort(), [
       "context-optimization.md",
@@ -115,14 +125,10 @@ test("deterministic allowlists isolate Agent Plugins, Cursor, and Codex bundles"
       "rtk-setup.md",
       "rtk-update.md",
     ]);
-    assert.deepEqual(readdirSync(join(first.opencode.path, "commands")).sort(), [
-      "context-optimization.md",
-      "efficiency.md",
-      "install-new-release-from-repo.md",
-      "rtk-filter-design.md",
-      "rtk-setup.md",
-      "rtk-update.md",
-    ]);
+    assert.deepEqual(
+      readdirSync(join(first.opencode.path, "commands")).sort(),
+      openCodePortableSkills.map((name) => `${name}.md`).sort(),
+    );
     const opencodeManifest = JSON.parse(readFileSync(join(first.opencode.path, ".opencode-plugin", "plugin.json"), "utf8"));
     assert.equal(opencodeManifest.opencodeCompatibility, "2.1.2");
     assert.equal(opencodeManifest.skills, "./skills/");

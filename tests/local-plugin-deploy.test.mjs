@@ -498,7 +498,7 @@ test("failed OpenCode deploy restores the shared config from memory and creates 
     const paths = deploymentPaths(item.home, plugin);
     mkdirSync(paths.opencodeCommands, { recursive: true });
     const foreignCommand = "workflow command\n";
-    const previousCommand = "Load the `efficiency` skill and apply it to the current request.\nprevious\n";
+    const previousCommand = openCodeCommand("efficiency", "Previous command.");
     writeFileSync(join(paths.opencodeCommands, "plan-work.md"), foreignCommand);
     writeFileSync(join(paths.opencodeCommands, "efficiency.md"), previousCommand);
     const original = `${JSON.stringify({ model: "keep", skills: ["./workflow/skills"] }, null, 2)}\n`;

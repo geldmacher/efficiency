@@ -20,7 +20,7 @@ import { checkLinks } from "./check-links.mjs";
 import { openCodeCommand, OPENCODE_COMPATIBILITY } from "../skills/install-new-release-from-repo/scripts/opencode-config.mjs";
 import { validateAgentPlugin, validateCodexPlugin, validateOpenCodePackage, validatePlugin } from "./validate-plugin.mjs";
 
-import { portableSkills, codexAdapterSkill } from "./plugin-components.mjs";
+import { portableSkills, openCodePortableSkills, releaseInstallerSkill, openCodeReleaseInstallerSkill, codexAdapterSkill } from "./plugin-components.mjs";
 
 export { OPENCODE_COMPATIBILITY, openCodeCommand };
 
@@ -38,7 +38,7 @@ const allowed = {
   "agent-plugins": ["plugin.json", "schemas/agent-plugins", "README.md", ...commonFiles],
   cursor: [".cursor-plugin", "agents", "commands", "rules", "README.md", ...commonFiles],
   codex: [".codex-plugin", "README.md", ...commonFiles],
-  opencode: commonFiles,
+  opencode: commonFiles.filter((path) => path !== `skills/${releaseInstallerSkill}`),
 };
 const developmentRoots = [".agents", ".build", ".cursor", ".git", "adapters", "node_modules", "targets", "test", "tests"];
 
@@ -156,11 +156,11 @@ function copyMapped(projectRoot, destination, sourceItem, destinationItem, trans
   chmodSync(output, stat.mode & 0o777);
 }
 
-function skillDescription(projectRoot, name) {
-  const source = readFileSync(join(projectRoot, "skills", name, "SKILL.md"), "utf8");
+function skillDescription(file) {
+  const source = readFileSync(file, "utf8");
   const document = parseDocument(source.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? "");
   const description = document.toJS()?.description;
-  if (document.errors.length || typeof description !== "string") throw new Error(`invalid skill metadata: ${name}`);
+  if (document.errors.length || typeof description !== "string") throw new Error(`invalid skill metadata: ${file}`);
   return description;
 }
 
@@ -232,7 +232,7 @@ export function validateBuiltTarget(destination, target, version) {
     assertSkills(destination, "skills", [...portableSkills, codexAdapterSkill], "Codex");
   } else if (target === "opencode") {
     if (existsSync(join(destination, "plugin.json"))) throw new Error("opencode target contains the portable root manifest");
-    assertSkills(destination, "skills", portableSkills, "OpenCode");
+    assertSkills(destination, "skills", openCodePortableSkills, "OpenCode");
     if (manifest.skills !== "./skills/") throw new Error("OpenCode target skill path drifted from ./skills/");
     if (manifest.opencodeCompatibility !== OPENCODE_COMPATIBILITY) throw new Error(`OpenCode package must target OpenCode ${OPENCODE_COMPATIBILITY}`);
   } else throw new Error(`unsupported target: ${target}`);
@@ -292,11 +292,16 @@ export function buildPluginTargets(outputRoot, sourceRoot = defaultRoot) {
     }
     if (target === "opencode") {
       copyMapped(projectRoot, destination, "targets/opencode/.opencode-plugin", ".opencode-plugin");
+      const installerSource = `skills/${releaseInstallerSkill}`;
+      const installerTarget = `skills/${openCodeReleaseInstallerSkill}`;
+      copyMapped(projectRoot, destination, installerSource, installerTarget);
+      copyMapped(projectRoot, destination, `${installerSource}/SKILL.md`, `${installerTarget}/SKILL.md`,
+        (text) => text.replace(`\nname: ${releaseInstallerSkill}\n`, `\nname: ${openCodeReleaseInstallerSkill}\n`));
       copyMapped(projectRoot, destination, "targets/opencode/README.md", "README.md", (text) => text.replaceAll("../../docs/", "docs/").replaceAll("../../skills/", "skills/"));
-      for (const name of portableSkills) {
+      for (const name of openCodePortableSkills) {
         const output = resolve(destination, "commands", `${name}.md`);
         mkdirSync(dirname(output), { recursive: true });
-        writeFileSync(output, openCodeCommand(name, skillDescription(projectRoot, name)), { mode: 0o644 });
+        writeFileSync(output, openCodeCommand(name, skillDescription(join(destination, "skills", name, "SKILL.md"))), { mode: 0o644 });
       }
     }
     validateBuiltTarget(destination, target, version);

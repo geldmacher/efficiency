@@ -111,3 +111,26 @@ test("OpenCode retains shared file permissions through deploy, rollback and unin
   assert.equal(existsSync(item.commandPath), false);
   assertNoInstallBackups(item.root);
 });
+
+test("OpenCode recognizes a verified legacy command and preserves a command owned by someone else", (t) => {
+  const item = fixture(t);
+  const legacy = previousCommand.replace(/^<!-- .*:opencode-command -->\n\n/m, "");
+  const foreign = command.replace(plugin + ":opencode-command", "example-addon:opencode-command");
+  const packageCommands = join(item.paths.packageDir, "commands");
+  mkdirSync(join(item.paths.packageDir, ".opencode-plugin"), { recursive: true });
+  mkdirSync(packageCommands);
+  writeFileSync(join(item.paths.packageDir, ".opencode-plugin/plugin.json"), JSON.stringify({ name: plugin }));
+  writeFileSync(join(packageCommands, "efficiency.md"), legacy);
+  const plan = () => planOpenCodeChanges({
+    home: item.home, plugin, env: {}, commandSources: [{ name: "efficiency.md", text: command }],
+  });
+
+  writeFileSync(item.commandPath, legacy);
+  applyOpenCodeChanges(plan(), {});
+  assert.equal(readFileSync(item.commandPath, "utf8"), command);
+
+  writeFileSync(item.commandPath, foreign);
+  assert.throws(plan, /already exists/);
+  uninstallOpenCodeDeployment({ home: item.home, plugin, env: {} });
+  assert.equal(readFileSync(item.commandPath, "utf8"), foreign);
+});
