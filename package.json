@@ -1,6 +1,6 @@
 {
   "name": "geldmacher-efficiency-plugin-development",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "private": true,
   "description": "Development validation for the Geldmacher Efficiency Agent Plugins, Cursor, Codex, and OpenCode targets.",
   "engines": {

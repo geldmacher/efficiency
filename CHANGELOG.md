@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 4.0.1
+
 ### Changed
 
 - Reconcile RTK instructions with stable 1.2.0. Windowed `rtk read` savings, gain timings, and monthly ccusage economics are interpreted from that release. Cursor leaves a command unchanged when its settings file cannot be loaded. Project-scoped Codex uninstall exits 2 when the hook guard refuses. The OpenCode plugin install is independent of the accompanying agent setup. A user Claude swap rule can rewrite a command RTK has no filter for, including a program called by path. Official Linux deb, rpm, and aarch64 packages are static musl builds. Hook registration remains verified at RTK 1.0.0; the 1.2.0 behavior was read from the release notes and source and was not executed here.
