@@ -168,6 +168,48 @@ test("RTK 1.0.0 compatibility notes stay in setup, evidence, and filter guidance
   }
 });
 
+test("RTK 1.2.0 source notes stay scoped and do not claim a live re-verification", () => {
+  const evidence = read("skills/efficiency/references/rtk-evidence.md");
+  assert.match(evidence, /windowed `rtk read`/);
+  assert.match(evidence, /separates the line number and the text with a tab/);
+  assert.match(evidence, /omit passthrough, fallback, bypass, proxy/);
+  assert.match(evidence, /rtk cc-economics/);
+  assert.match(evidence, /did not run `rtk gain`/);
+  const lifecycle = read("skills/rtk-setup/references/lifecycle.md");
+  assert.match(lifecycle, /\[RTK 1\.2\.0\]\(https:\/\/github\.com\/rtk-ai\/rtk\/releases\/tag\/v1\.2\.0\)/);
+  assert.match(lifecycle, /static musl builds/);
+  assert.match(lifecycle, /aarch64-unknown-linux-musl/);
+  assert.match(lifecycle, /This helper does not download deb, rpm, or tarball assets/);
+  const integration = read("skills/rtk-setup/references/integration.md");
+  assert.match(integration, /rtk init -g --opencode/);
+  assert.match(integration, /~\/\.config\/opencode\/plugins\/rtk\.ts/);
+  assert.match(integration, /cannot be combined with `--codex`/);
+  assert.match(integration, /prefix external programs/);
+  assert.match(integration, /uv run/);
+  assert.match(integration, /hooks\.wrap_fish_scripts/);
+  assert.match(integration, /occupied loopback port/);
+  assert.match(integration, /were not executed here/);
+  for (const host of ["cursor", "codex"]) {
+    const text = read(`skills/rtk-setup/references/${host}.md`);
+    assert.match(text, /verified with RTK 1\.0\.0, and hook registration is unchanged/);
+    assert.match(text, new RegExp(`The RTK 1\\.2\\.0 source still registers \`rtk hook ${host}\``));
+    assert.match(text, /live registration on 1\.2\.0 remains unverified/);
+    assert.doesNotMatch(text, /verified with RTK 1\.2\.0/);
+  }
+  assert.match(read("skills/rtk-setup/references/cursor.md"), /cli-config\.json/);
+  assert.match(read("skills/rtk-setup/references/codex.md"), /exits 2/);
+  for (const path of ["skills/rtk-filter-design/references/filter-format.md", "skills/rtk-filter-design/references/auditor.md"]) {
+    const filters = read(path);
+    assert.match(filters, /mode = "swap"/, path);
+    assert.match(filters, /schema_version = 1/, path);
+    assert.match(filters, /were not executed here/, path);
+  }
+  assert.match(read("skills/rtk-filter-design/references/filter-format.md"), /bare `rtk ls`/);
+  assert.match(read("skills/rtk-filter-design/references/filter-format.md"), /git ls-tree --name-only/);
+  assert.match(read("docs/usage.md"), /static musl builds/);
+  assert.match(read("CHANGELOG.md"), /Reconcile RTK instructions with stable 1\.2\.0/);
+});
+
 test("documented RTK processor fixtures include each host's required input fields", () => {
   const fixture = (host) => {
     // Metadata examples may precede the processor payload's tool_input envelope.
