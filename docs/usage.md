@@ -264,7 +264,7 @@ Both skills use the same lifecycle helper and integration references. The update
 
 After a successful Efficiency plugin update, `install-new-release-from-repo` also checks RTK. It offers first installation through `rtk-setup` or a needed update through `rtk-update` separately. Only your acceptance starts RTK changes; a decline or RTK failure leaves the successful plugin update intact. Checks run on these relevant invocations, without a background watcher.
 
-If you request configuration, the skill previews the affected settings before applying the authorized change. Generated `RTK.md` content belongs to `rtk init` and can change between versions. Setup examples and verification instructions in older versions apply to setup or troubleshooting. Before replacing a file with custom additions, account for needed tracking, environment, and sandbox settings in user-owned configuration or instructions; do not silently lose them or hand-edit the generated file as a durable fix.
+If you request configuration, the skill previews the affected settings before applying the authorized change. Generated `RTK.md` content belongs to `rtk init` and can change between versions. From RTK 1.2.0, full awareness for a host without a hook prefixes external programs and leaves shell builtins and shadowed `env` unprefixed. Setup examples and verification instructions in older versions apply to setup or troubleshooting. Before replacing a file with custom additions, account for needed tracking, environment, and sandbox settings in user-owned configuration or instructions; do not silently lose them or hand-edit the generated file as a durable fix.
 
 For native Codex integration, the skill explains the local RTK hook before asking you to trust it. An authorized setup adds a missing execution status message such as `RTK – Compact terminal output` or, in German, `RTK – Terminalausgaben komprimieren`, while preserving existing custom messages. This message describes the hook while it runs; the trust dialog may still call it "Hook 1". Metadata does not replace Codex's trust review, and changes to the hook definition may require renewed trust. Inspection-only requests leave configuration unchanged. The displayed title and status are verified separately in a local setup; until observed, they remain unverified.
 
@@ -295,7 +295,7 @@ An approved filter must preserve the meaning needed by its reader, including exa
 | Largest contributors | Which commands account for most of that reduction in absolute terms. |
 | Comparable complete task runs | Whether the whole task used fewer provider tokens, cost less, or finished with fewer turns while preserving quality. |
 
-A large `rtk gain` percentage alone does not establish lower total cost. That claim needs comparable runs with the same task, app, model, reasoning effort, and environment, plus provider usage and result-quality evidence.
+A large `rtk gain` percentage alone does not establish lower total cost. That claim needs comparable runs with the same task, app, model, reasoning effort, and environment, plus provider usage and result-quality evidence. With RTK 1.2.0 or newer, a windowed `rtk read` does not count the unread remainder as savings, and execution-time totals omit passthrough lifetimes. A monthly `rtk cc-economics` figure sums ccusage's per-project rows for that month; it is provider usage, separate from shell-output savings.
 
 ## Behavior and boundaries
 
@@ -340,7 +340,7 @@ A short task-focus principle applies through the Cursor rule and configured Code
 | OpenCode 2.1.2 (`@opencode/cli`) | The same six skills, each callable as `@name` or `/name`. No global instruction file and no OpenCode 1.x support. |
 | Other Agent Plugins v1 clients | Six portable skills; app-specific integration must be verified for that client. The release installer supports Cursor, Codex, and OpenCode 2.1.2. |
 | Release installer and development tools | Node.js 22 or newer. See [installation requirements](installation.md#before-you-start). |
-| Optional RTK integration | Native Cursor and version-dependent Codex hook or instruction paths. Verify the installed RTK version and active host runtime after updates; processor checks alone do not certify live compatibility. |
+| Optional RTK integration | Native Cursor hooks, version-dependent Codex hooks or instructions, and RTK's separate global OpenCode plugin (`rtk init -g --opencode`, which also sets up the accompanying agent). Verify the installed RTK version and active host runtime after updates; processor checks alone do not certify live compatibility. Linux deb, rpm, and aarch64 packages from RTK 1.2.0 are static musl builds. |
 
 The six shared skills are `efficiency`, `context-optimization`, `rtk-setup`, `rtk-update`, `rtk-filter-design`, and `install-new-release-from-repo`. Broad version compatibility is not certified; release records state the versions actually tested.
 
