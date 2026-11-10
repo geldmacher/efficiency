@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 4.0.2
+
 ### Changed
 
 - On Cursor and OpenCode, `install-new-release-from-repo` and `rtk-update` load only when you invoke them by name. Their descriptions are no longer offered for automatic selection. `efficiency`, `context-optimization`, `rtk-setup`, and `rtk-filter-design` stay selectable from the task. Codex still lists every skill, because it does not read `disable-model-invocation` and these skills do not ship a Codex invocation-policy file.

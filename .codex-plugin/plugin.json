@@ -1,6 +1,6 @@
 {
   "name": "geldmacher-efficiency",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "Helps coding agents choose simpler solutions, keep context lean, and communicate clearly. For Cursor and Codex.",
   "author": {
     "name": "Dennis Geldmacher",
