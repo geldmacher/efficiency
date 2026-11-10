@@ -4,6 +4,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, join } from "node:path";
 import test from "node:test";
 import { parseDocument } from "yaml";
+import { userOnlySkills } from "../scripts/plugin-components.mjs";
 import { defaultRoot, parseFrontmatter } from "../scripts/validate-plugin.mjs";
 import { portableSkills } from "./helpers/plugin-surface.mjs";
 
@@ -34,17 +35,20 @@ test("Cursor commands resolve to the identically named shared skill", () => {
   }
 });
 
-test("public skills remain available for implicit selection without file scoping", () => {
+test("only install and RTK update opt out of model invocation, without file scoping", () => {
+  assert.deepEqual([...userOnlySkills], ["install-new-release-from-repo", "rtk-update"]);
   const directories = [
     ...portableSkills.map((name) => `skills/${name}`),
     "adapters/codex/skills/response-simplicity-setup",
   ];
   for (const directory of directories) {
     const fields = parseFrontmatter(join(defaultRoot, directory, "SKILL.md"));
-    assert.notEqual(fields["disable-model-invocation"], true, directory);
+    const explicitOnly = userOnlySkills.includes(fields.name);
+    assert.equal(fields["disable-model-invocation"] === true, explicitOnly, directory);
     assert.notEqual(fields.disable_model_invocation, true, directory);
     assert.equal(fields.paths, undefined, directory);
     assert.equal(fields.globs, undefined, directory);
+    if (explicitOnly) assert.equal(existsSync(join(defaultRoot, directory, "agents", "openai.yaml")), false, directory);
     const metadata = `${directory}/agents/openai.yaml`;
     if (existsSync(join(defaultRoot, metadata))) {
       const document = parseDocument(read(metadata));
@@ -52,6 +56,12 @@ test("public skills remain available for implicit selection without file scoping
       assert.notEqual(document.toJS()?.policy?.allow_implicit_invocation, false, metadata);
     }
   }
+  // Handoffs read the skill file. They do not require the target to stay in the model catalog.
+  assert.match(read("skills/rtk-setup/SKILL.md"), /\]\(\.\.\/rtk-update\/SKILL\.md\)/);
+  assert.match(read("skills/install-new-release-from-repo/SKILL.md"), /\]\(\.\.\/rtk-update\/SKILL\.md\)/);
+  assert.match(read("skills/install-new-release-from-repo/SKILL.md"), /\]\(\.\.\/rtk-setup\/SKILL\.md\)/);
+  assert.match(read("skills/efficiency/SKILL.md"), /`rtk-setup` or `rtk-filter-design`/);
+  assert.doesNotMatch(read("skills/efficiency/SKILL.md"), /install-new-release-from-repo|rtk-update/);
 });
 
 test("communication and specialized references remain reachable through their entrypoints", () => {

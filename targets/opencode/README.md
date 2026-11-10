@@ -26,12 +26,14 @@ Use the [latest stable GitHub Release](https://github.com/geldmacher/efficiency/
 
 ## How skills are selected
 
-OpenCode lists each skill that has a description. Model auto-invocation stays enabled: these skills do not set `opencode/autoinvoke` or `disable-model-invocation`. You can also select one yourself:
+OpenCode lists a skill that has a description unless that skill sets `disable-model-invocation: true`. These skills do not set `opencode/autoinvoke` or `opencode/slash`.
+
+`efficiency`, `context-optimization`, `rtk-setup`, and `rtk-filter-design` stay available for automatic selection. `rtk-update` and `efficiency-install-release` are omitted from that list; invoke them by name.
 
 - Type `@efficiency` to load that skill by id.
 - Type `/efficiency` to run the matching command, which loads the same skill.
 
-The same pair works for `context-optimization`, `rtk-setup`, `rtk-update`, `rtk-filter-design`, and `efficiency-install-release`.
+The same pair works for `context-optimization`, `rtk-setup`, `rtk-filter-design`, `rtk-update`, and `efficiency-install-release`.
 
 Try a focused review:
 

@@ -20,7 +20,14 @@ import { checkLinks } from "./check-links.mjs";
 import { openCodeCommand, OPENCODE_COMPATIBILITY } from "../skills/install-new-release-from-repo/scripts/opencode-config.mjs";
 import { validateAgentPlugin, validateCodexPlugin, validateOpenCodePackage, validatePlugin } from "./validate-plugin.mjs";
 
-import { portableSkills, openCodePortableSkills, releaseInstallerSkill, openCodeReleaseInstallerSkill, codexAdapterSkill } from "./plugin-components.mjs";
+import {
+  portableSkills,
+  openCodePortableSkills,
+  releaseInstallerSkill,
+  openCodeReleaseInstallerSkill,
+  codexAdapterSkill,
+  userOnlySkills,
+} from "./plugin-components.mjs";
 
 export { OPENCODE_COMPATIBILITY, openCodeCommand };
 
@@ -256,6 +263,7 @@ export function validateBuiltTarget(destination, target, version) {
     }
     if (manifest.skills !== "./skills/") throw new Error("Codex target skill path drifted from ./skills/");
   }
+  assertInvocationFlags(destination, target);
   const structuralFailures = target === "agent-plugins"
     ? validateAgentPlugin(destination)
     : target === "cursor" ? validatePlugin(destination)
@@ -269,6 +277,33 @@ export function validateBuiltTarget(destination, target, version) {
     throw new Error(`${target} target Markdown links are invalid:\n- ${linkFailures.join("\n- ")}`);
   }
   files(destination);
+}
+
+const invocationFlag = /^disable-model-invocation:\s*true$/m;
+
+function assertInvocationFlags(destination, target) {
+  const names = target === "codex" ? [...portableSkills, codexAdapterSkill] : [...portableSkills];
+  for (const name of names) {
+    const directory = target === "opencode" && name === releaseInstallerSkill ? openCodeReleaseInstallerSkill : name;
+    const text = readFileSync(join(destination, "skills", directory, "SKILL.md"), "utf8");
+    const flagged = invocationFlag.test(text);
+    const shouldFlag = (target === "cursor" || target === "opencode") && userOnlySkills.includes(name);
+    if (flagged !== shouldFlag) {
+      throw new Error(`${target} ${directory} explicit-only flag is ${flagged ? "present" : "absent"}`);
+    }
+  }
+}
+
+function stripModelInvocationFlag(destination) {
+  for (const name of userOnlySkills) {
+    const skillFile = join(destination, "skills", name, "SKILL.md");
+    const mode = lstatSync(skillFile).mode & 0o777;
+    const text = readFileSync(skillFile, "utf8");
+    const stripped = text.replace(/^disable-model-invocation:\s*true\r?\n/m, "");
+    if (stripped === text) throw new Error(`${name} is missing disable-model-invocation: true`);
+    writeFileSync(skillFile, stripped, { mode });
+    chmodSync(skillFile, mode);
+  }
 }
 
 export function buildPluginTargets(outputRoot, sourceRoot = defaultRoot) {
@@ -304,6 +339,8 @@ export function buildPluginTargets(outputRoot, sourceRoot = defaultRoot) {
         writeFileSync(output, openCodeCommand(name, skillDescription(join(destination, "skills", name, "SKILL.md"))), { mode: 0o644 });
       }
     }
+    // Codex ignores the field. The Agent Skills spec rejects it. Cursor and OpenCode keep it.
+    if (target === "agent-plugins" || target === "codex") stripModelInvocationFlag(destination);
     validateBuiltTarget(destination, target, version);
     result[target] = { path: destination, hash: digest(destination), files: files(destination).length };
   }

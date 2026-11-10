@@ -16,7 +16,14 @@ import addFormats from "ajv-formats";
 import { parseDocument } from "yaml";
 
 import { OPENCODE_COMPATIBILITY, openCodeCommand } from "../skills/install-new-release-from-repo/scripts/opencode-config.mjs";
-import { portableSkills, openCodePortableSkills, codexAdapterSkill } from "./plugin-components.mjs";
+import {
+  portableSkills,
+  openCodePortableSkills,
+  codexAdapterSkill,
+  openCodeReleaseInstallerSkill,
+  releaseInstallerSkill,
+  userOnlySkills,
+} from "./plugin-components.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 export const defaultRoot = dirname(scriptDirectory);
@@ -42,7 +49,11 @@ const codexInterfaceKeys = new Set([
 ]);
 const httpsPattern = /^https:\/\/[^\s/$.?#].[^\s]*$/i;
 const hexColorPattern = /^#[0-9a-f]{6}$/i;
-const agentSkillKeys = new Set(["name", "description", "license", "compatibility", "metadata", "allowed-tools"]);
+// disable-model-invocation is honored by Cursor and OpenCode 2.1.2. The Agent Skills
+// reference library does not allow it; the Agent Plugins bundle strips the field.
+const agentSkillKeys = new Set([
+  "name", "description", "license", "compatibility", "metadata", "allowed-tools", "disable-model-invocation",
+]);
 
 const codexAdapterSkillsRelative = "adapters/codex/skills";
 
@@ -337,6 +348,9 @@ function validateAgentSkill(record, failures) {
     failures.push(`${record.label}: compatibility must be at most 500 characters`);
   }
   optionalString(fields, "allowed-tools", record.label, failures);
+  if ("disable-model-invocation" in fields && typeof fields["disable-model-invocation"] !== "boolean") {
+    failures.push(`${record.label}: disable-model-invocation must be boolean`);
+  }
   if ("metadata" in fields) {
     if (!fields.metadata || typeof fields.metadata !== "object" || Array.isArray(fields.metadata)) {
       failures.push(`${record.label}: metadata must be a string-to-string mapping`);
@@ -563,8 +577,14 @@ export function validateCodexPlugin(root = defaultRoot) {
     )
     : [];
   const codexSkillRecords = [...rootSkillRecords, ...adapterRecords];
+  const codexExplicitOnly = new Set(userOnlySkills);
   for (const record of codexSkillRecords) {
-    if (record.fields["disable-model-invocation"] === true || record.fields.disable_model_invocation === true) {
+    // Codex does not read this field. Shared source may set it for Cursor and OpenCode;
+    // the Codex bundle removes it. Any other skill must stay implicitly invocable.
+    const explicitOnlySource = codexExplicitOnly.has(record.fields.name);
+    const disablesInvocation = record.fields["disable-model-invocation"] === true
+      || record.fields.disable_model_invocation === true;
+    if (!explicitOnlySource && disablesInvocation) {
       failures.push(`${record.label}: Codex plugin skills must allow model invocation`);
     }
   }
@@ -643,11 +663,19 @@ export function validateOpenCodePackage(root) {
         continue;
       }
       const text = readFileSync(skillPath, "utf8");
-      if (/opencode\/autoinvoke|disable-model-invocation|opencode\/slash/.test(text)) {
-        failures.push(`${name}: OpenCode skill must stay auto-invocable and must not use removed slash metadata`);
+      if (/opencode\/autoinvoke|opencode\/slash/.test(text)) {
+        failures.push(`${name}: OpenCode skill must not use removed slash metadata`);
       }
       const document = parseDocument(text.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? "");
       const metadata = document.toJS();
+      const sourceName = name === openCodeReleaseInstallerSkill ? releaseInstallerSkill : name;
+      const flagged = metadata?.["disable-model-invocation"] === true;
+      if (flagged !== userOnlySkills.includes(sourceName)) {
+        failures.push(`${name}: OpenCode explicit-only flag does not match ${sourceName}`);
+      }
+      if (metadata && "disable-model-invocation" in metadata && typeof metadata["disable-model-invocation"] !== "boolean") {
+        failures.push(`${name}: disable-model-invocation must be boolean`);
+      }
       if (metadata?.name !== name) failures.push(`${name}: OpenCode skill name must match its directory`);
       const description = metadata?.description;
       if (typeof description === "string" && readFileSync(join(commandsDir, `${name}.md`), "utf8") !== openCodeCommand(name, description)) {
