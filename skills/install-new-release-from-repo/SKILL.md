@@ -1,6 +1,7 @@
 ---
 name: install-new-release-from-repo
 description: Install or update the Efficiency plugin from its latest stable GitHub Release for Cursor, Codex, or OpenCode 2.1.2. Supports installation previews; excludes publishing releases and deploying development checkouts.
+disable-model-invocation: true
 ---
 
 # Install new Release from repo

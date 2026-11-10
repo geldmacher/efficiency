@@ -136,10 +136,11 @@ test("Agent Skills validation enforces frontmatter, names, metadata, and body", 
     const skillPath = join(root, "skills", "sample-skill", "SKILL.md");
     await writeFile(
       skillPath,
-      "---\nname: wrong-name\ndescription: Sample.\nmetadata:\n  count: 2\nunknown: true\n---\n",
+      "---\nname: wrong-name\ndescription: Sample.\nmetadata:\n  count: 2\nunknown: true\ndisable-model-invocation: \"yes\"\n---\n",
     );
     const failures = validateAgentPlugin(root).join("\n");
     assert.match(failures, /unsupported field unknown/);
+    assert.match(failures, /disable-model-invocation must be boolean/);
     assert.match(failures, /name must match parent folder/);
     assert.match(failures, /metadata values must be strings/);
     assert.match(failures, /Markdown body must not be empty/);

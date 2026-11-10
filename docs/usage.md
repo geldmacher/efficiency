@@ -27,6 +27,8 @@ In **Cursor**, type `/` followed by the skill name. In **Codex**, use `$geldmach
 
 Natural-language requests such as “Review this refactor for complexity” or “Find duplicated instructions in AGENTS.md” can also select the matching skill. Selection depends on your app and the task. Name the skill explicitly when you want to make your choice clear.
 
+On Cursor and OpenCode, `install-new-release-from-repo` and `rtk-update` load only when you invoke them by name. Codex still selects them from the request, because Codex does not read `disable-model-invocation`.
+
 ## Review or simplify code
 
 **When:** a change is difficult to follow, adds new abstractions, or seems larger than the requirement needs.
@@ -256,7 +258,7 @@ The update check distinguishes configured hooks, processor results, actual execu
 
 ### Update or configure RTK
 
-To update existing RTK, invoke `/rtk-update` in Cursor or `$geldmacher-efficiency:rtk-update` in Codex. A bare invocation requests the latest official stable release and verification of the existing host integration, including necessary adjustments after a concrete preview. To inspect availability without changes, use `/rtk-update Check whether an update is available; do not change anything.` For a preview, use `/rtk-update Preview the update; do not apply it.`
+To update existing RTK, invoke `/rtk-update` in Cursor or `$geldmacher-efficiency:rtk-update` in Codex. On Cursor and OpenCode, that explicit invocation is what loads the skill. Codex can also select it from a matching request. A bare invocation requests the latest official stable release and verification of the existing host integration, including necessary adjustments after a concrete preview. To inspect availability without changes, use `/rtk-update Check whether an update is available; do not change anything.` For a preview, use `/rtk-update Preview the update; do not apply it.`
 
 The update skill stops when RTK is absent and points to `rtk-setup` for first installation. Setup also handles configuration, removal, diagnosis, and integration checks after an external update. Existing `/rtk-setup Update RTK...` requests delegate to `rtk-update`.
 
@@ -299,7 +301,7 @@ A large `rtk gain` percentage alone does not establish lower total cost. That cl
 
 ## Behavior and boundaries
 
-Skills can be selected explicitly or when relevant to a request. Only Cursor's short rule for responses and code changes is always applied; Codex needs the optional global setup for equivalent persistent guidance. That rule routes ordinary debugging, verification, repeated-work, and design decisions to the matching Efficiency reference; the `efficiency` skill itself is a short router for explicit reviews, assessments, and change texts. Specialized instructions load for the task that needs them.
+Most skills can be selected explicitly or when relevant to a request. On Cursor and OpenCode, name `install-new-release-from-repo` or `rtk-update` to load them. Only Cursor's short rule for responses and code changes is always applied; Codex needs the optional global setup for equivalent persistent guidance. That rule routes ordinary debugging, verification, repeated-work, and design decisions to the matching Efficiency reference; the `efficiency` skill itself is a short router for explicit reviews, assessments, and change texts. Specialized instructions load for the task that needs them.
 
 Reviews give recommendations and do not edit files. Implementation stays within the change you requested. Existing project checks and app approvals still apply, and concise answers must retain material evidence, uncertainty, risks, blockers, and validation status. Efficiency adds no custom MCP server, telemetry, or background automation.
 

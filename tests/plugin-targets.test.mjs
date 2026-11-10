@@ -19,7 +19,12 @@ import { checkLinks } from "../scripts/check-links.mjs";
 import { defaultRoot } from "../scripts/validate-plugin.mjs";
 
 import { portableSkills } from "./helpers/plugin-surface.mjs";
-import { openCodePortableSkills, openCodeReleaseInstallerSkill, releaseInstallerSkill } from "../scripts/plugin-components.mjs";
+import {
+  openCodePortableSkills,
+  openCodeReleaseInstallerSkill,
+  releaseInstallerSkill,
+  userOnlySkills,
+} from "../scripts/plugin-components.mjs";
 
 test("packages contain only user documentation, required artwork and target schemas", () => {
   const temporary = mkdtempSync(join(tmpdir(), "efficiency-doc-boundary-"));
@@ -96,26 +101,37 @@ test("deterministic allowlists isolate Agent Plugins, Cursor, and Codex bundles"
     assert.equal(codexManifest.name, "geldmacher-efficiency");
     assert.equal(codexManifest.skills, "./skills/");
 
+    const withoutInvocationFlag = (snapshot) => ({
+      ...snapshot,
+      "SKILL.md": Buffer.from(String(snapshot["SKILL.md"]).replace(/^disable-model-invocation:\s*true\r?\n/m, "")),
+    });
     for (const name of portableSkills) {
       assert.equal(existsSync(join(first["agent-plugins"].path, "skills", name, "SKILL.md")), true);
       assert.equal(existsSync(join(first.cursor.path, "skills", name, "SKILL.md")), true);
       assert.equal(existsSync(join(first.codex.path, "skills", name, "SKILL.md")), true);
 
       const portableSnapshot = directorySnapshot(join(first["agent-plugins"].path, "skills", name));
-      assert.deepEqual(directorySnapshot(join(first.cursor.path, "skills", name)), portableSnapshot,
+      const cursorSnapshot = directorySnapshot(join(first.cursor.path, "skills", name));
+      const codexSnapshot = directorySnapshot(join(first.codex.path, "skills", name));
+      const flagged = (snapshot) => /^disable-model-invocation:\s*true$/m.test(String(snapshot["SKILL.md"]));
+      assert.equal(flagged(portableSnapshot), false, `${name} Agent Plugins bundle must stay within the Agent Skills field set`);
+      assert.equal(flagged(codexSnapshot), false, `${name} Codex bundle must not rely on a field Codex ignores`);
+      assert.equal(flagged(cursorSnapshot), userOnlySkills.includes(name), name);
+      assert.deepEqual(withoutInvocationFlag(cursorSnapshot), portableSnapshot,
         `${name} differs between Agent Plugins and Cursor`);
-      assert.deepEqual(directorySnapshot(join(first.codex.path, "skills", name)), portableSnapshot,
-        `${name} differs between Agent Plugins and Codex`);
+      assert.deepEqual(codexSnapshot, portableSnapshot, `${name} differs between Agent Plugins and Codex`);
       const openCodeName = name === releaseInstallerSkill ? openCodeReleaseInstallerSkill : name;
       const openCodeSnapshot = directorySnapshot(join(first.opencode.path, "skills", openCodeName));
+      assert.equal(flagged(openCodeSnapshot), userOnlySkills.includes(name), openCodeName);
+      const normalizedOpenCode = withoutInvocationFlag(openCodeSnapshot);
       if (name === releaseInstallerSkill) {
         assert.equal(existsSync(join(first.opencode.path, "skills", name)), false);
-        assert.match(openCodeSnapshot["SKILL.md"].toString(), new RegExp(`^name: ${openCodeName}$`, "m"));
-        portableSnapshot["SKILL.md"] = Buffer.from(portableSnapshot["SKILL.md"].toString().replace(
-          `\nname: ${name}\n`, `\nname: ${openCodeName}\n`,
+        assert.match(String(openCodeSnapshot["SKILL.md"]), new RegExp(`^name: ${openCodeName}$`, "m"));
+        normalizedOpenCode["SKILL.md"] = Buffer.from(String(normalizedOpenCode["SKILL.md"]).replace(
+          `\nname: ${openCodeName}\n`, `\nname: ${name}\n`,
         ));
       }
-      assert.deepEqual(openCodeSnapshot, portableSnapshot, `${openCodeName} differs in OpenCode`);
+      assert.deepEqual(normalizedOpenCode, portableSnapshot, `${openCodeName} differs in OpenCode`);
     }
     assert.deepEqual(readdirSync(join(first.cursor.path, "commands")).sort(), [
       "context-optimization.md",

@@ -1,6 +1,7 @@
 ---
 name: rtk-update
 description: Update an existing Rust Token Killer (RTK) installation to the latest official stable release, then verify and adjust its host integration. Also use for update availability checks or previews; first installation and standalone integration setup belong to rtk-setup.
+disable-model-invocation: true
 ---
 
 # RTK Update

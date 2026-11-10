@@ -70,6 +70,8 @@ The Codex manifest uses the documented `./skills/` root and `.codex-plugin` cont
 
 The OpenCode manifest sets `opencodeCompatibility` to `2.1.2` and discovers `./skills/`. Its command files are generated from the skill descriptions. They load the skill by id and do not copy the Cursor command text. The package does not contain `CLAUDE.md`, `AGENTS.md`, or the Codex response guidance.
 
+Cursor and OpenCode keep `disable-model-invocation: true` on `install-new-release-from-repo` and `rtk-update`. The Agent Plugins bundle removes that field so those skills stay within the Agent Skills frontmatter set. The Codex bundle removes it as well: Codex does not honor the field, and these skills do not ship `agents/openai.yaml`.
+
 The builder copies the setup skill's canonical response reference to the Codex package's root `AGENTS.md`. Built-target validation rejects missing or changed guidance and leakage into the other targets; the policy contract keeps its text equal to Cursor's response rule. This generated file contains only the shared guidance for responses and code changes, with no automatic skill loading. Its global reference is configured separately through the setup skill and targets the stable installed source, never `.build` or a versioned cache. See [optional response guidance](installation.md#optional-codex-response-guidance).
 
 On Agent Plugins clients other than Cursor or Codex, the portable skills use conservative host-neutral behavior. They inspect only documented context or RTK integration surfaces, report unknown host integration as unverified, and do not assume Cursor hooks or Codex guidance paths.
