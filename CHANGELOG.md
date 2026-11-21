@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 4.0.3
+
 ### Changed
 
 - Reconcile RTK instructions with stable 1.2.1. The OpenCode plugin resolves the `rtk` the spawned shell will run, checking `PATH` before `RTK_BIN`, then standard install directories, and appends that directory to the shell `PATH`. Init leaves a compound user hook in place and treats a legacy `rtk-rewrite.sh` entry as a single executable invocation. A fallback command, including one after a valueless global flag, checks that legacy script before it runs. `tracking.history_days` is the retention window. A terminal `rtk gain` may end with one RTK Pro line, and a tracking migration that cannot run still shows the stored history. Hook registration remains verified at RTK 1.0.0; the 1.2.1 behavior was read from the release notes and source and was not executed here.
