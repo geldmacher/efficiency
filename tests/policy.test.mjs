@@ -202,9 +202,9 @@ test("RTK 1.2.0 source notes stay scoped and do not claim a live re-verification
   for (const host of ["cursor", "codex"]) {
     const text = read(`skills/rtk-setup/references/${host}.md`);
     assert.match(text, /verified with RTK 1\.0\.0, and hook registration is unchanged/);
-    assert.match(text, new RegExp(`The RTK 1\\.2\\.0 source still registers \`rtk hook ${host}\``));
-    assert.match(text, /live registration on 1\.2\.0 remains unverified/);
-    assert.doesNotMatch(text, /verified with RTK 1\.2\.0/);
+    assert.match(text, new RegExp(`The RTK 1\\.2\\.1 source still registers \`rtk hook ${host}\``));
+    assert.match(text, /live registration on 1\.2\.1 remains unverified/);
+    assert.doesNotMatch(text, /verified with RTK 1\.2\.1/);
   }
   assert.match(read("skills/rtk-setup/references/cursor.md"), /cli-config\.json/);
   assert.match(read("skills/rtk-setup/references/codex.md"), /exits 2/);
@@ -218,6 +218,36 @@ test("RTK 1.2.0 source notes stay scoped and do not claim a live re-verification
   assert.match(read("skills/rtk-filter-design/references/filter-format.md"), /git ls-tree --name-only/);
   assert.match(read("docs/usage.md"), /static musl builds/);
   assert.match(read("CHANGELOG.md"), /Reconcile RTK instructions with stable 1\.2\.0/);
+});
+
+test("RTK 1.2.1 source notes stay scoped and do not claim a live re-verification", () => {
+  const evidence = read("skills/efficiency/references/rtk-evidence.md");
+  assert.match(evidence, /tracking\.history_days/);
+  assert.match(evidence, /Across a team\? Spend by team and person, budgets, audit: pro\.rtk-ai\.app/);
+  assert.match(evidence, /rtk: tracking database was not upgraded:/);
+  assert.match(evidence, /did not run `rtk gain`/);
+  assert.match(evidence, /did not run a cleanup/);
+  const lifecycle = read("skills/rtk-setup/references/lifecycle.md");
+  assert.match(lifecycle, /\[RTK 1\.2\.1\]\(https:\/\/github\.com\/rtk-ai\/rtk\/releases\/tag\/v1\.2\.1\)/);
+  assert.match(lifecycle, /leaves this helper's Homebrew, Cargo, and Winget commands unchanged/);
+  assert.match(lifecycle, /were not executed here/);
+  const integration = read("skills/rtk-setup/references/integration.md");
+  assert.match(integration, /PATH` before `RTK_BIN|own `PATH` first/);
+  assert.match(integration, /RTK_BIN` was ignored/);
+  assert.match(integration, /audit;\/usr\/local\/bin\/rtk hook codex/);
+  assert.match(integration, /rtk-rewrite\.sh/);
+  assert.match(integration, /hook integrity check FAILED/);
+  assert.match(integration, /--ultra-compact/);
+  assert.match(integration, /was not executed here/);
+  assert.match(read("skills/rtk-setup/references/cursor.md"), /one word whose file name is `rtk-rewrite\.sh`/);
+  assert.match(read("skills/rtk-setup/references/codex.md"), /surrounded only by line feeds is still that handler/);
+  assert.match(read("skills/rtk-setup/references/codex.md"), /The v1\.2\.1 source still skips that rewrite/);
+  assert.match(read("docs/usage.md"), /tracking\.history_days/);
+  assert.match(read("CHANGELOG.md"), /Reconcile RTK instructions with stable 1\.2\.1/);
+  for (const path of ["skills/rtk-setup/references/cursor.md", "skills/rtk-setup/references/codex.md", "skills/rtk-setup/references/integration.md", "skills/efficiency/references/rtk-evidence.md"]) {
+    assert.doesNotMatch(read(path), /verified with RTK 1\.2\.1/, path);
+    assert.doesNotMatch(read(path), /was executed here/, path);
+  }
 });
 
 test("documented RTK processor fixtures include each host's required input fields", () => {
