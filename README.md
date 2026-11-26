@@ -111,7 +111,7 @@ $geldmacher-efficiency:install-new-release-from-repo Update Efficiency to the la
 @install-new-release-from-repo Update Efficiency to the latest stable GitHub Release for OpenCode.
 ```
 
-Cursor and OpenCode load this update skill only from an explicit request such as the ones above. Codex can also select it when the wording matches. If the skill is missing, use the installation request above. For manual updates, follow the [replacement and activation steps](docs/installation.md#manual-update). The [installation guide](docs/installation.md) also covers previews and recovery.
+Cursor and OpenCode load this update skill only from an explicit request such as the ones above. Codex can also select it when the wording matches. If the skill is missing, or an install from 3.6.0 through 3.10.0 reports that `provenance.json` is invalid, use the [one-time upgrade](docs/installation.md#update-from-efficiency-360-through-3100) instead of retrying that installed helper. For manual updates, follow the [replacement and activation steps](docs/installation.md#manual-update). The [installation guide](docs/installation.md) also covers previews and recovery.
 
 ## Learn more
 

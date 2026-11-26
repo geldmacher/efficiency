@@ -32,7 +32,7 @@ import {
   releaseNotesFromChangelog,
   verifyPreparedRelease,
 } from "../scripts/plugin-github-release.mjs";
-import { validateProvenance } from "../skills/install-new-release-from-repo/scripts/release-format.mjs";
+import { releaseBundleNames, validateProvenance } from "../skills/install-new-release-from-repo/scripts/release-format.mjs";
 
 const version = "1.2.3";
 
@@ -186,7 +186,7 @@ function exactView(prepared) {
     isPrerelease: false,
     name: `Efficiency ${provenance.version}`,
     body: readFileSync(join(prepared.directory, "RELEASE_NOTES.md"), "utf8"),
-    assets: provenance.published_assets.map((name) => ({ name })),
+    assets: releaseBundleNames(provenance).map((name) => ({ name })),
     url: `https://github.com/geldmacher/efficiency/releases/tag/${provenance.tag}`,
   };
 }
@@ -227,7 +227,7 @@ function publicationRunner(prepared, {
     if (args[0] === "release" && args[1] === "download") {
       const destination = args[args.indexOf("--dir") + 1];
       mkdirSync(destination, { recursive: true });
-      for (const name of prepared.provenance.published_assets) {
+      for (const name of releaseBundleNames(prepared.provenance)) {
         copyFileSync(join(prepared.directory, name), join(destination, name));
       }
       if (corruptDownload) writeFileSync(join(destination, prepared.provenance.targets.cursor.archive), "corrupt\n");
@@ -881,6 +881,7 @@ test("independent preparations produce byte-identical closed Cursor and Codex re
       `geldmacher-efficiency-cursor-v${version}.zip`,
       `geldmacher-efficiency-opencode-v${version}.zip`,
       "provenance.json",
+      "provenance.schema1.json",
     ]);
     for (const name of readdirSync(first.directory)) {
       assert.deepEqual(readFileSync(join(first.directory, name)), readFileSync(join(second.directory, name)), name);
@@ -890,6 +891,8 @@ test("independent preparations produce byte-identical closed Cursor and Codex re
     assert.equal(verified.provenance.source.tree_sha, git(item.repository, "rev-parse", "HEAD^{tree}"));
     assert.equal(verified.provenance.release_gate.result, "passed");
     assert.equal(verified.provenance.schema, 2);
+    assert.equal(verified.provenance.published_assets.includes("provenance.schema1.json"), false);
+    assert.match(readFileSync(join(first.directory, "RELEASE_NOTES.md"), "utf8"), /schema-1 provenance sha256: [0-9a-f]{64}\n$/);
     for (const host of ["cursor", "codex", "opencode"]) {
       const entries = zipEntries(join(first.directory, first.provenance.targets[host].archive));
       assert.ok(entries.every((entry) => entry.name === `${PLUGIN_NAME}/` || entry.name.startsWith(`${PLUGIN_NAME}/`)));
@@ -1237,7 +1240,7 @@ test("a new release uploads only the closed prepared set and verifies downloaded
     assert.ok(create);
     const argumentsList = create[1];
     const uploadedNames = argumentsList.slice(3, argumentsList.indexOf("--repo")).map((value) => value.split("/").at(-1));
-    assert.deepEqual(uploadedNames.sort(), [...prepared.provenance.published_assets].sort());
+    assert.deepEqual(uploadedNames.sort(), releaseBundleNames(prepared.provenance).sort());
     for (const forbidden of ["--clobber", "delete", "upload", "tag", "push"]) assert.equal(argumentsList.includes(forbidden), false);
     assert.equal(stub.calls.some(([command, args]) => command === "git" && ["tag", "push", "commit"].includes(args[0])), false);
   } finally {

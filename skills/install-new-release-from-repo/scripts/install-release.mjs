@@ -1,10 +1,11 @@
 #!/usr/bin/env node
+import { spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { chmodSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { PLUGIN_NAME, EXPECTED_REPOSITORY, RELEASE_HOSTS, assetName, canonicalJson, receiptForProvenance, sha256, validateProvenance } from "./release-format.mjs";
+import { PLUGIN_NAME, EXPECTED_REPOSITORY, RELEASE_HOSTS, PROVENANCE_BOOTSTRAP_ENV, SCHEMA1_PROVENANCE_NAME, SCHEMA2_ANCHOR_NAME, assertSchema1Commitment, assetName, canonicalJson, receiptForProvenance, sha256, supportedProvenanceSchema, unsupportedProvenanceSchemaError, validateProvenance } from "./release-format.mjs";
 import { releaseManifestPath, verifyArchive } from "./release-archive.mjs";
 import { applyOpenCodeChanges, commandSourcesFromEntries, planOpenCodeChanges, rollbackOpenCodeChanges } from "./opencode-config.mjs";
 import { assertPath, present, sameTree, marketplaceDocument, defaultRunner, codexList, cacheState, installCodex } from "./codex-install.mjs";
@@ -29,6 +30,93 @@ function regularFile(path) {
   return readFileSync(path);
 }
 
+const EMBEDDED_VERIFIER_SOURCE = `import { pathToFileURL } from "node:url";
+const loaded = await import(pathToFileURL(process.env.EFFICIENCY_EMBEDDED_INSTALLER).href);
+const directory = process.argv[1];
+const host = process.argv[2];
+const verified = await loaded.verifyRelease(directory, host);
+const target = verified?.provenance?.targets?.[host];
+if (!target?.archive_sha256 || verified.provenance.version == null) throw new Error("embedded verifier omitted the archive hash");
+process.stdout.write(JSON.stringify({ version: verified.provenance.version, archive_sha256: target.archive_sha256 }));
+`;
+
+function installerScriptRelative(host) {
+  const skill = host === "opencode" ? "efficiency-install-release" : "install-new-release-from-repo";
+  return `skills/${skill}/scripts/install-release.mjs`;
+}
+
+function assertIdentity(provenance, expectedVersion) {
+  if (provenance.repository !== EXPECTED_REPOSITORY || !stableVersion.test(provenance.version)
+    || (expectedVersion && provenance.version !== expectedVersion)
+    || receiptForProvenance(provenance) !== provenance.receipt_sha256) throw new Error("Release identity or receipt differs");
+}
+
+function assertEmbeddedVerifierAgrees(entries, directory, host, anchor) {
+  const relativeScript = installerScriptRelative(host);
+  if (!entries.some((entry) => entry.relativePath === relativeScript)) throw new Error("verified archive has no release installer");
+  const temp = mkdtempSync(join(tmpdir(), "efficiency-verifier-"));
+  try {
+    for (const entry of entries) {
+      const path = join(temp, entry.relativePath);
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(path, entry.bytes, { flag: "wx", mode: entry.mode });
+      chmodSync(path, entry.mode);
+    }
+    const result = spawnSync(process.execPath, ["--input-type=module", "-e", EMBEDDED_VERIFIER_SOURCE, directory, host], {
+      encoding: "utf8",
+      timeout: 60000,
+      maxBuffer: 1024 * 1024,
+      env: { ...process.env, [PROVENANCE_BOOTSTRAP_ENV]: "1", EFFICIENCY_EMBEDDED_INSTALLER: join(temp, relativeScript) },
+    });
+    if (result.status !== 0) {
+      const detail = (result.stderr || result.stdout || result.error?.message || "no output").trim();
+      throw new Error(`embedded verifier rejected the release: ${detail}`);
+    }
+    let reported;
+    try { reported = JSON.parse(result.stdout); }
+    catch { throw new Error("embedded verifier returned no agreement"); }
+    if (reported.version !== anchor.version || reported.archive_sha256 !== anchor.targets[host].archive_sha256) {
+      throw new Error("embedded verifier disagreed with the schema-2 anchor");
+    }
+  } finally {
+    rmSync(temp, { recursive: true, force: true });
+  }
+}
+
+function verifySupportedRelease(directory, host, expectedVersion, provenance, checked) {
+  validateProvenance(provenance);
+  assertIdentity(provenance, expectedVersion);
+  if (provenance.schema === 2 && existsSync(join(directory, SCHEMA1_PROVENANCE_NAME))) {
+    assertSchema1Commitment({
+      notes: checked("RELEASE_NOTES.md"),
+      schema1Bytes: checked(SCHEMA1_PROVENANCE_NAME),
+      schema2: provenance,
+    });
+  }
+  const archive = assetName(host, provenance.version);
+  const zip = checked(archive);
+  if (sha256(zip) !== provenance.targets[host].archive_sha256) throw new Error("Archive differs from provenance");
+  const entries = verifyArchive(zip, provenance, host);
+  return { provenance, archive, entries, directory, host };
+}
+
+function verifyUnsupportedSchema(directory, host, expectedVersion, untrusted, checked) {
+  const schema = untrusted?.schema;
+  if (process.env[PROVENANCE_BOOTSTRAP_ENV] === "1") throw new Error(unsupportedProvenanceSchemaError(schema, host));
+  try {
+    const anchor = JSON.parse(checked(SCHEMA2_ANCHOR_NAME).toString("utf8"));
+    if (typeof untrusted?.version === "string" && untrusted.version !== anchor.version) throw new Error("unsupported provenance version differs from the schema-2 anchor");
+    if (typeof untrusted?.tag === "string" && untrusted.tag !== anchor.tag) throw new Error("unsupported provenance tag differs from the schema-2 anchor");
+    const verified = verifySupportedRelease(directory, host, expectedVersion, anchor, checked);
+    if (verified.provenance.schema !== 2) throw new Error("provenance.schema2.json must be schema 2");
+    assertEmbeddedVerifierAgrees(verified.entries, directory, host, verified.provenance);
+    return verified;
+  } catch (error) {
+    if (String(error.message).startsWith("provenance.json schema ")) throw error;
+    throw new Error(`${unsupportedProvenanceSchemaError(schema, host)} ${error.message}`);
+  }
+}
+
 export function verifyRelease(directory, host, expectedVersion) {
   assertHost(host);
   const sums = regularFile(join(directory, "SHA256SUMS")).toString("utf8").split(/\r?\n/).filter(Boolean);
@@ -40,15 +128,24 @@ export function verifyRelease(directory, host, expectedVersion) {
     return bytes;
   };
   const provenance = JSON.parse(checked("provenance.json").toString("utf8"));
-  validateProvenance(provenance);
-  if (provenance.repository !== EXPECTED_REPOSITORY || !stableVersion.test(provenance.version)
-    || (expectedVersion && provenance.version !== expectedVersion)
-    || receiptForProvenance(provenance) !== provenance.receipt_sha256) throw new Error("Release identity or receipt differs");
-  const archive = assetName(host, provenance.version);
-  const zip = checked(archive);
-  if (sha256(zip) !== provenance.targets[host].archive_sha256) throw new Error("Archive differs from provenance");
-  const entries = verifyArchive(zip, provenance, host);
-  return { provenance, archive, entries, directory, host };
+  if (!supportedProvenanceSchema(provenance?.schema)) return verifyUnsupportedSchema(directory, host, expectedVersion, provenance, checked);
+  return verifySupportedRelease(directory, host, expectedVersion, provenance, checked);
+}
+
+export function materializeSchema1View(directory, host, destination) {
+  assertHost(host);
+  if (host === "opencode") throw new Error("schema-1 provenance has no OpenCode target");
+  if (existsSync(destination)) throw new Error("schema-1 view destination already exists");
+  const verified = verifyRelease(directory, host);
+  const schema1Path = join(directory, SCHEMA1_PROVENANCE_NAME);
+  if (!existsSync(schema1Path)) throw new Error(`release is missing ${SCHEMA1_PROVENANCE_NAME}`);
+  const schema1Bytes = readFileSync(schema1Path);
+  const archiveBytes = readFileSync(join(directory, verified.archive));
+  mkdirSync(destination);
+  writeFileSync(join(destination, verified.archive), archiveBytes, { flag: "wx" });
+  writeFileSync(join(destination, "provenance.json"), schema1Bytes, { flag: "wx" });
+  writeFileSync(join(destination, "SHA256SUMS"), `${sha256(archiveBytes)}  ${verified.archive}\n${sha256(schema1Bytes)}  provenance.json\n`, { flag: "wx" });
+  return destination;
 }
 
 async function downloadBytes(url, limit, fetcher) {
@@ -75,13 +172,20 @@ export async function downloadLatest(directory, host, fetcher = fetch) {
   if (release.draft !== false || release.prerelease !== false || !stableVersion.test(version ?? "")
     || release.tag_name !== `v${version}` || !Array.isArray(release.assets)) throw new Error("GitHub latest must identify a published stable release");
   const names = [assetName(host, version), "SHA256SUMS", "provenance.json"];
-  for (const name of names) {
-    const matches = release.assets.filter((asset) => asset.name === name);
+  const listed = (name) => release.assets.filter((asset) => asset.name === name);
+  const downloadAsset = async (name) => {
+    const matches = listed(name);
     const url = `https://github.com/${EXPECTED_REPOSITORY}/releases/download/v${version}/${name}`;
     if (matches.length !== 1 || matches[0].browser_download_url !== url) throw new Error(`Missing or conflicting GitHub asset: ${name}`);
     const bytes = await downloadBytes(url, name.endsWith(".zip") ? 64 * 1024 * 1024 : 2 * 1024 * 1024, fetcher);
     writeFileSync(join(directory, name), bytes, { flag: "wx" });
+  };
+  for (const name of names) await downloadAsset(name);
+  for (const name of [SCHEMA1_PROVENANCE_NAME, SCHEMA2_ANCHOR_NAME]) {
+    if (listed(name).length > 1) throw new Error(`Missing or conflicting GitHub asset: ${name}`);
+    if (listed(name).length === 1) await downloadAsset(name);
   }
+  if (listed(SCHEMA1_PROVENANCE_NAME).length === 1) await downloadAsset("RELEASE_NOTES.md");
   return verifyRelease(directory, host, version);
 }
 
@@ -195,7 +299,10 @@ export function installRelease(release, { home = homedir(), codexHome, codexBina
       if (!sameTree(payload, entries)) throw new Error("Staged installation differs from release");
       const evidence = join(stage, "release");
       mkdirSync(evidence);
-      for (const name of [release.archive, "SHA256SUMS", "provenance.json"]) cpSync(join(release.directory, name), join(evidence, name), { errorOnExist: true, force: false });
+      for (const name of [release.archive, "SHA256SUMS", "provenance.json", "RELEASE_NOTES.md", SCHEMA1_PROVENANCE_NAME, SCHEMA2_ANCHOR_NAME]) {
+        const source = join(release.directory, name);
+        if (existsSync(source)) cpSync(source, join(evidence, name), { errorOnExist: true, force: false });
+      }
       verifyRelease(evidence, host, provenance.version);
       if (!matches) {
         if (exists) { rmSync(destination, { recursive: true, force: true }); previousPluginRemoved = true; }

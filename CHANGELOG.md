@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Cursor and Codex installs of Efficiency 3.6.0 through 3.10.0 can update again. Their helper accepts only provenance schema 1 and rejects schema 2 `provenance.json` before it replaces files. New releases keep schema 2 `provenance.json`, so OpenCode and Efficiency 3.11.0 through 4.0.3 keep the normal update path, and also publish `provenance.schema1.json` bound by a checksum line in `RELEASE_NOTES.md`. The one-time program in the installation guide checks that binding, then runs the installer from the verified archive.
+
+### Changed
+
+- The updater accepts provenance schemas 1 and 2 explicitly. A newer schema installs only when `provenance.schema2.json` passes the schema 2 checks and the installer inside that verified archive reports the same archive hash. Otherwise the updater stops with the manual command and does not install.
+
 ## 4.0.3
 
 ### Changed
