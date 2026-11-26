@@ -16,7 +16,7 @@ import {
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { PLUGIN_NAME, EXPECTED_REPOSITORY, PROVENANCE_SCHEMA, RELEASE_HOSTS, provenanceHosts, publishedAssetNames, sha256, canonicalJson, assetName, receiptForProvenance, validateProvenance, exactKeys, shaField, contentSummary } from "../skills/install-new-release-from-repo/scripts/release-format.mjs";
+import { PLUGIN_NAME, EXPECTED_REPOSITORY, PROVENANCE_SCHEMA, RELEASE_HOSTS, SCHEMA1_PROVENANCE_NAME, assertSchema1Commitment, buildSchema1Artifact, provenanceHosts, publishedAssetNames, releaseBundleNames, sha256, canonicalJson, assetName, receiptForProvenance, validateProvenance, exactKeys, shaField, contentSummary } from "../skills/install-new-release-from-repo/scripts/release-format.mjs";
 import { releaseManifestPath } from "../skills/install-new-release-from-repo/scripts/release-archive.mjs";
 import { buildPluginTargets } from "./build-plugin-targets.mjs";
 
@@ -309,11 +309,11 @@ function releaseDirectory(base, version) {
 }
 
 function expectedReleasePaths(directory, provenance) {
-  return provenance.published_assets.map((name) => join(directory, name));
+  return releaseBundleNames(provenance).map((name) => join(directory, name));
 }
 
 function checksumNames(provenance) {
-  return [...provenanceHosts(provenance).map((host) => provenance.targets[host].archive), "RELEASE_NOTES.md", "provenance.json"];
+  return releaseBundleNames(provenance).filter((name) => name !== "SHA256SUMS");
 }
 
 function checksumDocument(directory, names) {
@@ -359,6 +359,13 @@ export function verifyPreparedRelease(directory, expectedReceipt) {
   }
   if (readFileSync(join(directory, "SHA256SUMS"), "utf8") !== checksumDocument(directory, checksumNames(provenance))) {
     throw new Error("SHA256SUMS differs from the prepared release files");
+  }
+  if (provenance.schema === 2) {
+    assertSchema1Commitment({
+      notes: readFileSync(join(directory, "RELEASE_NOTES.md")),
+      schema1Bytes: readFileSync(join(directory, SCHEMA1_PROVENANCE_NAME)),
+      schema2: provenance,
+    });
   }
   return { provenance, receipt: computedReceipt, paths: expectedReleasePaths(directory, provenance) };
 }
@@ -430,7 +437,22 @@ export function prepareRelease({
         root_directory: PLUGIN_NAME,
       };
     }
-    writeFileSync(join(staged, "RELEASE_NOTES.md"), snapshotNotes);
+    if (PROVENANCE_SCHEMA !== 2) {
+      throw new Error("provenance.json stays schema 2 so updaters from 3.11.0 onward can read it. A newer schema requires provenance.schema2.json and the bootstrap updater already shipped.");
+    }
+    const artifact = buildSchema1Artifact({
+      schema: PROVENANCE_SCHEMA,
+      kind: "github-release-provenance",
+      plugin: PLUGIN_NAME,
+      version: source.version,
+      tag: source.tag,
+      repository: source.repository,
+      source: { commit_sha: source.commit, tree_sha: source.tree, clean: true },
+      release_gate: { command: gate.command ?? "npm run release-check", result: "passed" },
+      targets,
+    }, snapshotNotes);
+    writeFileSync(join(staged, "RELEASE_NOTES.md"), artifact.notes);
+    writeFileSync(join(staged, SCHEMA1_PROVENANCE_NAME), artifact.bytes);
     const provenance = {
       schema: PROVENANCE_SCHEMA,
       kind: "github-release-provenance",
@@ -511,7 +533,7 @@ function normalizedBody(value) {
 }
 
 function expectedAssetHashes(directory, provenance) {
-  return Object.fromEntries(provenance.published_assets.map((name) => [name, fileSha256(join(directory, name))]));
+  return Object.fromEntries(releaseBundleNames(provenance).map((name) => [name, fileSha256(join(directory, name))]));
 }
 
 function verifyReleaseMetadata(view, directory, provenance) {
@@ -523,7 +545,7 @@ function verifyReleaseMetadata(view, directory, provenance) {
   if (normalizedBody(view.body) !== normalizedBody(readFileSync(join(directory, "RELEASE_NOTES.md"), "utf8"))) {
     throw new Error("GitHub release notes differ from RELEASE_NOTES.md");
   }
-  const expectedNames = [...provenance.published_assets].sort();
+  const expectedNames = [...releaseBundleNames(provenance)].sort();
   const actualNames = (view.assets ?? []).map((asset) => asset.name).sort();
   if (actualNames.join("\n") !== expectedNames.join("\n")) {
     throw new Error(`GitHub release assets differ; expected [${expectedNames.join(", ")}], received [${actualNames.join(", ")}]`);
@@ -572,7 +594,7 @@ export function publishRelease(receipt, {
   assertSourceBinding(source, provenance, "prepared release differs from the current repository");
   const publicationDirectory = mkdtempSync(join(tmpdir(), "efficiency-release-publish-"));
   try {
-    for (const name of provenance.published_assets) copyFileSync(join(directory, name), join(publicationDirectory, name));
+    for (const name of releaseBundleNames(provenance)) copyFileSync(join(directory, name), join(publicationDirectory, name));
     const publication = verifyPreparedRelease(publicationDirectory, receipt);
     const expectedHashes = expectedAssetHashes(publicationDirectory, provenance);
     runChecked(runner, "gh", ["auth", "status", "--hostname", "github.com"], { cwd: root }, "GitHub authentication");

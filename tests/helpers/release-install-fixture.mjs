@@ -1,13 +1,13 @@
 import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { buildPluginTargets } from "../../scripts/build-plugin-targets.mjs";
 import { inspectReleaseTarget } from "../../scripts/plugin-github-release.mjs";
 import { openCodeCommand } from "../../skills/install-new-release-from-repo/scripts/opencode-config.mjs";
 import { PLUGIN_NAME, EXPECTED_REPOSITORY, PROVENANCE_SCHEMA, RELEASE_HOSTS, assetName, canonicalJson, receiptForProvenance, sha256 } from "../../skills/install-new-release-from-repo/scripts/release-format.mjs";
 import { releaseManifestPath } from "../../skills/install-new-release-from-repo/scripts/release-archive.mjs";
 
-export function fixtureRelease(root, version = "3.2.1", { full = false } = {}) {
+export function fixtureRelease(root, version = "3.2.1", { full = false, extraFiles = {} } = {}) {
   mkdirSync(root, { recursive: true });
   const directory = join(root, "release");
   mkdirSync(directory);
@@ -28,6 +28,11 @@ export function fixtureRelease(root, version = "3.2.1", { full = false } = {}) {
       if (host === "opencode") {
         mkdirSync(join(source, "commands"), { recursive: true });
         writeFileSync(join(source, "commands", "efficiency.md"), openCodeCommand("efficiency", "Test fixture."));
+      }
+      for (const [relativePath, contents] of Object.entries(extraFiles)) {
+        const path = join(source, relativePath);
+        mkdirSync(dirname(path), { recursive: true });
+        writeFileSync(path, contents);
       }
     }
     const gitDirectory = join(root, `${host}.git`);

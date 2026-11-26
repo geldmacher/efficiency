@@ -6,6 +6,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
+test("installation guide embeds the schema 1 upgrade program", () => {
+  const guide = readFileSync(new URL("../docs/installation.md", import.meta.url), "utf8");
+  const program = readFileSync(new URL("../skills/install-new-release-from-repo/scripts/upgrade-from-schema1.mjs", import.meta.url), "utf8");
+  const block = guide.match(/```javascript\n([\s\S]*?\n)```/);
+  assert.ok(block, "the upgrade program must be embedded in the installation guide");
+  assert.equal(block[1], program.endsWith("\n") ? program : `${program}\n`);
+});
+
 test("documented shell checksum recipe stops at either damaged download", { skip: process.platform === "win32" }, () => {
   const guide = readFileSync(new URL("../docs/installation.md", import.meta.url), "utf8");
   const recipe = [...guide.matchAll(/```sh\n([\s\S]*?)```/g)].map((match) => match[1]).find((body) => body.startsWith("archive="));
